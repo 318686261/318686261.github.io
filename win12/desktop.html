@@ -12,10 +12,10 @@
 	<!-- Windows 12 网页版是一个开放源项目,
 	希望让用户在网络上预先体验 Windows 12,
 	内容可能与 Windows 12 正式版本不一致。
-	使用标准网络技术,例如 HTML、CSS 和 Javascript
-	此项目绝不附属于微软,且不应与微软操作系统或产品混淆,
+	使用标准网络技术，例如 HTML、CSS 和 JavaScript，
+	此项目绝不附属于微软，且不应与微软操作系统或产品混淆，
 	这也不是 Windows365 cloud PC
-	本项目中微软、Windows和其他示范产品是微软公司的商标 -->
+	本项目中微软、Windows 和其他示范产品是微软公司的商标 -->
 	<link rel="stylesheet" href="./desktop.css">
 	<link rel="stylesheet" href="bootstrap-icons.css">
 	<!-- Apps style -->
@@ -43,11 +43,51 @@
 	<base target="_blank">
 
 	<title>Windows 12 网页版</title>
+	<meta name="description" content="Windows 12网页版是一个在线体验Windows 12操作系统的开源项目,使用 HTML、CSS 和 JavaScript 模拟 Windows 12 操作系统的界面与交互。">
+	<meta name="keywords" content="Windows 12, Windows 12网页版, 在线Windows 12">
+	<meta name="keywords" content="Windows 12, Windows 12网页版, 在线Windows 12">
 </head>
+<!-- 开发须知：
+为统一代码风格和增加可读性，为他人的便利，以下内容所有开发者、贡献者务必遵守，感谢配合
+对于HTML文件的规定
+1. 绝对禁止格式化本文档
+2. 对于id属性，除必须不使用id属性，尽量以class替代。若必须使用，切记：
+	1. 除非是body>*的节点，请不要使用单个单词的 id 名称
+	2. 所取的名字必须要有意义
+	3. 对于非body>*节点，请按照“父元素标志词-(...)-id名称”进行命名。如：taskmgr-search, setting-search等
+3. 对于class属性的规定：
+	1. 仅对必要的元素分配class
+	2. 所取的名字必须要有意义
+	3. 在使用css选择器时，请确保选择的元素准确定位无其他匹配
+4. 压行：
+	1. 对于文件中的svg图像，请务必压成一行
+	2. 对于连续3个以上的连续结束标签，视情况压为一行
+	3. 对于较短的多个并列雷同的项，每项视情况压为一行，如list中的内容
+	3. 对于#loginback前的内容，压行可以舍弃可读性
 
+一些全局性可用的内容，供使用和统一风格：
+.button 经典按钮，常与.a合用
+list 列表>
+	a 列表项，常与.a合用
+	.text 文本内容
+.buttons 按钮组>
+	.submit 确认，常与.a合用
+	.cancel 取消，常与.a合用
+.act 经典点击动画
+.a 现代设计的链接，可用于各种元素
+.input 输入框
+
+有以下函数可用：
+setData(k,v) 本地存储信息，永久可用
+localStorage.getItem(k) 与前者配合使用
+stop(event) 停止事件向父级传递
+showcm(event,id,arg) 显示右键菜单，使用方法：oncontextmenu="return showcm(event,'标识',arg);"
+
+欢迎补充~
+-->
 <body>
 	<audio src="media/startup.mp3" id="startup-music"></audio>
-	<div id="loadback" style="background-color:#000;width:100%;height:100%;z-index:105;position:absolute;transition:200ms;">
+	<div id="loadback" style="background-color:#000;width:100%;height:100%;z-index:105;position:absolute;transition:200ms;cursor: none;/*加载界面隐藏鼠标指针*/">
 		<style>
 			#loadback.hide {
 				opacity: 0;
@@ -57,7 +97,7 @@
 				fill: none;
 				stroke-width: 2px;
 				stroke-linecap: round;
-				animation: spin-infinite 2s linear 0s infinite normal none running;
+				animation: spin-infinite 2.5s linear 0s infinite normal none running;
 				transform-origin: 50% 50%;
 				transition: all .2s ease-in-out 0s;
 			}
@@ -92,7 +132,7 @@
 				document.getElementById('loadbacksvg').style.opacity = 1;
 				document.getElementById('loadbackloading').style.opacity = 1;
 			}, 100);
-			
+
 			const explorer = window.navigator.userAgent
 			if(explorer.indexOf('Edge') == -1 && explorer.indexOf('edge') == -1  && explorer.indexOf('Edg') == -1  && explorer.indexOf('edg') == -1 ){
 				window.alert('目前只支持Edge浏览器');
@@ -126,7 +166,9 @@
 					$('#loginback').css('display', 'none');
 					window.clearInterval(qwq);
 				}, 2000);
-				document.querySelector('audio#startup-music').play();
+				if(use_music){
+					document.querySelector('audio#startup-music').play();
+				}
 			}, 1000);
 			this.onclick = null;
 		">
@@ -145,7 +187,7 @@
 			<div id="s-m-user">
 				<svg viewBox="0,0,257,344" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" overflow="hidden"><defs><clipPath id="user-clip0"><rect x="382" y="195" width="257" height="344" /></clipPath><linearGradient x1="351.462" y1="233.56" x2="669.496" y2="500.422" gradientUnits="userSpaceOnUse" spreadMethod="reflect" id="user-fill1"><stop offset="0" stop-color="#A964C8" /><stop offset="0.35" stop-color="#A964C8" /><stop offset="0.87" stop-color="#2D8AD5" /><stop offset="1" stop-color="#2D8AD5" /></linearGradient><linearGradient x1="351.462" y1="233.56" x2="669.496" y2="500.422" gradientUnits="userSpaceOnUse" spreadMethod="reflect" id="user-fill2"><stop offset="0" stop-color="#A964C8" /><stop offset="0.35" stop-color="#A964C8" /><stop offset="0.87" stop-color="#2D8AD5" /><stop offset="1" stop-color="#2D8AD5" /></linearGradient></defs><g clip-path="url(#user-clip0)" transform="translate(-382 -195)"><path d="M637.755 433.872C642.215 515.221 579.577 537.983 508.011 537.983 436.444 537.983 376.676 507.833 383.513 437.11 383.109 425.234 389.59 414.133 398.634 409.891 413.82 402.768 444.753 402.936 507.484 402.997 570.214 403.058 609.164 402.279 621.521 407.947 633.878 413.614 638.011 424.609 637.755 433.872Z" fill="url(#user-fill1)" fill-rule="evenodd" /><path d="M422 285C422 235.847 461.623 196 510.5 196 559.377 196 599 235.847 599 285 599 334.153 559.377 374 510.5 374 461.623 374 422 334.153 422 285Z" fill="url(#user-fill2)" fill-rule="evenodd" /></g></svg>
 			</div>
-			<p style="width: 100%;text-align: center;margin: -50px 0 20px 0;font-size: 30px;">Administartor</p>
+			<p style="width: 100%;text-align: center;margin: -50px 0 20px 0;font-size: 30px;">Administrator</p>
 			<input type="text" class="input" win12_title="搜索" placeholder="在这里输入你要搜索的内容" onfocus="hide_startmenu();
 				$('#search-btn').addClass('show');
 				$('#search-win').addClass('show-begin');
@@ -173,7 +215,7 @@
 				</a>
 				<a oncontextmenu="return showcm(event, 'smlapp', ['run', '运行'])"
 					onclick="openapp('run');hide_startmenu();">
-					<img src="icon/run.png">
+					<img src="icon/run.svg">
 					<p>运行</p>
 				</a>
 				<a oncontextmenu="return showcm(event, 'smlapp', ['about', '关于Win12网页版'])"
@@ -203,12 +245,12 @@
 				</a>
 				<a oncontextmenu="return showcm(event, 'smlapp', ['pythonEditor', 'Python Editor'])"
 					onclick="openapp('pythonEditor');hide_startmenu()">
-					<img src="icon/pythonEditor.png">
+					<img src="icon/pythonEditor.svg">
 					<p>Python Editor</p>
 				</a>
 				<a oncontextmenu="return showcm(event, 'smlapp', ['python', 'Python 3.10.2'])"
 					onclick="openapp('python');hide_startmenu()">
-					<img src="icon/python.png">
+					<img src="icon/python.svg">
 					<p>Python 3.10.2</p>
 				</a>
 				<a oncontextmenu="return showcm(event, 'smlapp', ['terminal', '终端'])"
@@ -218,7 +260,7 @@
 				</a>
 				<a oncontextmenu="return showcm(event, 'smlapp', ['whiteboard', 'Whiteboard'])"
 					onclick="openapp('whiteboard');hide_startmenu();">
-					<img src="icon/whiteboard.png">
+					<img src="icon/whiteboard.svg">
 					<p>Whiteboard</p>
 				</a>
 				<a oncontextmenu="return showcm(event, 'smlapp', ['defender', 'Windows 安全中心'])"
@@ -236,6 +278,16 @@
 					onclick="openapp('vscode');hide_startmenu();">
 					<img src="icon/vscode.png">
 					<p>Visual Studio Code</p>
+				</a>
+				<a oncontextmenu="return showcm(event, 'smlapp', ['wsa', '适用于 Android™️ 的 Windows 子系统'])"
+					onclick="openapp('wsa');hide_startmenu();">
+					<img src="icon/wsa.png">
+					<p>适用于 Android™️ 的 Windows 子系统</p>
+				</a>
+				<a oncontextmenu="return showcm(event, 'smlapp', ['windows12', 'Windows 12'])"
+					onclick="openapp('windows12');hide_startmenu();">
+					<img src="icon/logo.svg">
+					<p>Windows 12</p>
 				</a>
 			</list>
 		</div>
@@ -338,9 +390,10 @@
 						<img src="icon/edge.svg">
 						<p>Microsoft Edge</p>
 					</a>
-					<a class="a sm-app enable">
-						<img src="icon/office.png">
-						<p>这是Office</p>
+					<a class="a sm-app enable" onclick="openapp('windows12');hide_startmenu();"
+						oncontextmenu="return showcm(event,'smapp',['windows12','Windows 12'])">
+						<img src="icon/logo.svg">
+						<p>Windows 12</p>
 					</a>
 					<a class="a sm-app enable terminal" onclick="openapp('terminal');hide_startmenu();"
 						oncontextmenu="return showcm(event,'smapp',['terminal','终端'])">
@@ -429,82 +482,93 @@
 					<div class="calc">
 						<div class="wg calc">
 							<div class="titbar">
-								<a win12_title="更多" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)"
-									class="a more notip" onclick="$('.wg.calc>.titbar>.menu').toggleClass('show')"><i
-										class="bi bi-three-dots"></i></a>
+								<a win12_title="更多" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)" class="a more notip" onclick="$('.wg.calc>.titbar>.menu').toggleClass('show')"><i class="bi bi-three-dots"></i></a>
 								<div class="menu">
-									<a win12_title="打开应用" class="a img openapp"
-										onclick="$('.wg.calc>.titbar>.menu').removeClass('show');hide_widgets();openapp('calc')"
-										onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)">
+									<a win12_title="打开应用" class="a img openapp" onclick="$('.wg.calc>.titbar>.menu').removeClass('show');hide_widgets();openapp('calc')" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)">
 										<img src="icon/calc.svg">
 									</a>
-									<a class="a move" win12_title="移动 (不可用)" onmouseenter="showdescp(event)"
-										onmouseleave="hidedescp(event)"><i class="bi bi-arrows-move"></i></a>
-									<a class="a addtodt" win12_title="添加到桌面 (不可用)" onmouseenter="showdescp(event)"
-										onmouseleave="hidedescp(event)"><i class="bi bi-box-arrow-in-right"></i></a>
-									<a class="a delete" win12_title="删除" onmouseenter="showdescp(event)"
-										onmouseleave="hidedescp(event)"
-										onclick="$('.wg.calc>.titbar>.menu').removeClass('show');widgets.widgets.remove('calc')"><i
-											class="bi bi-trash"></i></a>
+									<a class="a move" win12_title="移动" onmouseenter="showdescp(event)" onclick="if (!edit_mode) { editMode(); }" onmouseleave="hidedescp(event)"><i class="bi bi-arrows-move"></i></a>
+									<a class="a addtodt" win12_title="添加到桌面" onmouseenter="showdescp(event)" onclick="widgets.widgets.addToDesktop('calc')" onmouseleave="hidedescp(event)"><i class="bi bi-box-arrow-in-right"></i></a>
+									<a class="a delete" win12_title="删除" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)" onclick="$('.wg.calc>.titbar>.menu').removeClass('show');widgets.widgets.remove('calc')"><i class="bi bi-trash"></i></a>
 								</div>
 							</div>
-							<div class="content">
-								<input value="0"
-									onkeydown="if(event.keyCode == 13)$('*:not(.template)>*>.wg.calc>.content>.keyb>.ans').click()">
-								<a style="grid-area: pow;" class="b"
-									onclick="$('*:not(.template)>*>.wg.calc>.content>input')[0].value*=$('*:not(.template)>*>.wg.calc>.content>input').val()">𝑥²</a>
-								<a style="grid-area: sqrt;" class="b"
-									onclick="$('*:not(.template)>*>.wg.calc>.content>input').val(Math.sqrt($('*:not(.template)>*>.wg.calc>.content>input').val()))">√𝑥</a>
-								<a style="grid-area: c;" class="b"
-									onclick="$('*:not(.template)>*>.wg.calc>.content>input')[0].value='0'">C</a>
-								<a style="grid-area: jia;" class="b u" onclick="widgets.calc.add('+')">+</a>
-								<a style="grid-area: n7;" class="b" onclick="widgets.calc.add('7')">7</a>
-								<a style="grid-area: n8;" class="b" onclick="widgets.calc.add('8')">8</a>
-								<a style="grid-area: n9;" class="b" onclick="widgets.calc.add('9')">9</a>
-								<a style="grid-area: jian;" class="b u" onclick="widgets.calc.add('-')">-</a>
-								<a style="grid-area: n4;" class="b" onclick="widgets.calc.add('4')">4</a>
-								<a style="grid-area: n5;" class="b" onclick="widgets.calc.add('5')">5</a>
-								<a style="grid-area: n6;" class="b" onclick="widgets.calc.add('6')">6</a>
-								<a style="grid-area: cheng;" class="b u" onclick="widgets.calc.add('×')">×</a>
-								<a style="grid-area: n1;" class="b" onclick="widgets.calc.add('1')">1</a>
-								<a style="grid-area: n2;" class="b" onclick="widgets.calc.add('2')">2</a>
-								<a style="grid-area: n3;" class="b" onclick="widgets.calc.add('3')">3</a>
-								<a style="grid-area: chu;" class="b u" onclick="widgets.calc.add('÷')">÷</a>
-								<a style="grid-area: dot;" class="b" onclick="widgets.calc.add('.')">.</a>
-								<a style="grid-area: n0;" class="b" onclick="widgets.calc.add('0')">0</a>
-								<a style="grid-area: back;" class="b"
-									onclick="if($('*:not(.template)>*>.wg.calc>.content>input').val().length > 1) { $('*:not(.template)>*>.wg.calc>.content>input').val($('*:not(.template)>*>.wg.calc>.content>input')[0].value.substring(0,$('*:not(.template)>*>.wg.calc>.content>input')[0].value.length-1)); } else { $('*:not(.template)>*>.wg.calc>.content>input').val('0') }"><i
-										class="bi bi-backspace"></i></a>
-								<a style="grid-area: ans;" class="b ans u"
-									onclick="$('*:not(.template)>*>.wg.calc>.content>input')[0].value=eval($('*:not(.template)>*>.wg.calc>.content>input')[0].value.replace('÷', '/').replace('×', '*'))">
-									=</a>
+							<div class="content" onmousedown="widgetsMove(this.parentElement, event);" ontouchstart="widgetsMove(this.parentElement, event);">
+								<div class="container">
+									<input id="calc-input-widgets" readonly="true" value="0" onkeydown="
+									switch (event.key) {
+										case '+':
+											widgetCalculator.func_key(1);
+											widgetCalculator.check($('*:not(.template)>*>.wg.calc>.content>.jia')[0]);
+											break;
+										case '-':
+											widgetCalculator.func_key(2);
+											widgetCalculator.check($('*:not(.template)>*>.wg.calc>.content>.jian')[0]);
+											break;
+										case '*':
+											widgetCalculator.func_key(3);
+											widgetCalculator.check($('*:not(.template)>*>.wg.calc>.content>.cheng')[0]);
+											break;
+										case '/':
+											widgetCalculator.func_key(4);
+											widgetCalculator.check($('*:not(.template)>*>.wg.calc>.content>.chu')[0]);
+											break;
+										case '=':
+											widgetCalculator.eq();
+											break;
+										case 'Enter':
+											widgetCalculator.eq();
+											break;
+										case 'Backspace':
+											widgetCalculator.backspace();
+											break;
+										case '.':
+											widgetCalculator.point();
+											break;
+									}
+									if (!isNaN(event.key)) {
+										widgetCalculator.number_key(Number(event.key));
+									}
+								"></input>
+								</div>
+								<a style="grid-area: pow;" class="b" onclick="widgetCalculator.square()">𝑥²</a>
+								<a style="grid-area: sqrt;" class="b" onclick="widgetCalculator.squareRoot()">√𝑥</a>
+								<a style="grid-area: c;" class="b" onclick="widgetCalculator.clear_num()">C</a>
+								<a style="grid-area: jia;" class="b u jia" onclick="widgetCalculator.func_key(1); widgetCalculator.check(this);">+</a>
+								<a style="grid-area: n7;" class="b" onclick="widgetCalculator.number_key(7);">7</a>
+								<a style="grid-area: n8;" class="b" onclick="widgetCalculator.number_key(8);">8</a>
+								<a style="grid-area: n9;" class="b" onclick="widgetCalculator.number_key(9);">9</a>
+								<a style="grid-area: jian;" class="b u jian" onclick="widgetCalculator.func_key(2); widgetCalculator.check(this);">-</a>
+								<a style="grid-area: n4;" class="b" onclick="widgetCalculator.number_key(4);">4</a>
+								<a style="grid-area: n5;" class="b" onclick="widgetCalculator.number_key(5);">5</a>
+								<a style="grid-area: n6;" class="b" onclick="widgetCalculator.number_key(6);">6</a>
+								<a style="grid-area: cheng;" class="b u hceng" onclick="widgetCalculator.func_key(3); widgetCalculator.check(this);">×</a>
+								<a style="grid-area: n1;" class="b" onclick="widgetCalculator.number_key(1);">1</a>
+								<a style="grid-area: n2;" class="b" onclick="widgetCalculator.number_key(2);">2</a>
+								<a style="grid-area: n3;" class="b" onclick="widgetCalculator.number_key(3);">3</a>
+								<a style="grid-area: chu;" class="b u chu" onclick="widgetCalculator.func_key(4); widgetCalculator.check(this);">÷</a>
+								<a style="grid-area: dot;" class="b" onclick="widgetCalculator.point()">.</a>
+								<a style="grid-area: n0;" class="b" onclick="widgetCalculator.number_key(0);">0</a>
+								<a style="grid-area: back;" class="b" onclick="widgetCalculator.backspace()"><i class="bi bi-backspace"></i></a>
+								<a style="grid-area: ans;" class="b ans u" onclick="if(!widgetCalculator.eq()){widgetCalculator.clear_num(); shownotice('ZeroDivision')}">=</a>
 							</div>
 						</div>
 					</div>
 					<div class="weather">
 						<div class="wg weather">
 							<div class="titbar">
-								<a win12_title="更多" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)"
-									class="a more notip" onclick="$('.wg.weather>.titbar>.menu').toggleClass('show')"><i
-										class="bi bi-three-dots"></i></a>
+								<a win12_title="更多" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)" class="a more notip" onclick="$('.wg.weather>.titbar>.menu').toggleClass('show')"><i class="bi bi-three-dots"></i></a>
 								<div class="menu">
-									<a class="a move" win12_title="移动 (不可用)" onmouseenter="showdescp(event)"
-										onmouseleave="hidedescp(event)"><i class="bi bi-arrows-move"></i></a>
-									<a class="a addtotb" win12_title="添加到任务栏" onmouseenter="showdescp(event)"
-										onmouseleave="hidedescp(event)"
-										onclick="widgets.widgets.addToToolbar('weather')"><i
-											class="bi bi-menu-app"></i></a>
-									<a class="a delete" win12_title="删除" onmouseenter="showdescp(event)"
-										onmouseleave="hidedescp(event)"
-										onclick="$('.wg.weather>.titbar>.menu').removeClass('show');widgets.widgets.remove('weather')"><i
-											class="bi bi-trash"></i></a>
+									<a class="a move" win12_title="移动" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)" onclick="if (!edit_mode) { editMode() }"><i class="bi bi-arrows-move"></i></a>
+									<a class="a addtotb" win12_title="添加到任务栏" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)" onclick="widgets.widgets.addToToolbar('weather')"><i class="bi bi-menu-app"></i></a>
+									<a class="a addtodt" win12_title="添加到桌面" onmouseenter="showdescp(event)" onclick="widgets.widgets.addToDesktop('weather')" onmouseleave="hidedescp(event)"><i class="bi bi-box-arrow-in-right"></i></a>
+									<a class="a delete" win12_title="删除" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)" onclick="$('.wg.weather>.titbar>.menu').removeClass('show');widgets.widgets.remove('weather')"><i class="bi bi-trash"></i></a>
 								</div>
 							</div>
-							<div class="content">
+							<div class="content" onmousedown="widgetsMove(this.parentElement, event);" ontouchstart="widgetsMove(this.parentElement, event);">
 								<img class="img" />
 								<div class="text">
-									<p class="temperature">92℃</p>
-									<p class="detail">晴朗 体感温度 95℃</p>
+									<p class="temperature">--℃</p>
+									<p class="detail">-- 体感温度 --℃</p>
 								</div>
 							</div>
 						</div>
@@ -515,12 +579,13 @@
 								<a win12_title="更多" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)" class="a more notip" onclick="$('.wg.monitor>.titbar>.menu').toggleClass('show')"><i class="bi bi-three-dots"></i></a>
 								<div class="menu">
 									<a class="a chose" win12_title="切换监视器类型" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)" onclick="shownotice('widgets.monitor')"><i class="bi bi-arrow-left-right"></i></a>
-									<a class="a move" win12_title="移动 (不可用)" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)"><i class="bi bi-arrows-move"></i></a>
+									<a class="a move" win12_title="移动" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)" onclick="if (!edit_mode) { editMode(); }"><i class="bi bi-arrows-move"></i></a>
 									<a class="a addtotb" win12_title="添加到任务栏" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)" onclick="widgets.widgets.addToToolbar('monitor')"><i class="bi bi-menu-app"></i></a>
+									<a class="a addtodt" win12_title="添加到桌面" onmouseenter="showdescp(event)" onclick="widgets.widgets.addToDesktop('monitor')" onmouseleave="hidedescp(event)"><i class="bi bi-box-arrow-in-right"></i></a>
 									<a class="a delete" win12_title="删除" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)" onclick="$('.wg.monitor>.titbar>.menu').removeClass('show');widgets.widgets.remove('monitor')"><i class="bi bi-trash"></i></a>
 								</div>
 							</div>
-							<div class="content">
+							<div class="content" onmousedown="widgetsMove(this.parentElement, event);" ontouchstart="widgetsMove(this.parentElement, event);">
 								<div class="container">
 									<svg width="60px" height="60px">
 										<circle cx="30px" cy="30px" r="26px"></circle>
@@ -550,7 +615,7 @@
 				<p style="color: #7f7f7f;margin-right: 5px;margin-top: 2px;">注意: 新闻内容均不属实 </p>
 			</div>
 			<div class="content">
-				<div class="card" style="grid-column: 1/6;grid-row: 1/3;color: #fff;background: var(--bgul);background-position:-0px -278px;background-size: 100%;">
+				<div class="card" style="grid-column: 1/6;grid-row: 1/3;color: #fff;background: var(--bgul);background-position:0 -278px;background-size: 100%;">
 					<p class="tit" style="font-size: 20px;margin: 90px 0 0 30px;text-shadow: 0 0 8px #000;">Windows12 v6.0 发布</p>
 					<a class="a" style="margin: 5px 0 0 50px;font-size: 17px;color: #9dd0fb;text-shadow: 0 0 3px #000;" onclick="hide_widgets();
 					openapp('about');if($('.window.about').hasClass('min'))minwin('about');
@@ -619,7 +684,7 @@
 			</div>
 		</div>
 		<div class="chat">
-			<a class="a btn" onclick="copilot.init()">开始对话</a>
+			<a class="a btn button" onclick="copilot.init()">开始对话</a>
 			<p style="margin-top: 20px;">注意:目前后端发生了一点小问题，大概率不能使用，若能使用当然就运气好了。</p>
 		</div>
 		<div class="inputbox disable">
@@ -852,31 +917,32 @@
 			<i class="bi bi-chevron-down"></i>
 		</div>
 	</div>
-	<div id="desktop" oncontextmenu="return showcm(event,'desktop',null)">
-		<div ondblclick="openapp('explorer');" ontouchstart="openapp('explorer');" win12_title="显示连接到此计算机的驱动器和硬件。">
+	<div id="desktop">
+		<div ondblclick="openapp('explorer');" ontouchstart="openapp('explorer');" win12_title="显示连接到此计算机的驱动器和硬件。" oncontextmenu="return showcm(event,'desktop.icon',['explorer',-1]);" appname="explorer">
 			<img src="apps/icons/explorer/thispc.svg">
 			<p>此电脑</p>
 		</div>
-		<div class="b" ondblclick="openapp('setting');" ontouchstart="openapp('setting');">
+		<div class="b" ondblclick="openapp('setting');" ontouchstart="openapp('setting');" oncontextmenu="return showcm(event,'desktop.icon',['setting',-1]);" appname="setting">
 			<img src="icon/setting.svg">
 			<p>设置</p>
 		</div>
-		<div class="b" ondblclick="openapp('about');" ontouchstart="openapp('about');">
+		<div class="b" ondblclick="openapp('about');" ontouchstart="openapp('about');" oncontextmenu="return showcm(event,'desktop.icon',['about',-1]);" appname="about">
 			<img src="icon/about.svg">
 			<p>关于 Win12 网页版</p>
 		</div>
-		<div class="b" ondblclick="openapp('edge');" ontouchstart="openapp('edge');">
+		<div class="b" ondblclick="openapp('edge');" ontouchstart="openapp('edge');" oncontextmenu="return showcm(event,'desktop.icon',['edge',-1]);" appname="edge">
 			<img src="icon/edge.svg">
 			<p>Microsoft Edge</p>
 		</div>
 		<div class="b" ondblclick="shownotice('feedback');" ontouchstart="shownotice('feedback');;">
 			<img src="icon/feedback.svg">
-			<p>发送反馈</p>
+			<p>反馈中心</p>
 		</div>
 		<span class="choose">
 		</span>
+		<p style="background-color: rgba(11,45,14,0);z-index:1;position: absolute;top:0px;left:0px;height:100%;width:100%" oncontextmenu="return showcm(event,'desktop');"></p>
 	</div>
-	<div id="cm">
+	<div id="cm" tabindex="-1">
 		<input class="foc">
 		<list>
 		</list>
@@ -887,6 +953,16 @@
 	</div>
 	<div id="descp">
 
+	</div>
+	<div id="desktop-widgets">
+		<div class="widgets-move"></div>
+	</div>
+	<div id="desktop-editbar-container">
+		<div id="desktop-editbar">
+			<div onclick="shownotice('widgets.desktop');"><i class="bi bi-plus"></i> 添加小组件</div>
+			<div onclick="openapp('setting');$('#win-setting > div.menu > list > a.enable.appearance')[0].click();"><i class="bi bi-brush"></i> 个性化</div>
+			<div onclick="editMode();" win12_title="退出编辑模式"><i class="bi bi-x-lg"></i></div>
+		</div>
 	</div>
 	<p id="translater" style="display: none;"></p>
 	<div id="notice-back">
@@ -926,31 +1002,31 @@
 				</button>
 				<ul class="nav-list">
 					<li class="nav-list-item active">
-						<a class="nav-list-link" href="#">
+						<a class="nav-list-link">
 							<icon></icon>
 							主页
 						</a>
 					</li>
 					<li class="nav-list-item">
-						<a class="nav-list-link" href="#">
+						<a class="nav-list-link">
 							<icon></icon>
 							病毒威胁与防护
 						</a>
 					</li>
 					<li class="nav-list-item">
-						<a class="nav-list-link" href="#">
+						<a class="nav-list-link">
 							<icon></icon>
 							账户防护
 						</a>
 					</li>
 					<li class="nav-list-item">
-						<a class="nav-list-link" href="#">
+						<a class="nav-list-link">
 							<icon></icon>
 							防火墙和网络防护
 						</a>
 					</li>
 					<li class="nav-list-item">
-						<a class="nav-list-link" href="#">
+						<a class="nav-list-link">
 							<icon></icon>
 							设备安全性
 						</a>
@@ -1193,27 +1269,11 @@
 					data: data,
 					options: options
 				});
-
-				document.querySelector('.open-right-area').addEventListener('click', function () {
-					document.querySelector('.app-right').classList.add('show');
-				});
-
-				document.querySelector('.close-right').addEventListener('click', function () {
-					document.querySelector('.app-right').classList.remove('show');
-				});
-
-				document.querySelector('.menu-button').addEventListener('click', function () {
-					document.querySelector('.app-left').classList.add('show');
-				});
-
-				document.querySelector('.close-menu').addEventListener('click', function () {
-					document.querySelector('.app-left').classList.remove('show');
-				});
-
 			</script>
 		</div>
 		<!-- partial -->
 		<script src='https://cdns.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js'></script>
+		<script src="https://unpkg.com/big.js@5.2.2/big.min.js"></script>
 	</div>
 	<div id="window-fill"></div>
 	<div class="window setting">
@@ -1236,30 +1296,69 @@
 					<svg viewBox="0,0,257,344" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" overflow="hidden"><defs><clipPath id="user-clip1"><rect x="382" y="195" width="257" height="344" /></clipPath><linearGradient x1="351.462" y1="233.56" x2="669.496" y2="500.422" gradientUnits="userSpaceOnUse" spreadMethod="reflect" id="user-fill3"><stop offset="0" stop-color="#A964C8" /><stop offset="0.35" stop-color="#A964C8" /><stop offset="0.87" stop-color="#2D8AD5" /><stop offset="1" stop-color="#2D8AD5" /></linearGradient><linearGradient x1="351.462" y1="233.56" x2="669.496" y2="500.422" gradientUnits="userSpaceOnUse" spreadMethod="reflect" id="user-fill4"><stop offset="0" stop-color="#A964C8" /><stop offset="0.35" stop-color="#A964C8" /><stop offset="0.87" stop-color="#2D8AD5" /><stop offset="1" stop-color="#2D8AD5" /></linearGradient></defs><g clip-path="url(#user-clip1)" transform="translate(-382 -195)"><path d="M637.755 433.872C642.215 515.221 579.577 537.983 508.011 537.983 436.444 537.983 376.676 507.833 383.513 437.11 383.109 425.234 389.59 414.133 398.634 409.891 413.82 402.768 444.753 402.936 507.484 402.997 570.214 403.058 609.164 402.279 621.521 407.947 633.878 413.614 638.011 424.609 637.755 433.872Z" fill="url(#user-fill3)" fill-rule="evenodd" /><path d="M422 285C422 235.847 461.623 196 510.5 196 559.377 196 599 235.847 599 285 599 334.153 559.377 374 510.5 374 461.623 374 422 334.153 422 285Z" fill="url(#user-fill4)" fill-rule="evenodd" /></g></svg>
 					<div>
 						<p>瓶盖</p>
-						<p>tanjingyuan@win12.com</p>
+						<p>tanjingyuan@windows12.com</p>
 					</div>
 				</a>
 				<input type="text" class="input" placeholder="查找设置" style="padding-left: 30px;">
 				<input-before class="bi bi-search"></input-before>
-				<list class="focs">
-					<a class="enable system check" onclick="apps.setting.page('system')"><img
-							src="apps/icons/setting/system.png">系统</a>
-					<a><img src="apps/icons/setting/blueteeth.png">蓝牙和其他设备</a>
-					<a><img src="apps/icons/setting/network.png">网络和 Internet</a>
-					<a class="enable appearance" onclick="apps.setting.page('appearance')"><img
-							src="apps/icons/setting/personal.png">个性化</a>
-					<a><img src="apps/icons/setting/apps.png">应用</a>
-					<a><img src="apps/icons/setting/user.png">账户</a>
-					<a><img src="apps/icons/setting/time.png">时间和语言</a>
-					<a><img src="apps/icons/setting/game.png">游戏</a>
+				<list class="focs"><!--压缩行数-->
+					<a class="enable home check" onclick="apps.setting.page('home')"><img src="apps/icons/setting/home.png">主页</a><!-- 主页  by lh11117 @github.com (20239/31~2023/10/1) -->
+					<a class="enable system" onclick="apps.setting.page('system')"><img src="apps/icons/setting/system.png">系统</a>
+					<a class="enable blueteeth" onclick="apps.setting.page('blueteeth')"><img src="apps/icons/setting/blueteeth.png">蓝牙和其他设备</a><!-- 蓝牙与设备  @Junchen Yi 2023-9-9-->
+					<a class="enable network" onclick="apps.setting.page('network')"><img src="apps/icons/setting/network.png">网络和 Internet</a><!-- 网络和 Internet  @Junchen Yi 2023-9-10-->
+					<a class="enable appearance" onclick="apps.setting.page('appearance')"><img src="apps/icons/setting/personal.png">个性化</a>
+					<a class="enable apps" onclick="apps.setting.page('apps')"><img src="apps/icons/setting/apps.png">应用</a><!-- 应用  @Junchen Yi 2023-9-11-->
+					<a class="enable user" onclick="apps.setting.page('user')"><img src="apps/icons/setting/user.png">账户</a><!-- 账户  @Junchen Yi 2023-9-11-->
+					<a class="enable time" onclick="apps.setting.page('time')"><img src="apps/icons/setting/time.png">时间和语言</a><!-- 时间  @Junchen Yi 2023-9-17-->
+					<a class="enable game" onclick="apps.setting.page('game')"><img src="apps/icons/setting/game.png">游戏</a>
 					<a><img src="apps/icons/setting/help.png">辅助功能</a>
-					<a><img src="apps/icons/setting/safe.png">隐私和安全性</a>
+					<a class="enable safe" onclick="apps.setting.page('safe')"><img src="apps/icons/setting/safe.png">隐私和安全性</a>
 					<a class="enable update" onclick="apps.setting.page('update')"><img src="apps/icons/setting/update.png">Windows 更新</a>
 					<span class="focs"></span>
 				</list>
 			</div>
 			<div class="page">
-				<div class="cnt system show">
+				<!-- 主页  begin -->
+				<div class="cnt home show">
+					<p class="title">主页</p>
+					<div style="display: flex;margin: 25px;">
+						<p class="s-icon" style="font-size: 70px;margin: -8px 10px 0px 20px;"></p>
+						<div>
+							<p style="font-size: 28px;text-overflow: ellipsis;white-space: nowrap;">Desktop-PingGai</p>
+							<p style="color: #7f7f7f;margin:-8px 0 -5px 0;">瓶盖</p>
+							<a style="color: var(--href);text-decoration: underline !important;;" class="a">重命名</a>
+						</div>
+					</div>
+					<div class="setting-card">
+						<p style="padding: 10px 15px;"><icon><img src="apps/icons/setting/ms.png"></icon><br>所有功能尽在 Microsoft 账户<br><span style="font-size: 14px;color:var(--text2)">登录后，即可在设备上使用你《最喜爱》的 Microsoft 应用和服务。可以备份设备、让设备更安全，并使用 Microsoft 365 应用版和云储存空间。</span><br><img src="apps/icons/setting/ms365.png"></p>
+						<div style="padding:  10px 15px;">
+							<a class="a button" onclick="window.location.href='./bluescreen.html?code=YOU_CAN_NOT_SIGN_IN_YOUR_MICROSOFT_ACCOUNT'" win12_title="BSOD is coming!">登录</a>
+						</div>
+					</div>
+					<div class="setting-card">
+						<p style="padding: 10px 15px;">推荐设置<br><span style="font-size: 14px;color:var(--text2)">最近使用的和常用的设置</span></p>
+						<div class="setting-list">
+							<a><icon><i class="bi bi-power"></i></icon><div><p>电源和电池</p><p></p></div><i class="bi bi-chevron-right"></i></a>
+							<a><icon><i class="bi bi-window-desktop"></i></icon><div><p>任务栏</p><p></p></div><i class="bi bi-chevron-right"></i></a>
+							<a><icon><i class="bi bi-camera"></i></icon><div><p>摄像头</p><p></p></div><i class="bi bi-chevron-right"></i></a>
+						</div>
+					</div>
+					<div class="setting-card">
+						<p style="padding: 10px 15px;">蓝牙设备<br><span style="font-size: 14px;color:var(--text2)">管理、添加和删除设备</span></p>
+						<div class="setting-list">
+							<a onclick="$('#win-setting>.menu>list>a.blueteeth')[0].click();"><icon></icon><div><p>蓝牙</p><p></p></div><i class="bi bi-chevron-right"></i></a>
+						</div>
+					</div>
+					<div class="setting-card">
+						<p style="padding: 10px 15px;">个性化设备</p>
+						<div class="setting-list">
+							<a onclick="$('#win-setting>.menu>list>a.appearance')[0].click();"><icon><i class="bi bi-palette"></i></icon><div><p>个性化</p><p></p></div><i class="bi bi-chevron-right"></i></a>
+						</div>
+					</div>
+					<div style="height: 60px;"></div>
+				</div>
+				<!-- 主页  end -->
+				<div class="cnt system">
 					<p class="title">系统</p>
 					<div style="display: flex;">
 						<p class="s-icon" style="font-size: 70px;margin: -8px 10px 0px 20px;"></p>
@@ -1286,6 +1385,52 @@
 						<a><icon></icon><div><p>关于</p><p>设备规格、重命名电脑、Windows 规格</p></div><i class="bi bi-chevron-right"></i></a>
 					</div>
 				</div>
+				<!-- 蓝牙与设备  @Junchen Yi 2023-9-9-->
+				<div class="cnt blueteeth">
+					<p class="title">蓝牙与设备</p>
+					<div style="display: flex;">
+						<p class="s-icon" style="font-size: 70px;margin: -8px 10px 0px 20px;"></p>
+						<div>
+							<p style="color: #7f7f7f;margin:-8px 0 -5px 0;">我的蓝牙名称</p>
+							<p style="font-size: 28px;text-overflow: ellipsis;white-space: nowrap;">Blueteeth-PingGai</p>
+							<p class="blueteeth-tips-text" style="color: #7f7f7f;margin:-8px 0 -5px 0;">这是您在其他设备的蓝牙列表中的名称</p>
+							<a style="color: var(--href);text-decoration: underline !important;;" class="a">重命名</a>
+						</div>
+					</div>
+					<div class="setting-list">
+						<a><icon></icon><div><p>连接</p><p>搜索新的蓝牙设备</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>设备</p><p>蓝牙鼠标、键盘、其他蓝牙设备</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>打印机与扫描仪</p><p>设置打印机、排除故障</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>手机</p><p>访问Android设备的照片、文件等</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>触控板</p><p>点击、滚动、缩放、手势</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>触控笔与触摸</p><p>设置触控笔、设置触控屏幕</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>USB设备</p><p>通过USB连接更多设备...</p></div><i class="bi bi-chevron-right"></i></a>
+					</div>
+				</div>
+				<!-- 蓝牙与设备 end -->
+				<!-- 网络和 Internet  @Junchen Yi 2023-9-10-->
+				<div class="cnt network">
+					<p class="title">网络和 Internet</p>
+					<div style="display: flex;">
+						<p class="s-icon" style="font-size: 70px;margin: -8px 15px 0px 20px;"></p>
+						<div>
+							<p style="color: #7f7f7f;margin:-8px 0 -5px 0;">Wifi 已连接</p>
+							<p style="font-size: 28px;text-overflow: ellipsis;white-space: nowrap;">PingGai - 5G</p>
+							<a style="color: var(--href);text-decoration: underline !important;;" class="a">断开</a>
+						</div>
+					</div>
+					<div class="setting-list">
+						<a><icon></icon><div><p>无线局域网</p><p>连接、管理已连接网络</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>移动网络 未连接</p><p>通过移动网络访问互联网</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>VPN</p><p>添加、连接、管理</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>移动互联网</p><p>通过本机移动网络共享互联网</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>飞行模式</p><p>暂停所有通讯与设备连接</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>代理</p><p>用于 Wifi 和以太网的代理服务器</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>拨号</p><p>通过 Wifi 网络拨打电话</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>高级设置</p><p>查看所有网络适配器、网络重置</p></div><i class="bi bi-chevron-right"></i></a>
+					</div>
+				</div>
+				<!-- 网络和 Internet end  @Junchen Yi -->
 				<div class="cnt appearance">
 					<p class="title">个性化</p>
 					<div class="setting-list" style="margin-top: 10px;">
@@ -1321,7 +1466,7 @@
 									setData('color2',$('div.app-color>div>input.theme2inp').val())">应用</a>
 							</div>
 						</div>
-						<a class="dp theme" onclick="$('.dp.theme').toggleClass('show');if ($('#set-theme>.a').length) return;apps.setting.theme_get();">
+						<a class="dp theme" onclick="$('.dp.theme').toggleClass('show');if (!($('#set-theme>.a').length)) apps.setting.theme_get();">
 							<icon>&#xE771;</icon><div><p>主题</p><p>设置 Windows 的主题 想要<span class="a jump" win12_title="https://github.com/tjy-gitnub/win12-theme" onclick="window.open('https://github.com/tjy-gitnub/win12-theme','_blank')">上传自己的主题</span>?</p></div><i class="bi bi-chevron-down"></i></a>
 						<div class="dp theme" id="set-theme">
 							<loading>
@@ -1334,44 +1479,150 @@
 						</div>
 						<div class="border-radius"><icon></icon><div><p>圆角</p><p>设置系统界面中是否启用圆角</p></div>
 							<div class="alr">
-								<a class="a checkbox checked" onclick="$(this).toggleClass('checked');$(':root').toggleClass('nobr')"></a>
+								<a class="a checkbox checked" id="sys_setting_1" onclick="$(this).toggleClass('checked');$(':root').toggleClass('nobr');sys_setting[0]=1-sys_setting[0];saveDesktop();"></a>
 							</div>
 						</div>
 						<div class="border-radius"><icon></icon><div><p>动画</p><p>系统界面元素过渡动画</p></div>
 							<div class="alr">
-								<a class="a checkbox checked" onclick="$(this).toggleClass('checked');$(':root').toggleClass('notrans')"></a>
+								<a class="a checkbox checked" id="sys_setting_2" onclick="$(this).toggleClass('checked');$(':root').toggleClass('notrans');sys_setting[1]=1-sys_setting[1];saveDesktop();"></a>
 							</div>
 						</div>
 						<div class="border-radius"><icon></icon><div><p>阴影</p><p>为系统界面元素添加阴影效果</p></div>
 							<div class="alr">
-								<a class="a checkbox checked" onclick="$(this).toggleClass('checked');$(':root').toggleClass('nosd')"></a>
+								<a class="a checkbox checked" id="sys_setting_3" onclick="$(this).toggleClass('checked');$(':root').toggleClass('nosd');sys_setting[2]=1-sys_setting[2];saveDesktop();"></a>
 							</div>
 						</div>
 						<div class="border-radius"><icon></icon><div><p>多窗口透明</p><p>为所有窗口开启透明效果，而不是仅用于焦点窗口 <span class="a jump" win12_title="开启后将占用大量GPU,可能造成卡顿">详细</span></p></div>
 							<div class="alr">
-								<a class="a checkbox" onclick="$(this).toggleClass('checked');$(':root').toggleClass('moreblur')"></a>
+								<a class="a checkbox" id="sys_setting_4" onclick="$(this).toggleClass('checked');$(':root').toggleClass('moreblur');sys_setting[3]=1-sys_setting[3];saveDesktop();"></a>
 							</div>
 						</div>
 						<div class="border-radius"><icon>&#xE621;</icon><div><p>Mica效果 (实验)</p><p>为焦点窗口开启mica效果 <a class="a jump" onclick="shownotice('feedback')">反馈</a></p></div>
 							<div class="alr">
-								<a class="a checkbox" onclick="$(this).toggleClass('checked');$(':root').toggleClass('mica')"></a>
+								<a class="a checkbox" id="sys_setting_5" onclick="$(this).toggleClass('checked');$(':root').toggleClass('mica');sys_setting[4]=1-sys_setting[4];saveDesktop();"></a>
 							</div>
 						</div>
+						<div class="border-radius"><icon><i class="bi bi-music-note-beamed"></i></icon><div><p>开机音乐</p><p>是否启用开机音乐</p></div>
+							<div class="alr">
+								<a class="a checkbox checked" id="sys_setting_6" onclick="sys_setting[5]=1-sys_setting[5];document.getElementById('sys_setting_6').setAttribute('class', 'a checkbox' + (sys_setting[5]?' checked':''));saveDesktop();"></a>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- 应用  @Junchen Yi 2023-9-11-->
+				<div class="cnt apps">
+					<p class="title">应用</p>
+					<div class="setting-list">
+						<a><icon></icon><div><p>应用程序和功能</p><p>已安装的应用程序、应用程序执行别名</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>默认应用程序</p><p>文件和链接类型的默认值，其他默认值</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>离线地图</p><p>下载、存储位置、地图更新</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>可选内容</p><p>为您的设备提供额外功能</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>网站应用程序</p><p>可以在应用程序而不是浏览器中打开的网站</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>视频</p><p>视频格式调整、HDR 流媒体、电池选项</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>启动项</p><p>登录时自动启动的应用程序</p></div><i class="bi bi-chevron-right"></i></a>
+					</div>
+				</div>
+				<!-- 应用 end  @Junchen Yi -->
+				<!-- 账户  @Junchen Yi 2023-9-11-->
+				<div class="cnt user">
+					<p class="title">账户</p>
+					<div style="display: flex;">
+						<a class="a user" style="display:flex">
+							<svg viewBox="0,0,257,344" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width: 100px;height: 100px;background-color: var(--hover-b);/* box-shadow: 0 0 10px var(--sd); */width: 60px;width: 60px;height: 60px;border-radius: 50%;padding: 11px;margin-right: 15px;margin-bottom: 15px;" overflow="hidden"><defs><clipPath id="user-clip1"><rect x="382" y="195" width="257" height="344" /></clipPath><linearGradient x1="351.462" y1="233.56" x2="669.496" y2="500.422" gradientUnits="userSpaceOnUse" spreadMethod="reflect" id="user-fill3"><stop offset="0" stop-color="#A964C8" /><stop offset="0.35" stop-color="#A964C8" /><stop offset="0.87" stop-color="#2D8AD5" /><stop offset="1" stop-color="#2D8AD5" /></linearGradient><linearGradient x1="351.462" y1="233.56" x2="669.496" y2="500.422" gradientUnits="userSpaceOnUse" spreadMethod="reflect" id="user-fill4"><stop offset="0" stop-color="#A964C8" /><stop offset="0.35" stop-color="#A964C8" /><stop offset="0.87" stop-color="#2D8AD5" /><stop offset="1" stop-color="#2D8AD5" /></linearGradient></defs><g clip-path="url(#user-clip1)" transform="translate(-382 -195)"><path d="M637.755 433.872C642.215 515.221 579.577 537.983 508.011 537.983 436.444 537.983 376.676 507.833 383.513 437.11 383.109 425.234 389.59 414.133 398.634 409.891 413.82 402.768 444.753 402.936 507.484 402.997 570.214 403.058 609.164 402.279 621.521 407.947 633.878 413.614 638.011 424.609 637.755 433.872Z" fill="url(#user-fill3)" fill-rule="evenodd" /><path d="M422 285C422 235.847 461.623 196 510.5 196 559.377 196 599 235.847 599 285 599 334.153 559.377 374 510.5 374 461.623 374 422 334.153 422 285Z" fill="url(#user-fill4)" fill-rule="evenodd" /></g></svg>
+							<div style="margin-top: 5px;">
+								<p>瓶盖</p>
+								<p>tanjingyuan@Windows12.com</p>
+							</div>
+						</a>
+					</div>
+					<div class="setting-list">
+						<a><icon></icon><div><p>您的微软账户</p><p>订阅、账单等</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>您的账户信息</p><p>电子邮件、日历和联系人使用的帐户</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>登陆选项</p><p>Windows Hello、安全密钥、密码、动态锁</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>电子邮件和账户</p><p>电子邮件、日历和联系人使用的帐户</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>家庭</p><p>管理您的家庭群组、编辑帐户类型和设备权限</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>Windows 备份</p><p>备份您的文件、应用程序、首选项以跨设备恢复它们</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>其他用户</p><p>设备访问、工作或学校用户、信息亭分配的访问</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>访问工作或学校账户</p><p>电子邮件、应用程序和网络等组织资源</p></div><i class="bi bi-chevron-right"></i></a>
+					</div>
+				</div>
+				<!-- 账户 end -->
+				<!-- 时间  @Junchen Yi 2023-9-17-->
+				<div class="cnt time">
+					<p class="title">时间和语言</p>
+					<div class="settingTimeItem">
+						<p class="settingTimeTitle">当前设备时间：</p>
+						<span class="settingTime"></span>
+					</div>
+					<div class="setting-list">
+						<a><icon></icon><div><p>日期与时间</p><p>时区、自动时钟设置、日历显示</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>语言和地区</p><p>Windows 和某些应用程序根据您所在的地区设置日期和时间的格式</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>输入</p><p>触摸键盘、文本建议、首选项</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon></icon><div><p>朗读与音频输入</p><p>语音语言、语音识别麦克风设置、声音</p></div><i class="bi bi-chevron-right"></i></a>
+						<a class="selectLanguageA"><icon></icon><div><p>Windows 显示语言</p><p>设置和文件资源管理器等 Windows 功能将以这种语言显示</p></div>
+							<select class="languageSelect bi-chevron-right">
+								<option value="en">English</option>
+								<option value="es">Español (Spanish)</option>
+								<option value="fr">Français (French)</option>
+								<option value="de">Deutsch (German)</option>
+								<option value="zh" selected>中文 (Chinese)</option>
+								<option value="ja">日本語 (Japanese)</option>
+								<option value="ko">한국어 (Korean)</option>
+								<option value="ar">العربية (Arabic)</option>
+								<option value="ru">Русский (Russian)</option>
+								<option value="pt">Português (Portuguese)</option>
+								<option value="it">Italiano (Italian)</option>
+								<option value="nl">Nederlands (Dutch)</option>
+								<option value="hi">हिन्दी (Hindi)</option>
+								<option value="sv">Svenska (Swedish)</option>
+								<option value="fi">Suomi (Finnish)</option>
+								<option value="da">Dansk (Danish)</option>
+								<option value="no">Norsk (Norwegian)</option>
+								<option value="tr">Türkçe (Turkish)</option>
+								<option value="pl">Polski (Polish)</option>
+								<option value="th">ภาษาไทย (Thai)</option>
+							</select>
+						</a>
+					</div>
+				</div>
+				<!-- 时间 end -->
+				<!-- 游戏 begin -->
+				<div class="cnt game">
+					<p class="title">游戏</p>
+					<div class="setting-list">
+						<a><icon><i class="bi bi-xbox"></i></icon><div><p>Xbox Game Bar</p><p>控制器和键盘快捷方式</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon><i class="bi bi-camera"></i></icon><div><p>摄像</p><p>保存位置，录制首选项</p></div><i class="bi bi-chevron-right"></i></a>
+						<a><icon><i class="bi bi-controller"></i></icon><div><p>游戏模式</p><p>优化电脑以便畅玩</p></div><i class="bi bi-chevron-right"></i></a>
+					</div>
+				</div>
+				<!-- 游戏 end -->
+				<div class="cnt safe">
+					<p class="title">隐私和安全性</p>
+					<div class="setting-list">
+						<a onclick="localStorage.setItem('desktop','[]');setIcon();"><icon><i class="bi bi-trash3"></i></icon><div><p>清除桌面图标</p><p>这将清除用户自定义的所有图标</p></div><i class="bi bi-chevron-right"></i></a>
 					</div>
 				</div>
 				<div class="cnt update">
 					<p class="title">Windows 更新</p>
 					<div class="lo">
-						<svg viewBox="0 0 65 65"version="1.1"id="svg5"xmlns:xlink="http://www.w3.org/1999/xlink"xmlns="http://www.w3.org/2000/svg"xmlns:svg="http://www.w3.org/2000/svg"><defs id="defs2"><linearGradient id="linearGradient12966"><stop style="stop-color:#1946ff;stop-opacity:1;"offset="0"id="stop12962"/><stop style="stop-color:#3eddff;stop-opacity:1;"offset="1"id="stop12964"/></linearGradient><linearGradient id="linearGradient10659"><stop style="stop-color:#6c00e8;stop-opacity:1;"offset="0"id="stop10655"/><stop style="stop-color:#d05ed6;stop-opacity:1;"offset="1"id="stop10657"/></linearGradient><linearGradient xlink:href="#linearGradient10659"id="linearGradient10661"x1="40.558044"y1="64.876854"x2="103.16348"y2="64.876854"gradientUnits="userSpaceOnUse"/><linearGradient xlink:href="#linearGradient10659"id="linearGradient12869"gradientUnits="userSpaceOnUse"x1="40.558044"y1="64.876854"x2="103.16348"y2="64.876854"/><linearGradient xlink:href="#linearGradient10659"id="linearGradient12871"gradientUnits="userSpaceOnUse"x1="40.558044"y1="64.876854"x2="103.16348"y2="64.876854"/><linearGradient xlink:href="#linearGradient12966"id="linearGradient12968"x1="40.558044"y1="64.876854"x2="103.16348"y2="64.876854"gradientUnits="userSpaceOnUse"/><linearGradient xlink:href="#linearGradient12966"id="linearGradient13788"gradientUnits="userSpaceOnUse"x1="40.558044"y1="64.876854"x2="103.16348"y2="64.876854"/><linearGradient xlink:href="#linearGradient12966"id="linearGradient13790"gradientUnits="userSpaceOnUse"x1="40.558044"y1="64.876854"x2="103.16348"y2="64.876854"/></defs><g id="layer1"><g id="g8420"transform="rotate(-173.25016,50.599831,57.584909)"style="stroke:url(#linearGradient10661)"><path style="fill:none;stroke:url(#linearGradient12869);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"id="path234-2"d="M 43.058046,79.121117 A 28.487005,28.487005 0 0 1 66.602472,51.066164 28.487005,28.487005 0 0 1 98.316952,69.38588"/><path style="fill:none;stroke:url(#linearGradient12871);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"d="M 85.756154,73.849626 100.66351,72.185133 98.999027,57.27777"id="path1617-6"/></g><g id="g8420-2"transform="rotate(6.74984,459.81282,-281.39813)"style="stroke:url(#linearGradient12968);stroke-opacity:1"><path style="fill:none;stroke:url(#linearGradient13788);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"id="path234-2-2"d="M 43.058046,79.121117 A 28.487005,28.487005 0 0 1 66.602472,51.066164 28.487005,28.487005 0 0 1 98.316952,69.38588"/><path style="fill:none;stroke:url(#linearGradient13790);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"d="M 85.756154,73.849626 100.66351,72.185133 98.999027,57.27777"id="path1617-6-0"/></g></g></svg>
-						<div>
-							<p>Windows 12 目前是最新版本</p>
-							<p class="detail">有更新可用时将会在此显示(有点困难，以后再完善，目前不能用)</p>
+						<svg viewBox="0 0 65 65"version="1.1" id="svg5" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg"><defs id="defs2"><linearGradient id="linearGradient12966"><stop style="stop-color:#1946ff;stop-opacity:1;"offset="0"id="stop12962"/><stop style="stop-color:#3eddff;stop-opacity:1;"offset="1"id="stop12964"/></linearGradient><linearGradient id="linearGradient10659"><stop style="stop-color:#6c00e8;stop-opacity:1;"offset="0"id="stop10655"/><stop style="stop-color:#d05ed6;stop-opacity:1;"offset="1"id="stop10657"/></linearGradient><linearGradient xlink:href="#linearGradient10659"id="linearGradient10661"x1="40.558044"y1="64.876854"x2="103.16348"y2="64.876854"gradientUnits="userSpaceOnUse"/><linearGradient xlink:href="#linearGradient10659"id="linearGradient12869"gradientUnits="userSpaceOnUse"x1="40.558044"y1="64.876854"x2="103.16348"y2="64.876854"/><linearGradient xlink:href="#linearGradient10659"id="linearGradient12871"gradientUnits="userSpaceOnUse"x1="40.558044"y1="64.876854"x2="103.16348"y2="64.876854"/><linearGradient xlink:href="#linearGradient12966"id="linearGradient12968"x1="40.558044"y1="64.876854"x2="103.16348"y2="64.876854"gradientUnits="userSpaceOnUse"/><linearGradient xlink:href="#linearGradient12966"id="linearGradient13788"gradientUnits="userSpaceOnUse"x1="40.558044"y1="64.876854"x2="103.16348"y2="64.876854"/><linearGradient xlink:href="#linearGradient12966"id="linearGradient13790"gradientUnits="userSpaceOnUse"x1="40.558044"y1="64.876854"x2="103.16348"y2="64.876854"/></defs><g id="layer1"><g id="g8420"transform="rotate(-173.25016,50.599831,57.584909)"style="stroke:url(#linearGradient10661)"><path style="fill:none;stroke:url(#linearGradient12869);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"id="path234-2"d="M 43.058046,79.121117 A 28.487005,28.487005 0 0 1 66.602472,51.066164 28.487005,28.487005 0 0 1 98.316952,69.38588"/><path style="fill:none;stroke:url(#linearGradient12871);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"d="M 85.756154,73.849626 100.66351,72.185133 98.999027,57.27777"id="path1617-6"/></g><g id="g8420-2"transform="rotate(6.74984,459.81282,-281.39813)"style="stroke:url(#linearGradient12968);stroke-opacity:1"><path style="fill:none;stroke:url(#linearGradient13788);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"id="path234-2-2"d="M 43.058046,79.121117 A 28.487005,28.487005 0 0 1 66.602472,51.066164 28.487005,28.487005 0 0 1 98.316952,69.38588"/><path style="fill:none;stroke:url(#linearGradient13790);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"d="M 85.756154,73.849626 100.66351,72.185133 98.999027,57.27777"id="path1617-6-0"/></g></g></svg>
+						<div class="update-main">
+							<div class="part">
+								<p class="notice">正在检查更新...</p>
+								<p class="detail"></p>
+							</div>
+							<div><a class="a button" style="font-size: 16px;margin-top: -7.5px;" onclick="apps.setting.checkUpdate()">检查更新</a></div>
 						</div>
 					</div>
 					<div class="setting-list">
-						<div><icon>&#xE794;</icon><div><p>更新已就绪 (别按按钮，否则后果自负！</p><p>v7.0.0</p></div><div class="alr"><a class="a button" style="font-size: 16px;margin-top: -7.5px;" onclick="sendToSw({head:'update'})">更新</a></div></div>
-						<a><icon>&#xE946;</icon><div><p>历史版本</p><p>查看历史版本功能</p></div><i class="bi bi-chevron-right"></i></a>
-						<a><icon>&#xE896;</icon><div><p>下载完整内容</p><p>当更新或系统出现问题，使用此项下载最新完整内容</p></div><i class="bi bi-chevron-right"></i></a>
+						<div class="update-now"><icon>&#xE794;</icon><div><p>正在检查更新...</p><p></p></div><div class="alr"><a class="a button" style="font-size: 16px;margin-top: -7.5px;" onclick="sendToSw({ head: 'update' }); localStorage.setItem('update', true); shownotice('setting.update')">更新</a></div></div>
+						<a onclick="openapp('about');$('#win-about>.update').addClass('show');$('#win-about>.about').removeClass('show');"><icon>&#xE946;</icon><div><p>历史版本</p><p>查看历史版本功能</p></div><i class="bi bi-chevron-right"></i></a>
+						<a onclick="sendToSw({ head: 'update',force:true })"><icon>&#xE896;</icon><div><p>下载完整内容</p><p>当更新或系统出现问题，使用此项下载最新完整内容</p></div><i class="bi bi-chevron-right"></i></a>
+						<div><icon></icon><div><p>自动更新</p><p>设置是否启用自动更新</p></div>
+							<div class="alr">
+								<a class="checkbox checked a" onclick="$(this).toggleClass('checked'); autoUpdate = !autoUpdate; localStorage.setItem('autoUpdate', autoUpdate)"></a>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -1395,8 +1646,8 @@
 		</div>
 		<div class="content" id="win-explorer">
 			<div class="path">
-				<a class="a btn btn-icon" style="filter: contrast(0.5);"><i class="bi bi-arrow-left"></i></a>
-				<a class="a btn btn-icon" style="filter: contrast(0.5);"><i class="bi bi-arrow-right"></i></a>
+				<a class="a btn btn-icon back" onclick="apps.explorer.back(apps.explorer.tabs[apps.explorer.now][0])"><i class="bi bi-arrow-left"></i></a>
+				<a class="a btn btn-icon front" onclick="apps.explorer.front(apps.explorer.tabs[apps.explorer.now][0])"><i class="bi bi-arrow-right"></i></a>
 				<a class="a btn btn-icon goback"><i class="bi bi-arrow-up"></i></a>
 				<p class="tit"></p>
 				<div class="search">
@@ -1468,32 +1719,65 @@
 			<img src="icon/calc.svg" class="icon">
 		</div>
 		<div class="content" id="win-calc">
-			<input id="calc-input" value="" onkeydown="if(event.keyCode == 13)$('#win-calc>.keyb>.ans').click()">
+			<div class="container">
+			<input id="calc-input" readonly="true" value="0" onkeydown="
+				switch (event.key) {
+					case '+':
+						appCalculator.func_key(1);
+						appCalculator.check($('#win-calc>.keyb>.jia')[0]);
+						break;
+					case '-':
+						appCalculator.func_key(2);
+						appCalculator.check($('#win-calc>.keyb>.jian')[0]);
+						break;
+					case '*':
+						appCalculator.func_key(3);
+						appCalculator.check($('#win-calc>.keyb>.cheng')[0]);
+						break;
+					case '/':
+						appCalculator.func_key(4);
+						appCalculator.check($('#win-calc>.keyb>.chu')[0]);
+						break;
+					case '=':
+						appCalculator.eq();
+						break;
+					case 'Enter':
+						appCalculator.eq();
+						break;
+					case 'Backspace':
+						appCalculator.backspace();
+						break;
+					case '.':
+						appCalculator.point();
+						break;
+				}
+				if (!isNaN(event.key)) {
+					appCalculator.number_key(Number(event.key));
+				}
+			"></input>
+			</div>
+			
 			<div class="keyb">
-				<a class="a b" onclick="$('#calc-input')[0].value*=$('#calc-input').val()">𝑥²</a>
-				<a class="a b" onclick="$('#calc-input').val(Math.sqrt($('#calc-input').val()))">√𝑥</a>
-				<a class="a b" onclick="$('#calc-input')[0].value='0'">C</a>
-				<a class="a b u" onclick="apps.calc.add('+')">+</a>
-				<a class="a b" onclick="apps.calc.add('7')">7</a>
-				<a class="a b" onclick="apps.calc.add('8')">8</a>
-				<a class="a b" onclick="apps.calc.add('9')">9</a>
-				<a class="a b u" onclick="apps.calc.add('-')">-</a>
-				<a class="a b" onclick="apps.calc.add('4')">4</a>
-				<a class="a b" onclick="apps.calc.add('5')">5</a>
-				<a class="a b" onclick="apps.calc.add('6')">6</a>
-				<a class="a b u" onclick="apps.calc.add('×')">×</a>
-				<a class="a b" onclick="apps.calc.add('1')">1</a>
-				<a class="a b" onclick="apps.calc.add('2')">2</a>
-				<a class="a b" onclick="apps.calc.add('3')">3</a>
-				<a class="a b u" onclick="apps.calc.add('÷')">÷</a>
-				<a class="a b" onclick="apps.calc.add('.')">.</a>
-				<a class="a b" onclick="apps.calc.add('0')">0</a>
-				<a class="a b"
-					onclick="if($('#calc-input').val().length > 1) { $('#calc-input').val($('#calc-input')[0].value.substring(0,$('#calc-input')[0].value.length-1)); } else { $('#calc-input').val('0'); }"><i
-						class="bi bi-backspace"></i></a>
-				<a class="a b ans u"
-					onclick="$('#calc-input')[0].value=eval($('#calc-input')[0].value.replace('÷', '/').replace('×', '*'))">
-					=</a>
+				<a class="a b" onclick="appCalculator.square('calc-input')">𝑥²</a>
+				<a class="a b" onclick="appCalculator.squareRoot('calc-input')">√𝑥</a>
+				<a class="a b" onclick="appCalculator.clear_num('calc-input')">C</a>
+				<a class="a b u jia" onclick="appCalculator.func_key(1); appCalculator.check(this);">+</a>
+				<a class="a b" onclick="appCalculator.number_key(7);">7</a>
+				<a class="a b" onclick="appCalculator.number_key(8);">8</a>
+				<a class="a b" onclick="appCalculator.number_key(9);">9</a>
+				<a class="a b u jian" onclick="appCalculator.func_key(2); appCalculator.check(this);">-</a>
+				<a class="a b" onclick="appCalculator.number_key(4);">4</a>
+				<a class="a b" onclick="appCalculator.number_key(5);">5</a>
+				<a class="a b" onclick="appCalculator.number_key(6);">6</a>
+				<a class="a b u cheng" onclick="appCalculator.func_key(3); appCalculator.check(this);">×</a>
+				<a class="a b" onclick="appCalculator.number_key(1);">1</a>
+				<a class="a b" onclick="appCalculator.number_key(2);">2</a>
+				<a class="a b" onclick="appCalculator.number_key(3);">3</a>
+				<a class="a b u chu" onclick="appCalculator.func_key(4); appCalculator.check(this);">÷</a>
+				<a class="a b" onclick="appCalculator.point()">.</a>
+				<a class="a b" onclick="appCalculator.number_key(0);">0</a>
+				<a class="a b" onclick="appCalculator.backspace('calc-input')"><i class="bi bi-backspace"></i></a>
+				<a class="a b ans u" onclick="if(!appCalculator.eq('calc-input')){ appCalculator.clear_num(); shownotice('ZeroDivision')}">=</a>
 			</div>
 		</div>
 	</div>
@@ -1514,40 +1798,42 @@
 		<div class="content" id="win-about">
 			<div class="menu">
 				<list class="focs">
-					<a onclick="$('#win-about>.about').addClass('show');$('#win-about>.update').removeClass('show');"><img
-							src="apps/icons/about/info.svg" height="17px" width="19px">简介</a>
-					<a onclick="$('#win-about>.update').addClass('show');$('#win-about>.about').removeClass('show');"><img
-							src="apps/icons/about/update.svg" height="20px" width="18px">更新记录</a>
+					<a onclick="$('#win-about>.about').addClass('show');$('#win-about>.update').removeClass('show');"><img src="apps/icons/about/info.svg" height="17px" width="19px">简介</a>
+					<a onclick="$('#win-about>.update').addClass('show');$('#win-about>.about').removeClass('show');"><img src="apps/icons/about/update.svg" height="20px" width="18px">更新记录</a>
 				</list>
 			</div>
 			<div class="cnt about">
 				<h1 class="tit"><span></span>Windows 12 网页版</h1>
 				<div style="margin-left: 20px;">
 					<h2 class="tit"><span></span>简介</h2>
-					<p>&emsp;&emsp;Windows 12 网页版是一个开源项目, 由谭景元原创, 使用 Html,css,js , 在网络上模拟、创新操作系统</p>
-					<p>&emsp;&emsp;此项目已发布至 Github, <a
-							onclick="window.open('https://github.com/tjy-gitnub/win12','_blank');"
-							win12_title="https://github.com/tjy-gitnub/win12" class="jump">点击此处查看</a></p>
-					<p>&emsp;&emsp;若您对于该项目有任何意见或建议，请在 Github 上<a
-							onclick="window.open('https://github.com/tjy-gitnub/win12/issues','_blank');"
-							win12_title="https://github.com/tjy-gitnub/win12/issues" class="jump">提交 issues</a>,
-						您的问题会被尽可能快地解决</p>
-					<p>&emsp;&emsp;原创作者谭景元，点击以<a onclick="window.open('https://tjy-gitnub.github.io/','_blank');"
-							win12_title="https://tjy-gitnub.github.io/" class="jump">了解详细</a></p>
+					<p>&emsp;&emsp;Windows 12 网页版是一个开源项目，由谭景元原创，使用 HTML、CSS 和 JavaScript，在网络上模拟、创新操作系统。</p>
+					<p>&emsp;&emsp;此项目已发布至 GitHub，<a onclick="window.open('https://github.com/tjy-gitnub/win12','_blank');" win12_title="https://github.com/tjy-gitnub/win12" class="jump">点击此处查看</a>。</p>
+					<p>&emsp;&emsp;若您对于该项目有任何意见或建议，请在 GitHub 上<a onclick="window.open('https://github.com/tjy-gitnub/win12/issues','_blank');" win12_title="https://github.com/tjy-gitnub/win12/issues" class="jump">提交 issues</a>，您的问题会被尽可能快地解决。</p>
+					<p>&emsp;&emsp;原创作者星源，点击以<a onclick="window.open('https://tjy-gitnub.github.io/','_blank');" win12_title="https://tjy-gitnub.github.io/" class="jump">了解详细</a>。</p>
 					<h2 class="tit"><span></span>开源说明</h2>
-					<p>&emsp;&emsp;此项目是一个开源项目。此项目使用EPL2.0开源许可。开源许可是具有法律效力的合同，请自觉遵守开源许可，尊重他人劳动。</p>
+					<p>&emsp;&emsp;此项目是一个开源项目。此项目使用 EPL v2.0 开源许可。开源许可是具有法律效力的合同，请自觉遵守开源许可，尊重他人劳动。</p>
 					<p>&emsp;&emsp;根据许可，你可以对该项目进行传播、分发、修改以及二次发布，包括个人和商业用途。</p>
-					<p>&emsp;&emsp;但您必须给出源码来源，<strong>包括作者，项目链接等</strong>，必须使用相同的协议发布。</p>
-					<p>&emsp;&emsp;若此项目的源码作为项目的一部分与你私有的源码一起发布时，你可以使用其它协议，<strong>但要声明EPL部分的内容并声明此部分继续遵循EPL协议</strong>。
-					</p>
-					<p>&emsp;&emsp;不是在项目基础上进行增加、修改的，仅参考源码的，不需要开源。</p>
+					<p>&emsp;&emsp;但您必须给出源码来源，<strong>包括作者，项目链接等</strong>，必须使用相同的协议开源。</p>
+					<p>&emsp;&emsp;若此项目的源码作为项目的一部分与你私有的源码一起发布时，你可以使用其它协议，<strong>但要声明 EPL 部分的内容并声明此部分继续遵循 EPL 协议</strong>。</p>
+					<p>&emsp;&emsp;不是在该项目基础上进行增加、修改的，仅参考源码的，不需要开源，但也仅供学习用途。</p>
 					<h2 class="tit"><span></span>特别感谢</h2>
 					<p>&emsp;&emsp;<strong>特别感谢 @NB-Group</strong></p>
-					<p>&emsp;&emsp;NB-Group为本项目的后端开发做出了重要贡献</p>
+					<p>&emsp;&emsp;NB-Group 为本项目的后端开发做出了重要贡献</p>
 					<p>&emsp;&emsp;在此表示特别感谢！</p>
 					<h2 class="tit"><span></span>贡献者</h2>
-					<p>感谢所有项目的贡献者 (实时数据(我也不知道这个贡献值是怎么算的))</p>
+					<p>&emsp;&emsp;感谢所有项目的贡献者（实时数据，计算方法：即为 Commits 次数）</p>
 					<div id="contri">
+						<loading>
+							<svg width="30px" height="30px" viewBox="0 0 16 16">
+								<circle cx="8px" cy="8px" r="7px" style="stroke:#7f7f7f50;fill:none;stroke-width:3px;">
+								</circle>
+								<circle cx="8px" cy="8px" r="7px" style="stroke:#2983cc;stroke-width:3px;"></circle>
+							</svg>
+						</loading>
+					</div>
+					<h2 class="tit"><span></span>Star</h2>
+					<p>&emsp;&emsp;感谢<a class="jump" win12_title="给个 Star 好不好？(即将跳转到：https://github.com/tjy-gitnub/win12/stargazers)" onclick="window.open('https://github.com/tjy-gitnub/win12/stargazers','_blank')">所有支持我们的人</a>。</p>
+					<div id="StarShow">
 						<loading>
 							<svg width="30px" height="30px" viewBox="0 0 16 16">
 								<circle cx="8px" cy="8px" r="7px" style="stroke:#7f7f7f50;fill:none;stroke-width:3px;">
@@ -1558,13 +1844,75 @@
 					</div>
 					<h2 class="tit"><span></span>其它</h2>
 					<p>&emsp;&emsp;此项目基于目前 Windows 版本创造，与微软的 Windows 12 正式版本不一致。</p>
-					<p>&emsp;&emsp;此项目绝不附属于微软,且不应与微软操作系统或产品混淆, 这也不是 Windows365 cloud PC</p>
-					<p>&emsp;&emsp;本项目中微软、Windows和其他示范产品是微软公司的商标</p>
+					<p>&emsp;&emsp;此项目绝不附属于微软，且不应与微软操作系统或产品混淆，这也不是 Windows365 cloud PC。</p>
+					<p>&emsp;&emsp;本项目中微软、Windows 和其他示范产品是微软公司的商标。</p>
 				</div>
 			</div>
 			<div class="cnt update">
 				<h1 class="tit"><span></span>更新记录</h1>
 				<div style="margin-left: 20px;">
+					<details><summary><span>v7.3.5</span> 整顿代码</summary><p>
+						&emsp;&emsp;-整顿代码，贡献者必须按本文件开头以及CONTRIBUTING.md的规范编辑代码，否则不予合并，感谢理解<br/>
+						&emsp;&emsp;-重绘新增的一些图标</p>
+						&emsp;&emsp;-细节优化和修复</p>
+					</details>
+					<details><summary><span>v7.3.4</span> Edge更新</summary><p>
+						&emsp;&emsp;(更新来自@lh11117)<br>
+						&emsp;&emsp;-Edge 支持全屏<br/>
+						&emsp;&emsp;-Edge 支持收藏夹</p>
+					</details>
+					<details><summary><span>v7.3.3</span> 细节优化</summary><p>
+						&emsp;&emsp;细节优化</p>
+					</details>
+					<details><summary><span>v7.3.2</span> 细节更改</summary><p>
+						&emsp;&emsp;没有新增内容 (各位可以抽时间去看看readme.md，一些特殊情况</p>
+					</details>
+					<details><summary><span>v7.3.1</span> Bug修复与细节优化</summary><p>
+						&emsp;&emsp;-删除update.md中重复的字(更新来自 @ZigaoWang )<br />
+						&emsp;&emsp;-修复BIOS无法正确访问的问题(更新来自 @ludonghengsb )</p>
+					</details>
+					<details><summary><span>v7.3.0</span> 桌面小组件、Dock自动隐藏、计算器完善和Windows 更新</summary><p>
+						&emsp;&emsp;(更新来自 @User782Tec )<br />
+						&emsp;&emsp;-新增了桌面小组件，可将小组件添加到桌面并调整位置<br />
+						&emsp;&emsp;-新增了编辑模式，可快捷编辑小组件的位置，并提供了相关的快捷入口<br />
+						&emsp;&emsp;-新增了窗口全屏且Dock不在使用时自动隐藏的功能<br />
+						&emsp;&emsp;-为Microsoft Edge浏览器和文件资源管理器新增了后退/前进的功能<br />
+						&emsp;&emsp;-又双叒叕优化计算器的精度问题与安全性问题<br />
+						&emsp;&emsp;-重写更新机制，并完善 Windows 更新<br />
+						&emsp;&emsp;-修复了文件资源管理器中右键文件失效的问题<br />
+						&emsp;&emsp;-修复了文件资源管理器中无法正确显示文件夹中文件的问题<br />
+						&emsp;&emsp;-更换了Python Editor的图标<br />
+						&emsp;&emsp;-完善了开源说明<br />
+						&emsp;&emsp;-其他细节与修复</p>
+					</details>
+					<details><summary><span>v7.2.1</span> README更新、“关于”应用显示实时Star数量、个性化设置支持保存</summary><p>
+						&emsp;&emsp;(更新来自 @lh11117 )<br />
+						&emsp;&emsp;-README更新<br />
+						&emsp;&emsp;-“关于”应用显示实时Star数量<br />
+						&emsp;&emsp;-个性化设置支持保存<br /></p>
+					</details>
+					<details><summary><span>v7.2.0</span> 优化运行、添加Windows12应用、添加WSA</summary><p>
+						&emsp;&emsp;(更新来自 @lh11117 )<br />
+						&emsp;&emsp;-优化运行<br />
+						&emsp;&emsp;-添加Windows12应用<br />
+						&emsp;&emsp;-添加WSA<br />
+						&emsp;&emsp;-添加shutdown命令<br />
+						&emsp;&emsp;-添加BIOS系统<br />
+						&emsp;&emsp;-支持桌面图标删除<br />
+						&emsp;&emsp;-更丰富的文件目录<br />
+						&emsp;&emsp;-任务管理器支持置顶<br /></p>
+					</details>
+					<details><summary><span>v7.1.0</span> 计算器进一步修复、离线页面的深色模式</summary><p>
+						&emsp;&emsp;(更新来自 @lh11117)<br />
+						&emsp;&emsp;-进一步修复了计算器精度缺陷和接受输入非法内容的问题<br />
+						&emsp;&emsp;-为Microsoft Edge浏览器的离线界面添加了深色模式版本<br />
+						&emsp;&emsp;-其他一些细节修复<br /></p>
+					</details>
+					<details><summary><span>v7.0.2</span> 计算器修复</summary><p>
+						&emsp;&emsp;(更新来自 @cong1223 和 @iewnfod)<br />
+						&emsp;&emsp;-修复计算器计算加减乘除、平方、平方根等运算的精度问题(来自 @cong1223)<br />
+						&emsp;&emsp;-只允许calc-input输入数字(来自 @iewnfod)<br /></p>
+					</details>
 					<details><summary><span>v7.0.1</span> 资源管理器标签页、离线界面与新闻</summary><p>
 						&emsp;&emsp;-文件资源管理器的标签页(来自 @tjy-gitnub)<br />
 						&emsp;&emsp;-新增了Microsoft Edge浏览器的离线界面(来自 @User782Tec)<br />
@@ -1601,199 +1949,13 @@
 							&emsp;&emsp;-适配新的主题格式，加速预览图显示<br />
 							&emsp;&emsp;-细节优化和修复</p>
 					</details>
-					<details>
-						<summary><span>v5.4.2</span> 灾难性程序错误修复</summary>
-						<p>
-							&emsp;&emsp;-修复pwa将主题获取请求拦截的重大灾难性事故<br />
-							&emsp;&emsp;-细节优化和修复
-						</p>
-					</details>
-					<details>
-						<summary><span>v5.4.1</span> bug修复</summary>
-						<p>
-							&emsp;&emsp;<strong>(更新来自 @tjy-gitnub)</strong><br />
-							&emsp;&emsp;-修复pwa将动态请求拦截的灾难性事故<br />
-							&emsp;&emsp;-调整大家梦寐以求的开始菜单滚动条<br />
-							&emsp;&emsp;-新增开始菜单固定项右键取消固定选项<br />
-							&emsp;&emsp;-适配主题格式的一些更改<br />
-							&emsp;&emsp;-细节优化和修复
-						</p>
-					</details>
-					<details>
-						<summary><span>v5.4.0</span> 新版logo与图标，UI优化，自定主题与winver</summary>
-						<p>
-							&emsp;&emsp;<strong>(更新来自 @tjy-gitnub,其实我想发v6的)</strong><br />
-							&emsp;&emsp;-新Logo:新版logo<br />
-							&emsp;&emsp;-新图标:重绘替换了win11的图标<br />
-							&emsp;&emsp;-自定主题:支持用户更改和上传自己的主题<br />
-							&emsp;&emsp;-版本信息:新增winver<br />
-							&emsp;&emsp;-新UI:加入win11的悬停立体高亮<br />
-							&emsp;&emsp;-启动优化:加快速度，修复本地因获取电量失败无法启动的问题<br />
-							&emsp;&emsp;-UI适配:稍稍更改了不适配的UI<br />
-							&emsp;&emsp;-Bug修复:右键菜单无法关闭<br />
-							&emsp;&emsp;-代码优化:对某些重复代码整理归纳，引入应用的初始化load配置<br />
-							&emsp;&emsp;-细节优化和修复<br />
-						</p>
-					</details>
-					<details>
-						<summary><span>v5.3.1</span> 问题修复</summary>
-						<p>
-							&emsp;&emsp;<strong>更新来自 @User782Tec</strong><br />
-							&emsp;&emsp;-修复了样式不正常的问题<br />
-							&emsp;&emsp;-修复了部分情况下Edge浏览器中加载动画圆圈位置不正确的问题<br />
-							&emsp;&emsp;-修复了开始菜单无法滚动的问题<br />
-							&emsp;&emsp;-修复了控制面板的样式问题<br />
-						</p>
-					</details>
-					<details>
-						<summary><span>v5.3.0</span> 触控设备适配、“运行”应用、“白板”应用、控制中心与细节修复</summary>
-						<p>
-							&emsp;&emsp;<strong>更新来自 @NB-Group 和 @User782Tec</strong><br />
-							&emsp;&emsp;-新增“运行”应用，可根据输入内容运行命令、打开文件夹或访问网站<br />
-							&emsp;&emsp;-新增白板应用，可进行作画并保存<br />
-							&emsp;&emsp;-新增控制中心，可调整显示器亮度<br />
-							&emsp;&emsp;-新增了右键点击任务栏图标后可以关闭应用的功能<br />
-							&emsp;&emsp;-新增了将应用固定到开始菜单的功能<br />
-							&emsp;&emsp;-新增了在Edge浏览器中获取网页标题的功能(此项更新由@NB-Group提供后端，@User782Tec完善前端)<br />
-							&emsp;&emsp;-适配触控设备在Edge浏览器中进行标签页拖动排序操作<br />
-							&emsp;&emsp;-修复了Edge浏览器中标签页拖动排序功能中计算位置不正确等的问题<br />
-							&emsp;&emsp;-修复了部分情况下Edge浏览器中加载动画圆圈位置不正确的问题<br />
-							&emsp;&emsp;-修复了部分情况下终端不能正常运作的问题(详见由NebulaTechs提出的Issue#87)<br />
-							&emsp;&emsp;-修复了部分情况下Edge浏览器中无法正确显示标签页的问题<br />
-							&emsp;&emsp;-其他一些更改<br />
-							&emsp;&emsp;-格式化部分文档<br />
-						</p>
-					</details>
-					<details>
-						<summary><span>v5.2.4</span> Python编辑器</summary>
-						<p>
-							&emsp;&emsp;<strong>更新来自 @NB-Group</strong><br />
-							&emsp;&emsp;-新增 Python 编辑器应用，编辑器自带自动补全，代码高亮和运行功能。<br />
-						</p>
-					</details>
-					<details>
-						<summary><span>v5.2.3</span> 登录界面优化和Python解释器</summary>
-						<p>
-							&emsp;&emsp;<strong>更新来自 @NB-Group 和 @User782Tec</strong><br />
-							&emsp;&emsp;-改进了登录界面，增加锁定壁纸及电源操作<br />
-							&emsp;&emsp;-兼容开发环境，在本地开发时不启用缓存和PWA<br />
-							&emsp;&emsp;-新增了Python解释器(此项更新由@NB-Group提供灵感与框架，@User782Tec完善)<br />
-							&emsp;&emsp;-修复了终端选择不正常的问题<br />
-							&emsp;&emsp;-改进了终端，可通过应用标识符来打开应用<br />
-							&emsp;&emsp;-格式化部分文档<br />
-						</p>
-					</details>
-					<details>
-						<summary><span>v5.2.2</span> 细节优化</summary>
-						<p>
-							&emsp;&emsp;-对相机外观和代码进行了优化<br />
-							&emsp;&emsp;-添加登录背景，一些外观优化<br />
-							&emsp;&emsp;-开源许可的完善<br />
-							&emsp;&emsp;-一些优化和修复<br />
-							&emsp;&emsp;-吊一下胃口:v6将使用全新图标(壁纸?)，支持自定义主题 >_-)o
-						</p>
-					</details>
-					<details>
-						<summary><span>v5.2.1</span> 登录界面，开机音效和细节优化</summary>
-						<p>
-							&emsp;&emsp;<strong>更新来自 @User782Tec</strong><br />
-							&emsp;&emsp;-为网站添加Favicon和标题<br />
-							&emsp;&emsp;-Edge浏览器中，超出标签页范围的文字将会被隐藏以避免文字溢出的问题<br />
-							&emsp;&emsp;-微调Edge浏览器中加载动画的位置<br />
-							&emsp;&emsp;-新增了开机音效和登录界面<br />
-							&emsp;&emsp;-格式化部分文档<br />
-						</p>
-					</details>
-					<details>
-						<summary><span>v5.2.0</span> 相机应用及细节修复</summary>
-						<p>
-							&emsp;&emsp;<strong>更新来自 @User782Tec</strong><br />
-							&emsp;&emsp;-新增“相机”应用，支持拍照功能<br />
-							&emsp;&emsp;-优化焦点控制，关闭焦点窗口后，焦点会转移至下面一个窗口，更加符合原生体验<br />
-							&emsp;&emsp;-计算器优化，优化符号及输入<br />
-							&emsp;&emsp;-修复桌面批量选择框在左上角出现蓝点的问题<br />
-							&emsp;&emsp;-修复部分情况下标题栏不显示的问题<br />
-							&emsp;&emsp;-优化窗口布局<br />
-							&emsp;&emsp;-修正部分非标准CSS特性<br />
-							&emsp;&emsp;-格式化部分文档<br />
-						</p>
-					</details>
-					<details>
-						<summary><span>v5.1.2</span> 细节修复和更改</summary>
-						<p>
-							&emsp;&emsp;-修复关于加载失效的问题<br />
-							&emsp;&emsp;-设置加载圈圈为主题色<br />
-							&emsp;&emsp;-添加刷新圈圈动画<br />
-							&emsp;&emsp;-优化窗口拖拽代码<br />
-							&emsp;&emsp;-其它一些更改<br />
-							&emsp;&emsp;-提示:在github项目页的一些<a
-								onclick="window.open('https://github.com/tjy-gitnub/win12','_blank');"
-								win12_title="https://github.com/tjy-gitnub/win12" class="jump">公告</a>
-							</p>
-					</details>
-					<details>
-						<summary><span>v5.1.1</span> 网页加载动画与新增应用</summary>
-						<p>
-							&emsp;&emsp;更新来自 @User782Tec<br />
-							&emsp;&emsp;-优化了桌面文件拖拽选择选择<br />
-							&emsp;&emsp;-Edge浏览器中网页加载时的标签页动画<br />
-							&emsp;&emsp;-增加了点击窗口图标后弹出菜单的功能（部分触控设备不能触发上下文菜单）<br />
-							&emsp;&emsp;-增加应用 VSCode 与 哔哩哔哩<br />
-							&emsp;&emsp;-其它: 格式化文档和修复
-						</p>
-					</details>
-					<details>
-						<summary><span>v5.1.0</span> 标签页拖动排序与云母效果</summary>
-						<p>
-							&emsp;&emsp;-标签页:可拖动标签页排序(仅桌面端)<br />
-							&emsp;&emsp;-云母效果(试验):在设置中启用并按"用法"操作<br />
-							&emsp;&emsp;-其它:细节优化和修复
-						</p>
-					</details>
-					<details>
-						<summary><span>v5.0.2</span> 贡献与Edge标签页</summary>
-						<p>
-							&emsp;&emsp;-贡献:关于应用新增贡献者数据<br />
-							&emsp;&emsp;-新标签页:对深色模式的适配，较高安全限制浏览器的适配<br />
-							&emsp;&emsp;-标签页:新增标签页关闭动画<br />
-							&emsp;&emsp;-兼容性:系统控件的防误触<br />
-							&emsp;&emsp;-其它:细节优化和修复
-						</p>
-					</details>
-					<details>
-						<summary><span>v5.0.1</span> 漏洞修复</summary>
-						<p>
-							<strong>更新由 @User782Tec 提供</strong><br />
-							&emsp;&emsp;-修复了 issues #67中的问题<br />
-							&emsp;&emsp;-修复了关闭所有Edge浏览器中的标签页后仍保留Edge浏览器的问题<br />
-							&emsp;&emsp;-完善Edge浏览器内输入内容的正则表达式匹配<br />
-							&emsp;&emsp;-略微修改Edge浏览器中输入框<br />
-							&emsp;&emsp;-新标签页<br />
-							&emsp;&emsp;-细节优化和修复
-						</p>
-					</details>
-					<details>
-						<summary><span>v5.0.0</span> 新增Edge</summary>
-						<p>
-							<strong>🎉🎉项目在Github上突破✨100✨stars✨啦！🎊🎈</strong><br />
-							&emsp;&emsp;-新增:Microsoft Edge应用(可以在Edge应用中提出反馈与建议，谢谢)<br />
-							&emsp;&emsp;-新增:桌面拖动选择框(没什么大用)<br />
-							&emsp;&emsp;-返璞归真:取消列表悬停效果<br />
-							&emsp;&emsp;-丰富:在文件资源管理器中添加了一些文件<br />
-							&emsp;&emsp;-精简:减小动画数量和幅度<br />
-							&emsp;&emsp;-修复:关于记事本的另存为问题<br />
-							&emsp;&emsp;-彩蛋:你发现动态壁纸了吗？<br />
-							&emsp;&emsp;-其它:细节优化和修复
-						</p>
-					</details>
+					<!-- 全部列出来那这个更多意义何在？ -->
+					<a onclick="window.open('update.md','_blank');" win12_title="update.md" class="a jump" style="text-align: center;">更多</a>
 				</div>
-				<a class="jump" win12_title="https://github.com/tjy-gitnub/win12/blob/main/update.md"
-					onclick="window.open('https://github.com/tjy-gitnub/win12/blob/main/update.md','_blank')"
-					style="text-align: center;display: block;margin-top: 5px;">更多</a>
 			</div>
 		</div>
 	</div>
-	<div class="window notepad">
+	<div class="window notepad" onclick="if(font_window){playWindowsBackground();showwin('notepad-fonts');}">
 		<div class="resize-bar"></div>
 		<div class="titbar">
 			<img src="icon/notepad.svg" class="icon">
@@ -1825,7 +1987,7 @@
 			<img src="icon/notepad.svg" class="icon">
 			<p>字体</p>
 			<div>
-				<a class="a wbtg red" onclick="hidewin('notepad-fonts', 'configs')"><i class="bi bi-x-lg"></i></a>
+				<a class="a wbtg red" onclick="hidewin('notepad-fonts', 'configs');font_window=false;"><i class="bi bi-x-lg"></i></a>
 			</div>
 		</div>
 		<div class="loadback">
@@ -1903,7 +2065,7 @@
 			</div>
 			<div class="buttons">
 				<a class="a submit act" onclick="apps.notepadFonts.commitFont();">确定</a>
-				<a class="a cancel act" onclick="hidewin('notepad-fonts', 'configs');">取消</a>
+				<a class="a cancel act" onclick="hidewin('notepad-fonts', 'configs');font_window=false;">取消</a>
 			</div>
 		</div>
 	</div>
@@ -1935,7 +2097,7 @@
 	<div class="window python terminal-apps">
 		<div class="resize-bar"></div>
 		<div class="titbar">
-			<img src="icon/python.png" class="icon">
+			<img src="icon/python.svg" class="icon">
 			<p>Python 3.10.2</p>
 			<div>
 				<a class="a wbtg red" onclick="hidewin('python')"><i class="bi bi-x-lg"></i></a>
@@ -1944,7 +2106,7 @@
 			</div>
 		</div>
 		<div class="loadback">
-			<img src="icon/python.png" class="icon">
+			<img src="icon/python.svg" class="icon">
 		</div>
 
 		<div class="content" id="win-python" onmouseup="$('#win-python input').focus();" ontouchend="$('#win-python input').focus();">
@@ -1956,48 +2118,65 @@
 			<pre>>>> <input type="text" onkeyup="if (event.keyCode == 13) { apps.python.run(); }"></pre>
 		</div>
 	</div>
-	<div class="window edge tabs">
+	<div class="window edge tabs" onmousemove="if(apps.edge.in_div('over-bar',event)||apps.edge.in_div('edge-path-bar',event)||apps.edge.in_div('edge-titbar',event)){null}else{if(apps.edge.fuls){$('.edge>.titbar').hide();$('.edge>.content>.tool').hide()}}">
 		<div class="resize-bar"></div>
-		<div class="titbar">
+		<div style="height:3px;width:100%;display: none;" id="over-bar" onmouseover="if(apps.edge.fuls){$('.edge>.titbar').show();$('.edge>.content>.tool').show()}" onmouseleave="if(apps.edge.fuls&&(apps.edge.b1||apps.edge.b2)){$('.edge>.titbar').hide();$('.edge>.content>.tool').hide()}"></div>
+		<div class="titbar" onmouseleave="apps.edge.b1=false;" onmouseover="apps.edge.b1=true;" id="edge-titbar">
 			<img src="icon/edge.svg" class="icon">
 			<p style="display: none;">Microsoft Edge</p>
 			<div class="tabs">
 			</div>
 			<div>
 				<a class="a wbtg red" onclick="hidewin('edge')"><i class="bi bi-x-lg"></i></a>
-				<a class="a wbtg max" onclick="maxwin('edge')"><i class="bi bi-app"></i></a>
+				<a class="a wbtg max" onclick="maxwin('edge');apps.edge.max=!apps.edge.max;" id="edge-max"><i class="bi bi-app"></i></a>
+				<a class="a wbtg" onclick="apps.edge.exitfullscreen()" id="fuls-edge-exit" style="display: none;"><i class="bi bi-arrows-angle-contract" id="fuls-edge-i"></i></a>
 				<a class="a wbtg" onclick="minwin('edge')"><i class="bi bi-dash-lg"></i></a>
+				<a class="a wbtg" onclick="apps.edge.fullscreen()" id="fuls-edge"><i class="bi bi-arrows-angle-expand" id="fuls-edge-i"></i></a>
 			</div>
 		</div>
 		<div class="loadback">
 			<img src="icon/edge.svg" class="icon">
 		</div>
 		<div class="content" id="win-edge">
-			<div class="tool">
-				<a class="a" style="filter: contrast(0.2);">
+			<div class="tool" onmouseleave="apps.edge.b2=false;" onmouseover="apps.edge.b2=true;" id="edge-path-bar">
+				<a class="a back" onclick="apps.edge.back(apps.edge.tabs[apps.edge.now][0]);">
 					<i class="bi bi-arrow-left-short" style="font-size: 25px;--top:-5px;"></i>
 				</a>
-				<a class="a" style="filter: contrast(0.2);">
+				<a class="a front" onclick="apps.edge.front(apps.edge.tabs[apps.edge.now][0]);">
 					<i class="bi bi-arrow-right-short" style="font-size: 25px;--top:-5px;"></i>
 				</a>
 				<a class="a" onclick="apps.edge.reload()">
 					<i class="bi bi-arrow-clockwise"></i>
 				</a>
 				<input type="text" onkeyup="if(event.keyCode==13&&$(this).val()!=''){apps.edge.goto($(this).val())}"
-					placeholder="在必应中搜索，或输入一个网址" class="url" spellcheck="false">
+					placeholder="在必应中搜索，或输入一个网址" class="url" spellcheck="false" id="edge-path">
 				<input type="text" onkeyup="if(event.keyCode==13&&$(this).val()!=''){m_tab.rename('edge',$(this).val());}"
 					placeholder="为标签页命名" class="rename" spellcheck="false">
 				<a class="a">
 					<i class="bi bi-info-circle" win12_title="浏览器只能访问允许嵌套的网站。由于规则限制无法获取网页标题，请右键标签页手动命名"></i>
 				</a>
-				<a class="a" style="filter: contrast(0.2);">
+				<script>
+				function add_save(){
+					t = document.getElementById('edge-path').value
+					if(t.length>7){
+						t = t.substring(0,7) + '...';
+					}
+					document.getElementById('save-bar').innerHTML += "<a onclick='apps.edge.goto(`" + document.getElementById('edge-path').value +  "`)' win12_title='" + document.getElementById('edge-path').value + "' class='save-item'><i class='bi bi-file-earmark'></i>" + t + "</a>";
+				}
+				</script>
+				<a class="a" style="filter: contrast(0.2);" onclick="add_save()">
 					<i class="bi bi-star"></i>
 				</a>
 				<a class="a" style="filter: contrast(0.2);">
 					<i class="bi bi-code-slash"></i>
 				</a>
+		    </div>
+			<div id="save-bar" style="margin:10px;margin-top: 3px;">
+				<!--收藏夹-->
+				<a onclick="apps.edge.goto('https://tjy-gitnub.github.io/')" win12_title="https://tjy-gitnub.github.io/" class="save-item"><i class="bi bi-file-earmark"></i>星源</a>
+				<a onclick="apps.edge.goto('https://www.bing.com')" win12_title="https://www.bing.com" class="save-item"><i class="bi bi-file-earmark"></i>Bing</a>
 			</div>
-			<iframe frameborder="0" class="0 show">
+			<iframe frameborder="0" class="0 show" onmousemove="if(apps.edge.fuls){$('.edge>.titbar').hide();$('.edge>.content>.tool').hide()}">
 			</iframe>
 		</div>
 	</div>
@@ -2046,10 +2225,28 @@
 			<!-- <iframe src="https://bilibili.com/" frameborder="0" style="width: 100%; height: 100%;" loading="lazy"></iframe> -->
 		</div>
 	</div>
+	<div class="window wsa">
+		<div class="resize-bar"></div>
+		<div class="titbar">
+			<img src="icon/wsa.png" class="icon">
+			<p>适用于 Android™️ 的 Windows 子系统</p>
+			<div>
+				<a class="a wbtg red" onclick="hidewin('wsa')"><i class="bi bi-x-lg"></i></a>
+				<a class="a wbtg max" style="pointer-events: none;color: #777;"><i class="bi bi-app"></i></a>
+				<a class="a wbtg" onclick="minwin('wsa')"><i class="bi bi-dash-lg"></i></a>
+			</div>
+		</div>
+		<div class="loadback">
+			<img src="icon/wsa.png" class="icon">
+		</div>
+		<div class="content" id="win-wsa" style="margin-bottom:auto;">
+			<iframe src="https://android11react.osrc.com/" frameborder="0" style=" width: 100%;height: 100%;" loading="lazy"></iframe>
+		</div>
+	</div>
 	<div class="window pythonEditor">
 		<div class="resize-bar"></div>
 		<div class="titbar">
-			<img src="icon/pythonEditor.png" class="icon">
+			<img src="icon/pythonEditor.svg" class="icon">
 			<p>Python Editor</p>
 			<div>
 				<a class="a wbtg red" onclick="hidewin('pythonEditor')"><i class="bi bi-x-lg"></i></a>
@@ -2059,7 +2256,7 @@
 			</div>
 		</div>
 		<div class="loadback">
-			<img src="icon/pythonEditor.png" class="icon">
+			<img src="icon/pythonEditor.svg" class="icon">
 		</div>
 		<div class="content" id="win-pythonEditor">
 			<div id="win-python-ace-editor"></div>
@@ -2091,6 +2288,25 @@
 			</div>
 			<canvas style="display: none;"></canvas>
 			<a style="display: none;"></a>
+		</div>
+	</div>
+	<div class="window windows12">
+		<div class="resize-bar"></div>
+		<div class="titbar">
+			<img src="icon/logo.svg" class="icon">
+			<p>Windows 12</p>
+			<div>
+				<a class="a wbtg red" onclick="hidewin('windows12')"><i class="bi bi-x-lg"></i></a>
+				<a class="a wbtg max" onclick="maxwin('windows12')"><i class="bi bi-app"></i></a>
+				<a class="a wbtg" onclick="minwin('windows12')"><i class="bi bi-dash-lg"></i></a>
+				<a class="a wbtg" onclick="apps.windows12.init()"><i class="bi bi-arrow-counterclockwise"></i></a>
+			</div>
+		</div>
+		<div class="loadback">
+			<img src="icon/logo.svg" class="icon">
+		</div>
+		<div class="content" id="win-win12">
+			<iframe style="height:100%; width:100%;object-fit:cover;" id="win12-window" frameborder="no"></iframe>
 		</div>
 	</div>
 	<div class="window camera-notice">
@@ -2125,14 +2341,14 @@
 	</div>
 	<div class="window run">
 		<div class="titbar">
-			<img src="icon/run.png" class="icon">
+			<img src="icon/run.svg" class="icon">
 			<p>运行</p>
 			<div>
 				<a class="a wbtg red" onclick="hidewin('run')"><i class="bi bi-x-lg"></i></a>
 			</div>
 		</div>
 		<div class="loadback">
-			<img src="icon/run.png" class="icon">
+			<img src="icon/run.svg" class="icon">
 		</div>
 		<div class="content" id="win-run">
 			<div class="top">
@@ -2153,7 +2369,7 @@
 	<div class="window whiteboard">
 		<div class="resize-bar"></div>
 		<div class="titbar">
-			<img src="icon/whiteboard.png" class="icon">
+			<img src="icon/whiteboard.svg" class="icon">
 			<p>Whiteboard</p>
 			<div>
 				<a class="a wbtg red" onclick="hidewin('whiteboard')"><i class="bi bi-x-lg"></i></a>
@@ -2163,7 +2379,7 @@
 			</div>
 		</div>
 		<div class="loadback">
-			<img src="icon/whiteboard.png" class="icon">
+			<img src="icon/whiteboard.svg" class="icon">
 		</div>
 		<div class="content" id="win-whiteboard">
 			<a class="download" href="" download="Picture.png"></a>
@@ -2279,7 +2495,10 @@
 		<div class="resize-bar"></div>
 		<div class="titbar">
 			<img src="icon/taskmgr.png" class="icon">
-			<p>任务管理器</p>
+			<span style="font-size: 15px;margin-top: 9px;">任务管理器</span><!--这里不能用p，否则会有神奇的特性（bug）发生-->
+			<div style="flex-grow: 1;display: flex;align-items: center;justify-content: center;">
+			    <input type="text" class="input" style="width: 75%;" placeholder="键入要搜索的名称" id="tsk-search" oninput="apps.taskmgr.generateProcesses()" value=""></input>
+			</div>
 			<div>
 				<a class="a wbtg red" onclick="hidewin('taskmgr')"><i class="bi bi-x-lg"></i></a>
 				<a class="a wbtg max" onclick="maxwin('taskmgr')"><i class="bi bi-app"></i></a>
@@ -2289,17 +2508,44 @@
 		<div class="loadback">
 			<img src="icon/taskmgr.png" class="icon">
 		</div>
-		<div class="content" id="win-taskmgr">
-			<div class="menu">
-				<list class="focs">
-					<a class="processes check" onclick="apps.taskmgr.page('processes')">
+		<div class="content" id="win-taskmgr" style="height:100%">
+			<script> //让设置按钮到最底下
+				setInterval(()=>{
+					document.getElementById('set-seting-to-bottom').style.height = (document.getElementById('win-taskmgr').clientHeight-document.getElementById('tsk-setting').clientHeight*document.getElementById('tsk-pages').getElementsByTagName('a').length-10) + "px";
+				},1145);
+				var hide = false;
+				function fold(){
+					if(!hide){
+						$('.taskmgr>.content>.menu>.focs>a>p').hide()
+						$('.taskmgr>.content>.menu>.focs>a').width('18px')
+						$('.taskmgr>.content>.menu>.focs').width('18px')
+						$('.taskmgr>.content>.menu').width('18px')
+						$('.taskmgr>.content>.menu>.focs>.fold').html('<icon><i class="bi bi-chevron-right"></i></icon>')
+					} else {
+						$('.taskmgr>.content>.menu>.focs>a>p').show()
+						$('.taskmgr>.content>.menu>.focs>a').width('222px')
+						$('.taskmgr>.content>.menu>.focs').width('222px')
+						$('.taskmgr>.content>.menu').width('222px')
+						$('.taskmgr>.content>.menu>.focs>.fold').html('<icon><i class="bi bi-chevron-left"></i></icon>')
+					}
+					hide = !hide
+				}
+				fold();//别问我这里为什么要执行一次，问就是有bug
+			</script>
+			<div class="menu" style="height:100%">
+				<list class="focs" id="tsk-pages" style="height:100%">
+					<a class="fold" onclick="fold()" style="width:33px;height:33px;margin:0px;" win12_title="折叠（目前还是个摆式）"><icon><i class="bi bi-chevron-right"></i></icon></a>
+					<a class="processes check" onclick="apps.taskmgr.page('processes')" win12_title="进程">
 						<svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="3.5 5.5 29 29">
 							<path d="M 5 11 L 5 29 C 5 32 6 33 9 33 L 14 33 C 17 33 18 32 18 29 L 18 7 L 9 7 C 6 7 5 8 5 11 M 18 7 L 27 7 C 30 7 31 8 31 11 L 31 16 C 31 19 30 20 27 20 L 5 20" stroke="var(--text)" stroke-width="1.5" fill="none"/>
 						</svg>
-						进程
+						<p>进程</p>
 					</a>
-					<a class="performance" onclick="apps.taskmgr.page('performance')"><icon class="s-icon"></icon> 性能</a>
-					<span class="focs"></span>
+					<a class="performance" onclick="apps.taskmgr.page('performance')" win12_title="性能"><icon class="s-icon"></icon><p>性能</p></a>
+					<!--添加新的分页请在这条注释前面添加-->
+					<div id="set-seting-to-bottom"></div>
+					<a class="setting" onclick="apps.taskmgr.page('setting')" id="tsk-setting" style="position: relative;bottom:0px;left:0px;" win12_title="设置"><i class="bi bi-gear"></i><p>设置</p></a>
+					<span class="focs" style="top: -445px; left: 0px;"></span>
 				</list>
 			</div>
 			<div class="main">
@@ -2322,6 +2568,13 @@
 							<!-- 进程信息 -->
 						</tbody>
 					</table>
+				</div>
+				<div class="cnt 404">
+					<div class="content" style="text-align: center;position:absolute;left:calc(50% - 25px);top:calc(50% - 35px);">
+						<p><b>无筛选结果</b><br />请尝试使用其他名称<span style="text-decoration:line-through" win12_title="你想让开发者秃头吗？QwQ！(双击隐藏此消息)" ondblclick="$(this).hide()">、发布者或 PID </span>键入以进行筛选。</p>
+						<br />
+						<a onclick="document.getElementById('tsk-search').value='';apps.taskmgr.generateProcesses()" style="cursor: pointer;color:var(--href);">重置筛选器</a>
+					</div>
 				</div>
 				<div class="cnt performance">
 					<div class="tit">
@@ -2667,18 +2920,83 @@
 						</div>
 					</div>
 				</div>
+				<div class="cnt setting">
+					<style>
+						/* 隐藏原始复选框 */
+						input[type="checkbox"] {
+							display: none;
+						}
+
+						/* 自定义复选框的外观 */
+						label {
+							display: inline-block;
+							position: relative;
+							padding-left: 25px;
+							margin-right: 10px;
+							cursor: pointer;
+						}
+
+						/* 复选框的外观 */
+						label:before {
+							content: "";
+							display: inline-block;
+							width: 18px;
+							height: 18px;
+							border: 1px solid #ccc;
+							border-radius: 3px;
+							background-color: #fff;
+							position: absolute;
+							left: 0;
+							top: 1px;
+						}
+
+						/* 复选框被选中时的外观 */
+						input[type="checkbox"]:checked + label:before {
+							background-color: #46afe4;
+						}
+
+						/* 复选框的勾选图标 */
+						label:after {
+							content: "\2713";
+							font-size: 14px;
+							color: #fff;
+							position: absolute;
+							left: 4px;
+							top: 0;
+							line-height: 18px;
+							display: none;
+						}
+
+						/* 复选框被选中时的勾选图标 */
+						input[type="checkbox"]:checked + label:after {
+							display: block;
+						}
+					</style>
+					<div class="tit">
+						<p>设置</p>
+						<hr>
+					</div>
+					<div>
+						<h3>窗口管理</h3>
+						<input type="checkbox" id="tsk-setting-topmost" name="tsk-setting-topmost" style="height: 15px;width:15px;color:#fff;" onclick="if(checked){topmost[topmost.length]='taskmgr'}else{topmost.splice(topmost.indexOf('taskmgr',1))};hidewin('taskmgr');apps.taskmgr.page('processes');$('#win-taskmgr>.menu>list.focs>a')[0].click();saveDesktop();document.getElementById('tsk-search').value='';setTimeout('openapp(`taskmgr`);apps.taskmgr.generateProcesses();',300);"/><label for="tsk-setting-topmost" style="font-size: 15px;">置于顶层</label>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
 	<script src="data/tasks.js"></script>
 	<script src="desktop.js"></script>
 	<script src="module/tab.js"></script>
+	<script src="scripts/setting_getTime.js"></script><!-- 设置页面获取时间逻辑 @Junchen Yi 2023-9-17-->
 	<script src="https://fastly.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js" async></script>
 	<!-- <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
 	<script defer src="https://pyscript.net/latest/pyscript.js"></script> -->         <!-- PyScript, 已弃用 -->
 	<script src="https://cdn.staticfile.org/ace/1.23.0/ace.min.js"></script>
 	<script src="https://cdn.staticfile.org/ace/1.23.0/ext-language_tools.min.js"></script>
 	<script src="https://cdn.staticfile.org/ace/1.23.0/ext-error_marker.min.js"></script>
+	<script src='https://cdn.staticfile.org/big.js/6.2.1/big.min.js'></script>
+	<script src="./scripts/calculator_kernel.js"></script>
+	<script src='https://cdns.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js'></script>
 </body>
 
 </html>

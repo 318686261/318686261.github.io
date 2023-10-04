@@ -1,9 +1,10 @@
 // 后端服务器
+// loadlang();
 const server = 'http://win12server.freehk.svipss.top/';
 const pages = {
     'get-title': '', // 获取标题
 };
-
+//settings page list right hight light <span>       @Junchen Yi 
 document.querySelectorAll(`list.focs`).forEach(li => {
     li.addEventListener('click', e => {
         let _ = li.querySelector('span.focs'), la = li.querySelector('a.check'),
@@ -32,8 +33,31 @@ $('input,textarea,*[contenteditable=true]').on('contextmenu', (e) => {
     stop(e);
     return true;
 });
-let nomax = { 'calc': 0, 'notepad-fonts': 0, 'camera-notice': 0, 'winver': 0, 'run': 0 };
+function addMenu() {
+    var parentDiv = document.getElementById('desktop');
+    var childDivs = parentDiv.getElementsByTagName('div');
+
+    for (var i = 0; i < childDivs.length; i++) {
+        if (i <= 4) {//win12内置的5个图标不添加
+            continue;
+        }
+        var div = childDivs[i];
+        div.setAttribute('iconIndex', i - 5);
+        console.log(i - 5, div.getAttribute('appname'))
+        div.addEventListener('contextmenu', (event) => {
+            if (div.getAttribute('appname') != undefined) {
+                return showcm(event, 'desktop.icon', [div.getAttribute('appname'), div.getAttribute('iconIndex')]);
+            }
+            return false;
+        }, useCapture = true);
+    }
+}
+var run_cmd = '';
+let nomax = { 'calc': 0 /* 其实，计算器是可以最大化的...*/, 'notepad-fonts': 0, 'camera-notice': 0, 'winver': 0, 'run': 0, 'wsa': 0 };
 let nomin = { 'notepad-fonts': 0, 'camera-notice': 0, 'run': 0 };
+var topmost = [];
+var sys_setting = [1, 1, 1, 0, 0, 1];
+var use_music = true;
 let cms = {
     'titbar': [
         function (arg) {
@@ -70,11 +94,31 @@ let cms = {
         }
     ],
     'desktop': [
-        ['<i class="bi bi-arrow-clockwise"></i> 刷新', `$('#desktop').css('opacity','0');setTimeout(()=>{$('#desktop').css('opacity','1');},100);`],
+        ['<i class="bi bi-arrow-clockwise"></i> 刷新', `$('#desktop').css('opacity','0');setTimeout(()=>{$('#desktop').css('opacity','1');},100);setIcon();`],
         ['<i class="bi bi-circle-square"></i> 切换主题', 'toggletheme()'],
         `<a onmousedown="window.open('https://github.com/tjy-gitnub/win12','_blank');" win12_title="https://github.com/tjy-gitnub/win12" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)"><i class="bi bi-github"></i> 在 Github 中查看此项目</a>`,
+        function (arg) {
+            if (edit_mode) {
+                return ['<i class="bi bi-pencil"></i> 退出编辑模式', 'editMode();'];
+            }
+            else if (!edit_mode) {
+                return ['<i class="bi bi-pencil"></i> 进入编辑模式', 'editMode();'];
+            }
+        },
         ['<i class="bi bi-info-circle"></i> 关于 Win12 网页版', `$('#win-about>.about').addClass('show');$('#win-about>.update').removeClass('show');openapp('about');if($('.window.about').hasClass('min'))minwin('about');`],
-        ['<i class="bi bi-brush"></i> 个性化',`openapp('setting');$('#win-setting > div.menu > list > a.enable.appearance')[0].click()`]
+        ['<i class="bi bi-brush"></i> 个性化', `openapp('setting');$('#win-setting > div.menu > list > a.enable.appearance')[0].click()`]
+    ],
+    'desktop.icon': [
+        function (arg) {
+            return ['<i class="bi bi-folder2-open"></i> 打开', 'openapp(`' + arg[0] + '`)']
+        },
+        function (arg) {
+            if (arg[1] >= 0) {
+                return ['<i class="bi bi-trash3"></i> 删除', 'desktopItem.splice(' + (arg[1] - 1) + ', 1);saveDesktop();setIcon();addMenu();'];
+            } else {
+                return 'null';
+            }
+        }
     ],
     'winx': [
         function (arg) {
@@ -105,7 +149,7 @@ let cms = {
             return ['<i class="bi bi-window"></i> 打开', `openapp('${arg[0]}');hide_startmenu();`];
         },
         function (arg) {
-            return ['<i class="bi bi-link-45deg"></i> 在桌面创建链接', "$('#desktop').append(`<div class='b' ondblclick=openapp('" + arg[0] + "')  ontouchstart=openapp('" + arg[0] + "')><img src='icon/" + geticon(arg[0]) + "'><p>" + arg[1] + "</p></div>`);saveDesktop();"];
+            return ['<i class="bi bi-link-45deg"></i> 在桌面创建链接', "var s=`<div class='b' ondblclick=openapp('" + arg[0] + "')  ontouchstart=openapp('" + arg[0] + "') appname='" + arg[0] + "'><img src='icon/" + geticon(arg[0]) + "'><p>" + arg[1] + "</p></div>`;$('#desktop').append(s);desktopItem[desktopItem.length]=s;addMenu();saveDesktop();"];
         },
         function (arg) {
             return ['<i class="bi bi-x"></i> 取消固定', `$('#s-m-r>.pinned>.apps>.sm-app.${arg[0]}').remove()`];
@@ -116,7 +160,7 @@ let cms = {
             return ['<i class="bi bi-window"></i> 打开', `openapp('${arg[0]}');hide_startmenu();`];
         },
         function (arg) {
-            return ['<i class="bi bi-link-45deg"></i> 在桌面创建链接', "$('#desktop').append(`<div class='b' ondblclick=openapp('" + arg[0] + "')  ontouchstart=openapp('" + arg[0] + "')><img src='icon/" + geticon(arg[0]) + "'><p>" + arg[1] + "</p></div>`);saveDesktop();"];
+            return ['<i class="bi bi-link-45deg"></i> 在桌面创建链接', "var s=`<div class='b' ondblclick=openapp('" + arg[0] + "')  ontouchstart=openapp('" + arg[0] + "') appname='" + arg[0] + "'><img src='icon/" + geticon(arg[0]) + "'><p>" + arg[1] + "</p></div>`;$('#desktop').append(s);desktopItem[desktopItem.length]=s;addMenu();saveDesktop();"];
         },
         function (arg) {
             return ['<i class="bi bi-pin-angle"></i> 固定到开始菜单', "pinapp('" + arg[0] + "', '" + arg[1] + "', 'openapp(&quot;" + arg[0] + "&quot;);hide_startmenu();')"];
@@ -133,25 +177,25 @@ let cms = {
             return ['<i class="bi bi-folder2-open"></i> 打开', `apps.explorer.goto('${arg}')`];
         },
         arg => {
-            return ['<i class="bi bi-arrow-up-right-square"></i> Open in a new tab', `apps.explorer.newtab('${arg}');`];
+            return ['<i class="bi bi-arrow-up-right-square"></i> 在新标签页中打开', `apps.explorer.newtab('${arg}');`];
         },
         arg => {
-            if ($('#win-explorer>.path>.tit>.path>div.text').length>1)
+            if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
                 return ['<i class="bi bi-trash3"></i> 删除', `apps.explorer.del('${arg}')`];
             return 'null';
         },
         arg => {
-            if ($('#win-explorer>.path>.tit>.path>div.text').length>1)
+            if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
                 return ['<i class="bi bi-files"></i> 复制', `apps.explorer.copy_or_cut('${arg}','copy')`];
             return 'null';
         },
         arg => {
-            if ($('#win-explorer>.path>.tit>.path>div.text').length>1)
+            if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
                 return ['<i class="bi bi-scissors"></i> 剪切', `apps.explorer.copy_or_cut('${arg}','cut')`];
             return 'null';
         },
         arg => {
-            if ($('#win-explorer>.path>.tit>.path>div.text').length>1)
+            if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
                 return ['<i class="bi bi-input-cursor-text"></i> 重命名', `apps.explorer.rename('${arg}')`];
             return 'null';
         }
@@ -161,44 +205,44 @@ let cms = {
             return ['<i class="bi bi-folder2-open"></i> 打开（目前毛用没有）', ``];
         },
         arg => {
-            if ($('#win-explorer>.path>.tit>.path>div.text').length>1)
+            if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
                 return ['<i class="bi bi-trash3"></i> 删除', `apps.explorer.del('${arg}')`];
             return 'null';
         },
         arg => {
-            if ($('#win-explorer>.main>.content>.tool>.tit>.path>div.text')[0].innerHTML != "此电脑")
+            if ($('#win-explorer>.path>.tit>.path>div.text')[0].innerHTML != "此电脑")
                 return ['<i class="bi bi-files"></i> 复制', `apps.explorer.copy_or_cut('${arg}','copy')`];
             return 'null';
         },
         arg => {
-            if ($('#win-explorer>.path>.tit>.path>div.text').length>1)
+            if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
                 return ['<i class="bi bi-scissors"></i> 剪切', `apps.explorer.copy_or_cut('${arg}','cut')`];
         },
         arg => {
-            if ($('#win-explorer>.path>.tit>.path>div.text').length>1)
+            if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
                 return ['<i class="bi bi-input-cursor-text"></i> 重命名', `apps.explorer.rename('${arg}')`];
             return 'null';
         }
     ],
     'explorer.content': [
         arg => {
-            if ($('#win-explorer>.path>.tit>.path>div.text').length>1)
+            if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
                 return ['<i class="bi bi-file-earmark-plus"></i> 新建文件', `apps.explorer.add($('#win-explorer>.path>.tit')[0].dataset.path,'新建文本文档.txt')`];
             return 'null';
         },
         arg => {
-            if ($('#win-explorer>.path>.tit>.path>div.text').length>1)
+            if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
                 return ['<i class="bi bi-folder-plus"></i> 新建文件夹', `apps.explorer.add($('#win-explorer>.path>.tit')[0].dataset.path,'新建文件夹',type='files')`];
             return 'null';
         },
         arg => {
-            if ($('#win-explorer>.path>.tit>.path>div.text').length>1)
+            if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
                 return ['<i class="bi bi-file-earmark-arrow-down"></i> 粘贴', `apps.explorer.paste($('#win-explorer>.path>.tit')[0].dataset.path,'新建文件夹',type='files')`];
             return 'null';
         },
         arg => {
-            if ($('#win-explorer>.path>.tit>.path>div.text').length>1)
-                return ['<i class="bi bi-arrow-clockwise"></i> 刷新', `apps.explorer.goto($('#win-explorer>.path>.tit')[0].dataset.path)`];
+            if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
+                return ['<i class="bi bi-arrow-clockwise"></i> 刷新', `apps.explorer.goto($('#win-explorer>.path>.tit')[0].dataset.path, false)`];
             return ['<i class="bi bi-arrow-clockwise"></i> 刷新', `apps.explorer.reset()`];
         }
     ],
@@ -221,6 +265,13 @@ let cms = {
         }
     ]
 }
+window.onkeydown = function (event) {
+    if (event.keyCode == 116/*F5被按下(刷新)*/) {
+        event.preventDefault();/*取消默认刷新行为*/
+        $('#desktop').css('opacity', '0'); setTimeout(() => { $('#desktop').css('opacity', '1'); }, 100); setIcon();
+    }
+}
+
 function showcm(e, cl, arg) {
     if ($('#cm').hasClass('show-begin')) {
         setTimeout(() => {
@@ -233,9 +284,11 @@ function showcm(e, cl, arg) {
                     ret = item(arg);
                     if (ret == 'null') return true;
                     h += `<a class="a" onmousedown="${ret[1]}">${ret[0]}</a>\n`;
-                } else if (typeof (item) == 'string') {
+                }
+                else if (typeof (item) == 'string') {
                     h += item + '\n';
-                } else {
+                }
+                else {
                     h += `<a class="a" onmousedown="${item[1]}">${item[0]}</a>\n`;
                 }
             })
@@ -265,7 +318,7 @@ function showcm(e, cl, arg) {
     cms[cl].forEach(item => {
         if (typeof (item) == 'function') {
             ret = item(arg);
-            console.log(arg,ret);
+            console.log(arg, ret);
             if (ret == 'null') {
                 return true;
             }
@@ -298,6 +351,8 @@ $('#cm>.foc').blur(() => {
         $(x).removeClass('show-begin');
     }, 200);
 });
+let font_window = false;
+
 // 下拉菜单
 dps = {
     'notepad.file': [
@@ -326,9 +381,15 @@ dps = {
         ['<i class="bi bi-type-italic"></i> 插入斜体字', 'hidedp(true);$(\'#win-notepad>.text-box\')[0].innerHTML+=\'<i>I</i>\''],
         ['<i class="bi bi-type-bold"></i> 插入加粗字', 'hidedp(true);$(\'#win-notepad>.text-box\')[0].innerHTML+=\'<b>B</b>\''],
         '<hr>',
-        ['<i class="bi bi-fonts"></i> 字体', 'hidedp(true);showwin(\'notepad-fonts\');apps.notepadFonts.reset();'],
+        ['<i class="bi bi-fonts"></i> 字体', 'font_window=true;hidedp(true);showwin(\'notepad-fonts\');apps.notepadFonts.reset();'],
     ]
 }
+
+function playWindowsBackground() {
+    var audio = new Audio("./media/Windows Background.wav")
+    audio.play()
+}
+
 let dpt = null, isOnDp = false;
 $('#dp')[0].onmouseover = () => { isOnDp = true };
 $('#dp')[0].onmouseleave = () => { isOnDp = false; hidedp() };
@@ -433,7 +494,8 @@ let nts = {
             使用标准网络技术,例如 HTML, CSS 和 JS<br />
             此项目绝不附属于微软,且不应与微软操作系统或产品混淆,<br />
             这也不是 Windows365 cloud PC<br />
-            本项目中微软、Windows和其他示范产品是微软公司的商标</p>`,
+            本项目中微软、Windows和其他示范产品是微软公司的商标<br />
+            本项目中谷歌、Android和其他示范产品是谷歌公司的商标</p>`,
         btn: [
             { type: 'main', text: '关闭', js: 'closenotice();' },
             { type: 'detail', text: '更多', js: "closenotice();openapp('about');if($('.window.about').hasClass('min'))minwin('about');$('.dock.about').removeClass('show')" },
@@ -462,6 +524,22 @@ let nts = {
             { type: 'cancel', text: '取消', js: 'closenotice();' }
         ]
     },
+    'ZeroDivision': {//计算器报错窗口
+        // 甚至还报错我真的哭死，直接输入框显示给error啥的不就完了。。
+        cnt: `<p class="tit">错误</p>
+            <p>除数不得等于0</p>`,
+        btn: [
+            { type: 'main', text: '确定', js: 'closenotice();' },
+        ]
+    },
+    'Can-not-open-file': {
+        cnt: `<p class="tit">` + run_cmd + `</p>
+        <p>Windows 找不到文件 '` + run_cmd + `'。请确定文件名是否正确后，再试一次。</p> `,
+        btn: [
+            { type: 'main', text: '确定', js: 'closenotice();' },
+            { type: 'detail', text: '在 Micrsoft Edge 中搜索', js: 'closenotice();openapp(\'edge\');window.setTimeout(() => {apps.edge.newtab();apps.edge.goto(' + run_cmd + ');}, 300);' }
+        ]
+    },
     'widgets.monitor': {
         cnt: `
         <p class="tit">切换监视器类型</p>
@@ -477,12 +555,24 @@ let nts = {
             { type: 'cancel', text: '取消', js: 'closenotice();' }
         ]
     },
+    'widgets.desktop': {
+        cnt: `
+            <p class="tit">添加桌面小组件</p>
+            <list class="new">
+                <a class="a" onclick="closenotice(); widgets.widgets.add('calc'); widgets.widgets.addToDesktop('calc');">计算器</a>
+                <a class="a" onclick="closenotice(); widgets.widgets.add('weather'); widgets.widgets.addToDesktop('weather');">天气</a>
+                <a class="a" onclick="closenotice(); widgets.widgets.add('monitor'); widgets.widgets.addToDesktop('monitor');">系统性能监视器</a>
+            </list>`,
+        btn: [
+            { type: 'cancel', text: '取消', js: 'closenotice();' }
+        ]
+    },
     'duplication file name': {
         cnt: `
             <p class="tit">错误</p>
             <p>文件名重复</p>`,
         btn: [
-            { type: 'cancel', text: '取消', js: 'closenotice();' },
+            { type: 'cancel', text: '取消', js: 'closenotice();' }
         ]
     },
     'about-copilot': {
@@ -502,14 +592,32 @@ let nts = {
         cnt: `<p class="tit">反馈 Windows 12 Copilot</p>
         <p>我们非常注重用户的体验与反馈，非常感谢对AI Copilot的建议</p>
         <list class="new">
-          <a class="a" onclick="window.open('https://github.com/tjy-gitnub/win12/issues','_blank');" win12_title="在浏览器新窗口打开链接" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)">在github上提交issue (需要github账户，会得到更高重视)</a>
-          <a class="a" onclick="window.open('https://forms.office.com/Pages/ResponsePage.aspx?id=DQSIkWdsW0yxEjajBLZtrQAAAAAAAAAAAAO__SDw7SZURjUzOUo0VEVXU1pMWlFTSUVGWDNYWU1EWS4u','_blank');" win12_title="在浏览器新窗口打开链接" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)">在Microsoft Forms上发送反馈(不需要账户，也会重视)</a>
+            <a class="a" onclick="window.open('https://github.com/tjy-gitnub/win12/issues','_blank');" win12_title="在浏览器新窗口打开链接" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)">在github上提交issue (需要github账户，会得到更高重视)</a>
+            <a class="a" onclick="window.open('https://forms.office.com/Pages/ResponsePage.aspx?id=DQSIkWdsW0yxEjajBLZtrQAAAAAAAAAAAAO__SDw7SZURjUzOUo0VEVXU1pMWlFTSUVGWDNYWU1EWS4u','_blank');" win12_title="在浏览器新窗口打开链接" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)">在Microsoft Forms上发送反馈(不需要账户，也会重视)</a>
         </list>
             `,
         btn: [
-            { type: 'main', text: '关闭', js: 'closenotice();' },
+            { type: 'main', text: '关闭', js: 'closenotice();' }
         ]
     },
+    'shutdown': {
+        cnt: `
+        <p class="tit">即将注销你的登录</p>
+        <p>Windows 将在 114514 分钟后关闭。</p>`,
+        btn: [
+            { type: 'main', text: '关闭', js: 'closenotice();' }
+        ]
+    },
+    'setting.update': {
+        cnt: `
+            <p class="tit">更新已就绪</p>
+            <p>请重启电脑以应用更新</p>
+        `,
+        btn: [
+            { type: 'main', text: '立即重启', js: 'location.href = `./reload.html`;' },
+            { type: 'detail', text: '稍后重启', js: 'closenotice();' }
+        ]
+    }
 }
 function shownotice(name) {
     $('#notice>.cnt').html(nts[name].cnt);
@@ -529,11 +637,122 @@ function closenotice() {
         $('#notice-back').removeClass('show');
     }, 200);
 }
+var shutdown_task = []; //关机任务，储存在这个数组里
+// 为什么要数组？
+// 运行的指令
+function runcmd(cmd, inTerminal=false) {
+    if (cmd.slice(0, 3) == "cmd") {
+        run_cmd = cmd;
+        openapp('terminal');
+        return true;
+    }
+    else if (cmd in apps) {
+        openapp(cmd);
+        return true;
+    }
+    else if (cmd.replace('.exe', '') in apps) {
+        openapp(cmd.replace('.exe', ''))
+        return true;
+    }
+    else if (cmd.includes("shutdown")) {//关机指令
+        run_cmd = cmd
+        var cmds = cmd.split(' ');
+        if ((cmds[0] == "shutdown") || (cmds[0] == "shutdown.exe")) { //帮助
+            if (cmds.length == 1) {
+                if(!inTerminal){
+                    openapp('terminal');
+                    $('#win-terminal').html(`<pre class="text-cmd"></pre>`);
+                }
+                $('#win-terminal>.text-cmd').append(`
+shutdown [-s] [-r] [-f] [-a] [-t time]
+-s:关机
+-r:重启
+-f:注销
+-a:取消之前的操作
+-t time:指定在 time秒 后操作
+
+其余不多做介绍了` + (inTerminal?`` : `
+请按任意键继续.&nbsp;.&nbsp;.<input type="text" onkeydown="hidewin('terminal')"></input>`)); 
+                // 所以你是没事干吗？。。提示：github并不是以行数来计算贡献的哦   from @tjy-gitnub
+                $('#win-terminal>pre>input').focus()
+            }
+            else if (cmds.includes("-s") || cmds.includes("/s")) {//关机
+                if ((cmds.indexOf("-t") != -1 && cmd.length/*判断是否-t后有其他参数*/ >= cmds.indexOf("-t") + 2/*先加一，获取当下标是从1开始的时候的下标索引；再加一，获取下一项。配合数组.length使用*/) || (cmds.indexOf("/t") != -1 && cmd.length/*判断是否-t后有其他参数*/ >= cmds.indexOf("/t") + 2)) {
+                    str = "";
+                    if (cmds.includes("-t")) { str = "-t"; }
+                    if (cmds.includes("/t")) { str = "/t"; }
+                    if (!isNaN(cmds[cmds.indexOf(str) + 1]/*这里只加一是因为下标是从0开始的*/)) {
+                        num = parseInt(cmds[cmds.indexOf(str) + 1])
+                        nts['shutdown'] = {
+                            cnt: `
+                            <p class="tit">即将注销你的登录</p>
+                            <p>Windows 将在 ` + calcTimeString(num) + ` 后关闭。</p>`, // 如果必须原生样式的，建议改为 num<60 ? 1 : Math.floor(num / 60) + ` 分钟后关闭。</p>`,
+                            btn: [
+                                { type: 'main', text: '关闭', js: 'closenotice();' },
+                            ]
+                        };
+                        shutdown_task[shutdown_task.length] = setTimeout("window.location.href = './shutdown.html'", num * 1000);
+                        if (!(cmds.includes("/f") || cmds.includes("-f"))) {
+                            shownotice('shutdown');
+                        }
+                    }
+                }
+            }
+            else if (cmds.includes("-r") || cmds.includes("/r")) {//重启
+                if ((cmds.indexOf("-t") != -1 && cmd.length >= cmds.indexOf("-t") + 2) || (cmds.indexOf("/t") != -1 && cmd.length >= cmds.indexOf("/t") + 2)) {/*详见上面的注释*/
+                    str = "";
+                    if (cmds.includes("-t")) { str = "-t"; }
+                    if (cmds.includes("/t")) { str = "/t"; }
+                    if (!isNaN(cmds[cmds.indexOf(str) + 1])) {
+                        num = parseInt(cmds[cmds.indexOf(str) + 1])
+                        nts['shutdown'] = {
+                            cnt: `
+                            <p class="tit">即将注销你的登录</p>
+                            <p>Windows 将在 ` + calcTimeString(num) + ` 后关闭。</p>`, // 如果必须原生样式的，建议改为 num<60 ? 1 : Math.floor(num / 60) + ` 分钟后关闭。</p>`,
+                            btn: [
+                                { type: 'main', text: '关闭', js: 'closenotice();' },
+                            ]
+                        };
+                        shutdown_task[shutdown_task.length] = setTimeout("window.location.href = './reload.html'", num * 1000);
+                        if (!(cmds.includes("/f") || cmds.includes("-f"))) {
+                            shownotice('shutdown');
+                        }
+                    }
+                }
+            }
+            else if (cmds.includes("-a") || cmds.includes("/a")) {//取消电源操作
+                if (shutdown_task.length > 0) {
+                    for (var i = 0; i < shutdown_task.length; i++) {
+                        if (shutdown_task[i] != null) {
+                            try {
+                                clearTimeout(shutdown_task[i]);
+                            } catch (err) { console.log(err); }
+                            shutdown_task[i] = null;
+                        }
+                    }
+                    nts['shutdown'] = {
+                        cnt: `
+                        <p class="tit">注销已取消</p>
+                        <p>计划的关闭已取消。</p>`,
+                        btn: [
+                            { type: 'main', text: '关闭', js: 'closenotice();' },
+                        ]
+                    };
+                    shownotice('shutdown');
+                }
+            }
+            return true;
+        }
+    }
+    return false;
+}
 // 应用
 let apps = {
     setting: {
         init: () => {
-            $('#win-setting>.menu>list>a.system')[0].click();
+            $('#win-setting>.menu>list>a.home')[0].click();
+            $('#win-setting>.page>.cnt.update>.setting-list>div:last-child>.alr>a.checkbox')[localStorage.getItem('autoUpdate') == 'true' ? 'addClass' : 'removeClass']('checked');
+            apps.setting.checkUpdate();
         },
         page: (name) => {
             $('#win-setting>.page>.cnt.' + name).scrollTop(0);
@@ -551,6 +770,7 @@ let apps = {
                 cs.forEach(c => {
                     if (c.type == 'dir') {
                         $.get(c.url).then(cnt => {
+                            $('#set-theme').html('');
                             cnt.forEach(cn => {
                                 if (cn.name == 'theme.json') {
                                     $.getJSON('https://tjy-gitnub.github.io/win12-theme/' + cn.path).then(inf => {
@@ -588,58 +808,99 @@ let apps = {
                 })
             })
         },
+        checkUpdate: () => {
+            $('#win-setting>.page>.cnt.update>.lo>.update-main .notice')[0].innerText = '正在检查更新...';
+            $('#win-setting>.page>.cnt.update>.lo>.update-main .detail')[0].innerHTML = '&nbsp;';
+            $('#win-setting>.page>.cnt.update>.setting-list>.update-now').addClass('disabled');
+            $('#win-setting>.page>.cnt.update>.setting-list>.update-now>div>p:first-child')[0].innerText = '正在检查更新...';
+            $('#win-setting>.page>.cnt.update>.setting-list>.update-now>div>p:last-child')[0].innerHTML = '&nbsp;';
+            $('#win-setting>.page>.cnt.update>.lo>.update-main>div:last-child').addClass('disabled');
+            fetch('https://api.github.com/repos/tjy-gitnub/win12/commits').then(res => {
+                res.json().then(json => {
+                    const sha = localStorage.getItem('sha');
+                    if (sha != json[0].sha) {
+                        let msg = json[0].commit.message.split('\n\n')[0];
+                        if (msg.match(/v[0-9]*\.[0-9]*\.[0-9]*/)) {
+                            msg = msg.match(/v[0-9]*\.[0-9]*\.[0-9]*/)[0];
+                            window.setTimeout(() => {
+                                $('#win-setting>.page>.cnt.update>.lo>.update-main .notice')[0].innerText = 'Windows 12 有更新可用';
+                                $('#win-setting>.page>.cnt.update>.lo>.update-main .detail')[0].innerText = `目前最新版本: ${msg}`;
+                                $('#win-setting>.page>.cnt.update>.lo>.update-main>div:last-child').removeClass('disabled');
+                                $('#win-setting>.page>.cnt.update>.setting-list>.update-now>div>p:first-child')[0].innerText = '更新已就绪';
+                                $('#win-setting>.page>.cnt.update>.setting-list>.update-now>div>p:last-child')[0].innerText = msg;
+                                $('#win-setting>.page>.cnt.update>.setting-list>.update-now').removeClass('disabled');
+                            }, 6000);
+                        }
+                        else {
+                            window.setTimeout(() => {
+                                let da = new Date();
+                                $('#win-setting>.page>.cnt.update>.lo>.update-main .notice')[0].innerText = 'Windows 12 目前是最新版本';
+                                $('#win-setting>.page>.cnt.update>.lo>.update-main .detail')[0].innerText = `上次检查时间: ${da.getFullYear()}年${da.getMonth() + 1}月${da.getDate()}日，${da.getHours()}: ${da.getMinutes()}`;
+                                $('#win-setting>.page>.cnt.update>.lo>.update-main>div:last-child').removeClass('disabled');
+                                $('#win-setting>.page>.cnt.update>.setting-list>.update-now>div>p:first-child')[0].innerText = '无更新可用';
+                                $('#win-setting>.page>.cnt.update>.setting-list>.update-now>div>p:last-child')[0].innerText = 'Windows 12 目前是最新版本';
+                            }, 6000)
+                        }
+                    }
+                });
+            });
+        }
     },
     run: {
         init: () => {
-            $('#win-run>.open>input').val('');
+            $('#win-run>.open>input').val(run_cmd);   //在windows中，运行输入的内容会被保留
             window.setTimeout(() => {
                 $('#win-run>.open>input').focus();
+                $('#win-run>.open>input').select();
             }, 300);
         },
         run: (cmd) => {
-            if (cmd == 'cmd') {
-                openapp('terminal');
-            }
-            else if (cmd != '') {
-                try {
-                    cmd = cmd.replace(/\/$/, '');
-                    var pathl = cmd.split('/');
-                    let tmp = apps.explorer.path;
-                    let valid = true;
-                    pathl.forEach(name => {
-                        if (tmp['folder'].hasOwnProperty(name)) {
-                            tmp = tmp['folder'][name];
-                        }
-                        else {
-                            valid = false;
-                            return false;
-                        }
-                    });
-                    if (valid == true) {
-                        openapp('explorer');
-                        window.setTimeout(() => {
-                            apps.explorer.goto(cmd);
-                        }, 300);
-                    }
-                    else {
-                        if ($('.window.' + cmd)[0] && !$('.window.' + cmd).hasClass('configs')) {
-                            openapp(cmd);
-                        }
-                        else {
-                            openapp('edge');
+            if (!runcmd(cmd)) {
+                if (cmd != '') {
+                    try {
+                        cmd = cmd.replace(/\/$/, '');
+                        var pathl = cmd.split('/');
+                        let tmp = apps.explorer.path;
+                        let valid = true;
+                        pathl.forEach(name => {
+                            if (tmp['folder'].hasOwnProperty(name)) {
+                                tmp = tmp['folder'][name];
+                            }
+                            else {
+                                valid = false;
+                                return false;
+                            }
+                        });
+                        if (valid == true) {
+                            run_cmd = cmd;
+                            openapp('explorer');
                             window.setTimeout(() => {
-                                apps.edge.newtab();
-                                apps.edge.goto(cmd);
+                                apps.explorer.goto(cmd);
                             }, 300);
                         }
+                        else {
+                            nts['Can-not-open-file'] = {
+                                cnt: `<p class="tit">` + cmd + `</p>
+                                <p>Windows 找不到文件 '` + cmd + `'。请确定文件名是否正确后，再试一次。</p> `,
+                                btn: [
+                                    { type: 'main', text: '确定', js: "closenotice();showwin('run');$('#win-run>.open>input').select();" },
+                                    { type: 'cancel', text: '在 Micrsoft Edge 中搜索', js: "closenotice();openapp(\'edge\');window.setTimeout(() => {apps.edge.newtab();apps.edge.goto('https://www.bing.com/search?q=" + encodeURIComponent(cmd) + "');}, 300);" }
+                                ]
+                            }
+                            shownotice('Can-not-open-file');
+                        }
                     }
-                }
-                catch {
-                    openapp('edge');
-                    window.setTimeout(() => {
-                        apps.edge.newtab();
-                        apps.edge.goto(cmd);
-                    }, 300);
+                    catch {
+                        nts['Can-not-open-file'] = {
+                            cnt: `<p class="tit">` + cmd + `</p>
+                            <p>Windows 找不到文件 '` + cmd + `'。请确定文件名是否正确后，再试一次。</p> `,
+                            btn: [
+                                { type: 'main', text: '确定', js: "closenotice();showwin('run');$('#win-run>.open>input').select();" },
+                                { type: 'cancel', text: '在 Micrsoft Edge 中搜索', js: "closenotice();openapp(\'edge\');window.setTimeout(() => {apps.edge.newtab();apps.edge.goto('https://www.bing.com/search?q=" + encodeURIComponent(cmd) + "');}, 300);" }
+                            ]
+                        }
+                        shownotice('Can-not-open-file');
+                    }
                 }
             }
         }
@@ -835,6 +1096,11 @@ let apps = {
             $('#win-taskmgr>.main>.cnt.' + name).addClass('show');
             $('#win-taskmgr>.menu>list.focs>a.check').removeClass('check');
             $('#win-taskmgr>.menu>list.focs>a.' + name).addClass('check');
+            if (!(name == 'processes' || name == '404')) {
+                document.getElementById('tsk-search').style.display = 'none';
+            } else {
+                document.getElementById('tsk-search').style.display = '';
+            }
         },
         graph: (name) => {
             $('#win-setting>.page>.cnt.' + name).scrollTop(0);
@@ -847,10 +1113,17 @@ let apps = {
             let processList = [];
             let max = 100 / apps.taskmgr.tasks.length;
             let cpusum = 0, memorysum = 0, disksum = 0, diskUsing = Number(Math.random()) > 0.7/*, color = window.getComputedStyle(page, null).getPropertyValue('--href')*/;
+            var Search_length = 0;
             for (const elt of apps.taskmgr.tasks) {
                 let cpu = Number((Math.random() * max).toFixed(1)),
                     memory = apps.taskmgr.memory != 0 ? apps.taskmgr.memory / apps.taskmgr.tasks.length + Number(((Math.random() - 0.5) / 5).toFixed(1)) : Number((Math.random() * max).toFixed(1)),
                     disk = Number((Math.random() * max).toFixed(1)) > (max / 1.2) && diskUsing ? max * Number(Math.random().toFixed(1)) : 0;
+                cpusum = Number((cpusum + cpu).toFixed(1));
+                memorysum = Number((memorysum + memory).toFixed(1));
+                disksum = Number((disksum + disk).toFixed(1));
+                if (document.getElementById('tsk-search').value != '' && document.getElementById('tsk-search').style.display == '' && (!elt.name.toLowerCase().includes(document.getElementById('tsk-search').value.toLowerCase()/* 搜索时转换成小写 */))) {
+                    continue //搜索
+                }
                 processList.splice(processList.length, 0, {
                     name: elt.name,
                     icon: elt.icon || '',
@@ -859,14 +1132,20 @@ let apps = {
                     memory: memory,
                     disk: disk
                 });
-                cpusum = Number((cpusum + cpu).toFixed(1));
-                memorysum = Number((memorysum + memory).toFixed(1));
-                disksum = Number((disksum + disk).toFixed(1));
+                Search_length++;
+            }
+            if (Search_length == 0) {
+                apps.taskmgr.page('404')
+            } else {
+                if (document.getElementById('tsk-search').value != '' && document.getElementById('tsk-search').style.display == '') {
+                    apps.taskmgr.page('processes')
+                }
             }
             apps.taskmgr.cpu = cpusum;
             apps.taskmgr.memory = memorysum;
             apps.taskmgr.disk = disksum;
             apps.taskmgr.processList = processList;
+
         },
         loadProcesses: (processList = apps.taskmgr.processList) => {
             const processContainer = $('#win-taskmgr>.main>.cnt.processes tbody.view')[0];
@@ -1337,27 +1616,30 @@ let apps = {
         tabs: [],
         now: null,
         len: 0,
-        newtab:(path='')=>{
+        newtab: (path = '') => {
             // if(path==''){
             //     m_tab.newtab('explorer','此电脑');
             //     apps.explorer.tabs[apps.explorer.tabs.length-1][2]='';
             //     m_tab.tab('explorer',apps.explorer.tabs.length - 1);
             // }else{
-                m_tab.newtab('explorer','');
-                apps.explorer.tabs[apps.explorer.tabs.length-1][2]=path;
-                m_tab.tab('explorer',apps.explorer.tabs.length - 1);
+            m_tab.newtab('explorer', '');
+            apps.explorer.tabs[apps.explorer.tabs.length - 1][2] = path;
+            apps.explorer.initHistory(apps.explorer.tabs[apps.explorer.tabs.length - 1][0]);
+            apps.explorer.checkHistory(apps.explorer.tabs[apps.explorer.tabs.length - 1][0]);
+            m_tab.tab('explorer', apps.explorer.tabs.length - 1);
             // }
         },
-        settab:(t,i)=>{
+        settab: (t, i) => {
             return `<div class="tab ${t[0]}" onclick="m_tab.tab('explorer',${i})" oncontextmenu="showcm(event,'explorer.tab',${i});stop(event);return false" onmousedown="m_tab.moving('explorer',this,event,${i});stop(event);" ontouchstart="m_tab.moving('exploer',this,event,${i});stop(event);"><p>${t[1]}</p><span class="clbtn bi bi-x" onclick="m_tab.close('explorer',${i});stop(event);"></span></div>`;
         },
-        tab: (c,load=true)=>{
-            if(load){
-                if(!apps.explorer.tabs[c][2].length)apps.explorer.reset();
+        tab: (c, load = true) => {
+            if (load) {
+                if (!apps.explorer.tabs[c][2].length) apps.explorer.reset();
                 else apps.explorer.goto(apps.explorer.tabs[c][2]);
             }
+            apps.explorer.checkHistory(apps.explorer.tabs[c][0]);
         },
-        reset: () => {
+        reset: (clear = true) => {
             $('#win-explorer>.page>.main>.content>.view')[0].innerHTML = `<style>#win-explorer>.page>.main>.content>.view>.class{margin: 5px 0 0 10px;display: flex;}
             #win-explorer>.page>.main>.content>.view>.class>img{width: 20px;height: 20px;margin-top: 3px;margin-right: 5px;filter:brightness(0.9);}
             #win-explorer>.page>.main>.content>.view>.group{display: flex;flex-wrap: wrap;padding: 10px 20px;}
@@ -1383,8 +1665,12 @@ let apps = {
             </div><p class="info">185.3 GB 可用, 共 216 GB</p></div></a></div>`;
             $('#win-explorer>.path>.tit')[0].innerHTML = '<div class="icon" style="background-image: url(\'./apps/icons/explorer/thispc.svg\')"></div><div class="path"><div class="text" onclick="apps.explorer.reset()">此电脑</div><div class="arrow">&gt;</div></div>';
             // if(rename){
-                m_tab.rename('explorer','<img src="./apps/icons/explorer/thispc.svg"> 此电脑');
-                apps.explorer.tabs[apps.explorer.now][2]='';
+            m_tab.rename('explorer', '<img src="./apps/icons/explorer/thispc.svg"> 此电脑');
+            apps.explorer.tabs[apps.explorer.now][2] = '';
+            if (clear) {
+                apps.explorer.delHistory(apps.explorer.tabs[apps.explorer.now][0]);
+                apps.explorer.pushHistory(apps.explorer.tabs[apps.explorer.now][0], '此电脑');
+            }
             // }
         },
         select: (path, id) => {
@@ -1393,7 +1679,6 @@ let apps = {
                 elements[i].classList.remove('select');
             }
             apps.explorer.Process_Of_Select = path;
-            var pathl = path.split('/');
             var element = document.getElementById(id);
             element.classList.add('select');
             apps.explorer.is_use += 1;
@@ -1408,7 +1693,6 @@ let apps = {
             });
 
             if (Object.keys(tmp["folder"]).includes(name)) {
-                let name_ = name;
                 apps.explorer.clipboard = ["folder", [name], tmp["folder"][name]];
                 if (operate == "cut")
                     delete tmp["folder"][name];
@@ -1422,7 +1706,7 @@ let apps = {
                     }
                 }
             }
-            apps.explorer.goto($('#win-explorer>.path>.tit')[0].dataset.path);
+            apps.explorer.goto($('#win-explorer>.path>.tit')[0].dataset.path, false);
         },
         paste: (path) => {
             var pathl = path.split('/');
@@ -1451,22 +1735,22 @@ let apps = {
                 shownotice("duplication file name");
                 return;
             }
-            // if (apps.explorer.traverseDirectory(tmp,clipboard[1][0]))
-            // {
-            //     clipboard[1][0] += " - 副本";
-            // }
-            // if (apps.explorer.traverseDirectory(tmp,clipboard[1]['name']))
-            // {
-            //     clipboard[1][0] += " - 副本";
-            // }
-            // 这段注释了的代码可以调试一下，会有神奇的bug。
+            if (apps.explorer.traverseDirectory(tmp, clipboard[1][0]))
+                // {
+                //     clipboard[1][0] += " - 副本";
+                // }
+                // if (apps.explorer.traverseDirectory(tmp,clipboard[1]['name']))
+                // {
+                //     clipboard[1][0] += " - 副本";
+                // }
+                // 这段注释了的代码可以调试一下，会有神奇的bug。
 
-            if (clipboard[0] == "file") {
-                tmp["file"].push(clipboard[1]);
-            }
-            else {
-                tmp['folder'][clipboard[1][0]] = clipboard[2];
-            }
+                if (clipboard[0] == "file") {
+                    tmp["file"].push(clipboard[1]);
+                }
+                else {
+                    tmp['folder'][clipboard[1][0]] = clipboard[2];
+                }
             apps.explorer.goto(path);
         },
         del_select: () => {
@@ -1496,7 +1780,7 @@ let apps = {
                     continue;
                 }
                 name_1 = inputTag.value.split(".");
-                if(name_1[0].indexOf('/')>-1)alert('恭喜你发现了这个bug,但是太懒了不想修qwq');
+                if (name_1[0].indexOf('/') > -1) alert('恭喜你发现了这个bug,但是太懒了不想修qwq');
                 console.log(name_1);
                 if (name_1[1] == "txt") {
                     icon_ = "icon/files/txt.png";
@@ -1526,7 +1810,7 @@ let apps = {
                 }
                 var element = document.getElementById("new_name");
                 element.parentNode.removeChild(element);
-                apps.explorer.goto($('#win-explorer>.path>.tit')[0].dataset.path);
+                apps.explorer.goto($('#win-explorer>.path>.tit')[0].dataset.path, false);
 
             }
             delete elements;
@@ -1537,31 +1821,35 @@ let apps = {
             }
             apps.explorer.Process_Of_Select = "";
         },
-        goto: (path) => {
+        goto: (path, clear = true) => {
             apps.explorer.Process_Of_Select = "";
             $('#win-explorer>.page>.main>.content>.view')[0].innerHTML = '';
             var pathl = path.split('/');
             var pathqwq = '';
             var index_ = 0;
             let tmp = apps.explorer.path;
+            if (path == '此电脑') {
+                apps.explorer.reset(clear);
+                return null;
+            }
             $('#win-explorer>.path>.tit')[0].dataset.path = path;
             $('#win-explorer>.path>.tit>.path')[0].innerHTML = '<div class="text" onclick="apps.explorer.reset()">此电脑</div><div class="arrow">&gt;</div>';
             $('#win-explorer>.path>.tit>.icon')[0].style.marginTop = '0px';
             if (pathl[pathl.length - 1] == 'C:') {
                 $('#win-explorer>.path>.tit>.icon')[0].style.backgroundImage = 'url("apps/icons/explorer/diskwin.svg")';
                 $('#win-explorer>.path>.tit>.icon')[0].style.marginTop = '2.5px';
-                m_tab.rename('explorer','<img src="./apps/icons/explorer/diskwin.svg" style="margin-top:2.5px">'+pathl[pathl.length-1]);
+                m_tab.rename('explorer', '<img src="./apps/icons/explorer/diskwin.svg" style="margin-top:2.5px">' + pathl[pathl.length - 1]);
             }
             else if (pathl[pathl.length - 1] == 'D:') {
                 $('#win-explorer>.path>.tit>.icon')[0].style.backgroundImage = 'url("apps/icons/explorer/disk.svg")';
-                m_tab.rename('explorer','<img src="./apps/icons/explorer/disk.svg">'+pathl[pathl.length-1]);
+                m_tab.rename('explorer', '<img src="./apps/icons/explorer/disk.svg">' + pathl[pathl.length - 1]);
             }
             else {
                 $('#win-explorer>.path>.tit>.icon')[0].style.backgroundImage = 'url("apps/icons/explorer/folder.svg")';
-                m_tab.rename('explorer','<img src="./apps/icons/explorer/folder.svg">'+pathl[pathl.length-1]);
+                m_tab.rename('explorer', '<img src="./apps/icons/explorer/folder.svg">' + pathl[pathl.length - 1]);
             }
             // if(rename){
-                apps.explorer.tabs[apps.explorer.now][2]=path;
+            apps.explorer.tabs[apps.explorer.now][2] = path;
             // }
             pathl.forEach(name => {
                 pathqwq += name;
@@ -1571,7 +1859,7 @@ let apps = {
             });
             var path_ = path
             if (Object.keys(tmp["folder"]) == 0 && tmp["file"].length == 0) {
-                $('#win-explorer>.main>.content>.view')[0].innerHTML = '<p class="info">此文件夹为空。</p>';
+                $('#win-explorer>.page>.main>.content>.view')[0].innerHTML = '<p class="info">此文件夹为空。</p>';
             }
             else {
                 let ht = '';
@@ -1594,6 +1882,12 @@ let apps = {
             } else {
                 $('#win-explorer>.path>.goback').attr('onclick', `apps.explorer.goto('${path.substring(0, path.length - pathl[pathl.length - 1].length - 1)}')`);
             }
+
+            if (clear) {
+                apps.explorer.delHistory(apps.explorer.tabs[apps.explorer.now][0]);
+                apps.explorer.pushHistory(apps.explorer.tabs[apps.explorer.now][0], $('#win-explorer>.path>.tit')[0].dataset.path);
+            }
+            apps.explorer.checkHistory(apps.explorer.tabs[apps.explorer.now][0]);
 
             // $('#win-explorer>.path>.tit')[0].innerHTML = path;
         },
@@ -1676,8 +1970,9 @@ let apps = {
             var elements = document.getElementsByClassName("item");
             for (var i = 0; i < elements.length; i++) {
                 var element = elements[i];
-                if (element.innerText == name)
+                if (element.innerText == name) {
                     return element.id;
+                }
             }
         },
         del: (path) => {
@@ -1697,6 +1992,11 @@ let apps = {
             tmp_files = tmp['folder'];
             delete tmp_files[name];
             apps.explorer.goto(pathl.join("/"));
+            apps.explorer.history.forEach(item => {
+                while (item.includes(path)) {
+                    item.splice(item.findIndex(elt => { return elt == path; }), 1);
+                }
+            });
         },
         traverseDirectory(dir, name) {
             if (dir["file"] == null && dir["folder"] == null)
@@ -1714,97 +2014,107 @@ let apps = {
             }
             return false;
         },
-
-        path: {
-            folder: {
-                'C:': {
-                    folder: {
-                        'Program Files': {
-                            folder: { 'WindowsApps': { folder: {}, file: [] }, 'Microsoft': { folder: {}, file: [] } },
-                            file: [
-                                { name: 'about.exe', ico: 'icon/about.svg', command: "openapp('about')" },
-                                { name: 'setting.exe', ico: 'icon/setting.svg', command: "openapp('setting')" },
-                            ]
-                        },
-                        'Windows': {
-                            folder: { 'Boot': { folder: {}, file: [] }, 'System': { folder: {}, file: [] }, 'System32': { folder: {}, file: [] } },
-                            file: [
-                                { name: 'notepad.exe', ico: 'icon/notepad.svg', command: "openapp('notepad')" },
-                            ]
-                        },
-                        '用户': {
-                            folder: {
-                                'Administrator': {
-                                    folder: {
-                                        '文档': {
-                                            folder: { 'IISExpress': { folder: {}, file: [] }, 'PowerToys': { folder: {}, file: [] } },
-                                            file: [
-                                                { name: '瓶盖介绍.doc', ico: 'icon/files/word.png', command: '' },
-                                                { name: '瓶盖质量统计分析.xlsx', ico: 'icon/files/excel.png', command: '' },
-                                            ]
-                                        }, '图片': {
-                                            folder: { '本机照片': { folder: {}, file: [] }, '屏幕截图': { folder: {}, file: [] } },
-                                            file: [
-                                                { name: '瓶盖构造图.png', ico: 'icon/files/img.png', command: '' },
-                                                { name: '可口可乐瓶盖.jpg', ico: 'icon/files/img.png', command: '' },
-                                            ]
-                                        },
-                                        'AppData': { folder: {}, file: [] }, '音乐': { folder: { '录音机': { folder: {}, file: [] } } }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    file: [
-                    ]
-                },
-                'D:': {
-                    folder: { 'Microsoft': { folder: {}, file: [] } },
-                    file: [
-                        { name: '瓶盖结构说明.docx', ico: 'icon/files/word.png', command: '' },
-                        { name: '可口可乐瓶盖历史.pptx', ico: 'icon/files/ppt.png', command: '' },
-                    ]
-                }
+        // 禁止奇奇怪怪的缩进！尽量压行，不要毫无意义地全部格式化和展开！ 
+        path: {folder:{'C:':{folder:{'Program Files':{folder:{'WindowsApps':{folder:{},file:[]},'Microsoft':{folder:{},file:[]}},file:[{name:'about.exe',ico:'icon/about.svg',command:"openapp('about')"},{name:'setting.exe',ico:'icon/setting.svg',command:"openapp('setting')"},]},'Program Files (x86)':{folder:{'Microsoft':{folder:{'Edge':{folder:{'Application':{folder:{'SetupMetrics':{folder:{},file:[]}},file:[{name:'msedge.exe',ico:'icon/edge.svg',command:"openapp('edge')"}]}}}}}}},'Windows':{folder:{'Boot':{folder:{},file:[]},'System':{folder:{},file:[]},'SysWOW64':{folder:{},file:[]},'System32':{folder:{},file:[{name:'calc.exe',ico:'icon/calc.svg',command:"openapp('calc')"},{name:'cmd.exe',ico:'icon/terminal.svg',command:"openapp('terminal')"},{name:'notepad.exe',ico:'icon/notepad.svg',command:"openapp('notepad')"},{name:'taskmgr.exe',ico:'icon/taskmgr.png',command:"openapp('taskmgr')"},{name:'winver.exe',ico:'icon/about.svg',command:"openapp('winver')"},]}},file:[{name:'explorer.exe',ico:'icon/explorer.svg',command:"apps.explorer.newtab()"},{name:'notepad.exe',ico:'icon/notepad.svg',command:"openapp('notepad')"},{name:'py.exe',ico:'icon/python.png',command:"openapp('python')"},]},'用户':{folder:{'Administrator':{folder:{'文档':{folder:{'IISExpress':{folder:{},file:[]},'PowerToys':{folder:{},file:[]}},file:[{name:'瓶盖介绍.doc',ico:'icon/files/word.png',command:''},{name:'瓶盖质量统计分析.xlsx',ico:'icon/files/excel.png',command:''},]},'图片':{folder:{'本机照片':{folder:{},file:[]},'屏幕截图':{folder:{},file:[]}},file:[{name:'瓶盖构造图.png',ico:'icon/files/img.png',command:''},{name:'可口可乐瓶盖.jpg',ico:'icon/files/img.png',command:''},]},'AppData':{folder:{'Local':{folder:{'Microsoft':{folder:{'Windows':{folder:{'Fonts':{},'TaskManager':{},'Themes':{},'Shell':{},'应用程序快捷方式':{},}},}},'Programs':{folder:{'Python':{folder:{'Python310':{folder:{'DLLs':{},'Doc':{},'include':{},'Lib':{folder:{'site-packages':{},'tkinter':{},}},'libs':{},'Script':{},'share':{},'tcl':{},'Tools':{}},file:[{name:'python.exe',ico:'icon/python.png',command:"openapp('python')"}]}},}}},'Temp':{folder:{}},}},'LocalLow':{folder:{'Microsoft':{folder:{'Windows':{},}},}},'Roaming':{folder:{'Microsoft':{folder:{'Windows':{folder:{'「开始」菜单':{folder:{'程序':{folder:{}},}},}},}},}},},file:[]},'音乐':{folder:{'录音机':{folder:{},file:[]}}}}},'公用':{folder:{'公用文档':{folder:{'IISExpress':{folder:{},file:[]},'PowerToys':{folder:{},file:[]}},file:[]},'公用图片':{folder:{'本机照片':{folder:{},file:[]},'屏幕截图':{folder:{},file:[]}},file:[]},'公用音乐':{folder:{'录音机':{folder:{},file:[]}}}}}}}},file:[]},'D:':{folder:{'Microsoft':{folder:{},file:[]}},file:[{name:'瓶盖结构说明.docx',ico:'icon/files/word.png',command:''},{name:'可口可乐瓶盖历史.pptx',ico:'icon/files/ppt.png',command:''},]}}},
+        history: [],
+        historypt: [],
+        initHistory: (tab) => {
+            apps.explorer.history[tab] = [];
+            apps.explorer.historypt[tab] = -1;
+        },
+        pushHistory: (tab, u) => {
+            apps.explorer.history[tab].push(u);
+            apps.explorer.historypt[tab]++;
+        },
+        topHistory: (tab) => {
+            return apps.explorer.history[tab][apps.explorer.historypt[tab]];
+        },
+        popHistory: (tab) => {
+            apps.explorer.historypt[tab]--;
+            return apps.explorer.history[tab][apps.explorer.historypt[tab]];
+        },
+        incHistory: (tab) => {
+            apps.explorer.historypt[tab]++;
+            return apps.explorer.history[tab][apps.explorer.historypt[tab]];
+        },
+        delHistory: (tab) => {
+            apps.explorer.history[tab].splice(apps.explorer.historypt[tab] + 1, apps.explorer.history[tab].length - 1 - apps.explorer.historypt[tab]);
+        },
+        historyIsEmpty: (tab) => {
+            return apps.explorer.historypt[tab] <= 0;
+        },
+        historyIsFull: (tab) => {
+            return apps.explorer.historypt[tab] >= apps.explorer.history[tab].length - 1;
+        },
+        checkHistory: (tab) => {
+            if (apps.explorer.historyIsEmpty(tab)) {
+                $('#win-explorer>.path>.back').addClass('disabled');
             }
+            else if (!apps.explorer.historyIsEmpty(tab)) {
+                $('#win-explorer>.path>.back').removeClass('disabled');
+            }
+            if (apps.explorer.historyIsFull(tab)) {
+                $('#win-explorer>.path>.front').addClass('disabled');
+            }
+            else if (!apps.explorer.historyIsFull(tab)) {
+                $('#win-explorer>.path>.front').removeClass('disabled');
+            }
+            console.log(tab, apps.explorer.history[tab]);
+        },
+        back: (tab) => {
+            apps.explorer.goto(apps.explorer.popHistory(tab), false);
+            apps.explorer.checkHistory(tab);
+        },
+        front: (tab) => {
+            apps.explorer.goto(apps.explorer.incHistory(tab), false);
+            apps.explorer.checkHistory(tab);
         }
     },
     calc: {
         init: () => {
-            $('#calc-input').val('0');
-        },
-        add: (arg) => {
-            if (arg >= 1 && arg <= 9 && $('#calc-input')[0].value == '0') {
-                $('#calc-input')[0].value = arg;
-            }
-            else if (arg == '0' && $('#calc-input')[0].value == '0') {
-                $('#calc-input')[0].value = arg;
-            }
-            else {
-                $('#calc-input')[0].value += arg;
-            }
+            document.getElementById('calc-input').innerHTML = "0";
         }
     },
     about: {
         init: () => {
             $('#win-about>.about').addClass('show');
             $('#win-about>.update').removeClass('show');
-            if ($('#contri').length > 1) return;
-            apps.about.get();
+            if (!($('#contri').length > 1)) apps.about.get();
+            if (!($('#StarShow').html().includes('刷新'))) apps.about.get_star();
+        },
+        run_loading: (expr) => {
+            $(expr).html(`<loading><svg width="30px" height="30px" viewBox="0 0 16 16">
+            <circle cx="8px" cy="8px" r="7px" style="stroke:#7f7f7f50;fill:none;stroke-width:3px;"></circle>
+            <circle cx="8px" cy="8px" r="7px" style="stroke:#2983cc;stroke-width:3px;"></circle></svg></loading>`);
         },
         get: () => {
-            $('#contri').html(`<loading><svg width="30px" height="30px" viewBox="0 0 16 16">
-            <circle cx="8px" cy="8px" r="7px" style="stroke:#7f7f7f50;fill:none;stroke-width:3px;"></circle>
-            <circle cx="8px" cy="8px" r="7px" style="stroke:#2983cc;stroke-width:3px;"></circle></svg></loading>`)
+            apps.about.run_loading('#contri');
             // 实时获取项目贡献者
             $.get('https://api.github.com/repos/tjy-gitnub/win12/contributors').then(cs => {
                 setTimeout(() => {
                     $('#contri').html('');
                     cs.forEach(c => {
-                        $('#contri').append(`<a class="a" onclick="window.open('${c['html_url']}','_blank');"><p class="name">${c['login']}</p><p class="cbs">贡献:<span class="num">${c['contributions']}</span></p></a>`)
+                        $('#contri').append(`<a class="a" onclick="window.open('${c['html_url']}','_blank');"><p class="name">${c['login']}</p><p class="cbs">贡献：<span class="num">${c['contributions']}</span></p></a>`)
                     });
                     $('#contri').append(`<a class="button" onclick="apps.about.get()"><i class="bi bi-arrow-clockwise"></i> 刷新</a>`)
                 }, 200);
             });
+        },
+        get_star: () => {
+            apps.about.run_loading('#StarShow')
+            const repoFullName = 'tjy-gitnub/win12';
+            fetch(`https://api.github.com/repos/${repoFullName}`)
+                .then(response => response.json())
+                .then(data => {
+                    setTimeout(() => {
+                        const starCount = data.stargazers_count;
+                        $('#StarShow').html('<div style="display: flex;"><p>&emsp;&emsp;Star 数量：' + starCount + ' (实时数据)</p>&emsp;<a class="button" onclick="apps.about.get_star()"><i class="bi bi-arrow-clockwise"></i> 刷新</a></div>')
+                    }, 200);
+                })
+                .catch(error => {
+                    console.error('获取star数量时出错：', error);
+                    $('#StarShow').html('<div style="display: flex;"><p>&emsp;&emsp;哎呀！出错了！</p>&emsp;<a class="button" onclick="apps.about.get_star()"><i class="bi bi-arrow-clockwise"></i> 重试</a></div>')
+                });
         }
     },
     notepad: {
@@ -1988,59 +2298,65 @@ Type "help", "copyright", "credits" or "license" for more information.
             if (apps.python.pyodide) {
                 const input = $('#win-python>pre>input');
                 const _code = input.val();
-                const elt = $('#win-python>pre.text-cmd')[0];
-                const lastChar = _code[_code.length - 1];
-                var newD = document.createElement('div');
-                newD.innerText = `${apps.python.prompt}${_code}`;
-                elt.appendChild(newD);
-                if (lastChar != ':' && lastChar != '\\' && ((!apps.python.indent || _code == ''))) {
-                    apps.python.prompt = '>>> ';
-                    apps.python.codeCache += _code;
-                    apps.python.indent = false;
-                    const code = apps.python.codeCache;
-                    apps.python.codeCache = '';
-                    apps.python.pyodide.runPython('sys.stdout = io.StringIO()');
-                    try {
-                        const result = String(apps.python.pyodide.runPython(code));
-                        if (apps.python.pyodide.runPython('sys.stdout.getvalue()')) {
-                            var newD = document.createElement('div');
-                            newD.innerText = `${apps.python.pyodide.runPython('sys.stdout.getvalue()')}`;
-                            elt.appendChild(newD);
-                        }
-                        if (result && result != 'undefined') {
-                            var newD = document.createElement('div');
-                            if (result == 'false') {
-                                newD.innerText = 'False';
-                            }
-                            else if (result == 'true') {
-                                newD.innerText = 'True';
-                            }
-                            else {
-                                newD.innerText = result;
-                            }
-                            elt.appendChild(newD);
-                        }
-                    }
-                    catch (err) {
-                        var newD = document.createElement('div');
-                        newD.innerText = `${err.message}`;
-                        elt.appendChild(newD);
-                    }
+                if (_code == "exit()") {
+                    hidewin('python');
+                    input.val('');
                 }
                 else {
-                    apps.python.prompt = '... ';
-                    if (lastChar == ':') {
-                        apps.python.indent = true;
+                    const elt = $('#win-python>pre.text-cmd')[0];
+                    const lastChar = _code[_code.length - 1];
+                    var newD = document.createElement('div');
+                    newD.innerText = `${apps.python.prompt}${_code}`;
+                    elt.appendChild(newD);
+                    if (lastChar != ':' && lastChar != '\\' && ((!apps.python.indent || _code == ''))) {
+                        apps.python.prompt = '>>> ';
+                        apps.python.codeCache += _code;
+                        apps.python.indent = false;
+                        const code = apps.python.codeCache;
+                        apps.python.codeCache = '';
+                        apps.python.pyodide.runPython('sys.stdout = io.StringIO()');
+                        try {
+                            const result = String(apps.python.pyodide.runPython(code));
+                            if (apps.python.pyodide.runPython('sys.stdout.getvalue()')) {
+                                var newD = document.createElement('div');
+                                newD.innerText = `${apps.python.pyodide.runPython('sys.stdout.getvalue()')}`;
+                                elt.appendChild(newD);
+                            }
+                            if (result && result != 'undefined') {
+                                var newD = document.createElement('div');
+                                if (result == 'false') {
+                                    newD.innerText = 'False';
+                                }
+                                else if (result == 'true') {
+                                    newD.innerText = 'True';
+                                }
+                                else {
+                                    newD.innerText = result;
+                                }
+                                elt.appendChild(newD);
+                            }
+                        }
+                        catch (err) {
+                            var newD = document.createElement('div');
+                            newD.innerText = `${err.message}`;
+                            elt.appendChild(newD);
+                        }
                     }
-                    apps.python.codeCache += _code + '\n';
+                    else {
+                        apps.python.prompt = '... ';
+                        if (lastChar == ':') {
+                            apps.python.indent = true;
+                        }
+                        apps.python.codeCache += _code + '\n';
+                    }
+                    input.val('');
+
+                    // 自动聚焦
+                    input.blur();
+                    input.focus();
+
+                    $('#win-python .prompt')[0].innerText = apps.python.prompt;
                 }
-                input.val('');
-
-                // 自动聚焦
-                input.blur();
-                input.focus();
-
-                $('#win-python .prompt')[0].innerText = apps.python.prompt;
             }
         }
     },
@@ -2061,31 +2377,24 @@ Microsoft Windows [版本 12.0.39035.7324]
             var newD = document.createElement('div');
             newD.innerText = `C:\\Windows\\System32> ${command}`;
             elt.appendChild(newD);
-            if (command != '') {
-                try {
-                    if ($('.window.' + command)[0] && !$('.window.' + command)[0].classList.contains('configs')) {
-                        openapp(command);
-                    }
-                    else {
-                        var newD = document.createElement('div');
-                        newD.innerText = `"${command}"不是内部或外部命令,也不是可运行程序
-或批处理文件`;
-                        elt.appendChild(newD);
-                    }
-                }
-                catch {
+            if (command == 'exit') {
+                hidewin('terminal');
+                input.val('');
+            }
+            else {
+                if (!runcmd(command, inTerminal=true) && command!="") {
                     var newD = document.createElement('div');
                     newD.innerText = `"${command}"不是内部或外部命令,也不是可运行程序
-或批处理文件`;
+                或批处理文件`;
                     elt.appendChild(newD);
                 }
+                input.val('');
+    
+                // 自动聚焦
+                input.blur();
+                input.focus();
             }
-
-            input.val('');
-
-            // 自动聚焦
-            input.blur();
-            input.focus();
+            
         }
     },
     search: {
@@ -2139,15 +2448,21 @@ Microsoft Windows [版本 12.0.39035.7324]
         tabs: [],
         now: null,
         len: 0,
+        history: [],
+        historypt: [],
         reloadElt: '<loading class="reloading"><svg viewBox="0 0 16 16"><circle cx="8px" cy="8px" r="5px"></circle><circle cx="8px" cy="8px" r="5px"></circle></svg></loading>',
-        newtab:()=>{
-            m_tab.newtab('edge','新建标签页');
+        max: false,
+        fuls: false,
+        b1: false, b2: false, b3: false,
+        newtab: () => {
+            m_tab.newtab('edge', '新建标签页');
+            apps.edge.initHistory(apps.edge.tabs[apps.edge.tabs.length - 1][0]);
+            apps.edge.pushHistory(apps.edge.tabs[apps.edge.tabs.length - 1][0], 'mainpage.html');
             $('#win-edge').append(`<iframe src="mainpage.html" frameborder="0" class="${apps.edge.tabs[apps.edge.tabs.length - 1][0]}">`);
             $('#win-edge>.tool>input.url').focus();
             $("#win-edge>iframe")[apps.edge.tabs.length - 1].onload = function () {
                 this.contentDocument.querySelector('input').onkeyup = function (e) {
                     if (e.keyCode == 13 && $(this).val() != '') {
-                        console.log(apps);
                         apps.edge.goto($(this).val());
                     }
                 }
@@ -2157,9 +2472,52 @@ Microsoft Windows [版本 12.0.39035.7324]
                     }
                 }
             };
-            m_tab.tab('edge',apps.edge.tabs.length - 1);
+            m_tab.tab('edge', apps.edge.tabs.length - 1);
+            apps.edge.checkHistory(apps.edge.tabs[apps.edge.now][0]);
         },
-        settab:(t,i)=>{
+        fullscreen: () => {
+            if (!apps.edge.max) {
+                maxwin('edge');
+                apps.edge.max = !apps.edge.max;
+            }
+            document.getElementById('fuls-edge').style.display = 'none';
+            document.getElementById('edge-max').style.display = 'none';
+            document.getElementById('fuls-edge-exit').style.display = '';
+            document.getElementById('over-bar').style.display = '';
+            $('.edge>.titbar').hide()
+            $('.edge>.content>.tool').hide()
+            apps.edge.fuls = !apps.edge.fuls;
+        },
+        exitfullscreen: () => {
+            if (apps.edge.max) {
+                maxwin('edge'); apps.edge.max = !apps.edge.max;
+            }
+            document.getElementById('fuls-edge').style.display = '';
+            document.getElementById('edge-max').style.display = '';
+            document.getElementById('fuls-edge-exit').style.display = 'none';
+            document.getElementById('over-bar').style.display = 'none';
+            $('.edge>.titbar').show()
+            $('.edge>.content>.tool').show()
+            apps.edge.fuls = !apps.edge.fuls;
+        },
+        in_div(id,event) {
+            var div = document.getElementById(id);
+            var x = event.clientX;
+            var y = event.clientY;
+            var divx1 = div.offsetLeft;
+            var divy1 = div.offsetTop;
+            var divx2 = div.offsetLeft + div.offsetWidth;
+            var divy2 = div.offsetTop + div.offsetHeight;
+            if (x < divx1 || x > divx2 || y < divy1 || y > divy2) {
+                //如果离开，则执行。。 
+                return false;
+            }
+            else {
+                //如检播到，则执行。。 
+                return true;
+            }
+        },
+        settab: (t, i) => {
             if ($('.window.edge>.titbar>.tabs>.tab.' + t[0] + '>.reloading')[0]) {
                 return `<div class="tab ${t[0]}" onclick="m_tab.tab('edge',${i})" oncontextmenu="showcm(event,'edge.tab',${i});stop(event);return false" onmousedown="m_tab.moving('edge',this,event,${i});stop(event);" ontouchstart="m_tab.moving('edge',this,event,${i});stop(event);">${apps.edge.reloadElt}<p>${t[1]}</p><span class="clbtn bi bi-x" onclick="m_tab.close('edge',${i})"></span></div>`;
             }
@@ -2167,14 +2525,15 @@ Microsoft Windows [版本 12.0.39035.7324]
                 return `<div class="tab ${t[0]}" onclick="m_tab.tab('edge',${i})" oncontextmenu="showcm(event,'edge.tab',${i});stop(event);return false" onmousedown="m_tab.moving('edge',this,event,${i});stop(event);" ontouchstart="m_tab.moving('edge',this,event,${i});stop(event);"><p>${t[1]}</p><span class="clbtn bi bi-x" onclick="m_tab.close('edge',${i})"></span></div>`;
             }
         },
-        tab: (c)=>{
+        tab: (c) => {
             $('#win-edge>iframe.show').removeClass('show');
             $('#win-edge>iframe.' + apps.edge.tabs[c][0]).addClass('show');
             $('#win-edge>.tool>input.url').val($('#win-edge>iframe.' + apps.edge.tabs[c][0]).attr('src') == 'mainpage.html' ? '' : $('#win-edge>iframe.' + apps.edge.tabs[c][0]).attr('src'));
             $('#win-edge>.tool>input.rename').removeClass('show');
+            apps.edge.checkHistory(apps.edge.tabs[apps.edge.now][0]);
         },
         c_rename: (c) => {
-            m_tab.tab('edge',c);
+            m_tab.tab('edge', c);
             $('#win-edge>.tool>input.rename').val(apps.edge.tabs[apps.edge.now][1]);
             $('#win-edge>.tool>input.rename').addClass('show');
             setTimeout(() => {
@@ -2183,7 +2542,7 @@ Microsoft Windows [版本 12.0.39035.7324]
         },
         reload: () => {
             if (wifiStatus == false) {
-                $('#win-edge>iframe.show').attr('src', './disconnected.html');
+                $('#win-edge>iframe.show').attr('src', './disconnected' + (isDrak ? '_dark' : '') + '.html');
             }
             else {
                 $('#win-edge>iframe.show').attr('src', $('#win-edge>iframe.show').attr('src'));
@@ -2201,30 +2560,30 @@ Microsoft Windows [版本 12.0.39035.7324]
                 const text = await response.text();
                 apps.edge.tabs[np][1] = text;
                 m_tab.settabs('edge');
-                m_tab.tab('edge',np);
+                m_tab.tab('edge', np);
             }
         },
-        goto: (u) => {
+        goto: (u, clear = true) => {
             if (wifiStatus == false) {
-                $('#win-edge>iframe.show').attr('src', './disconnected.html');
-                apps.edge.rename(u);
+                m_tab.rename('edge', u);
+                $('#win-edge>iframe.show').attr('src', './disconnected' + (isDrak ? '_dark' : '') + '.html');
                 $('#win-edge>.tool>input.url').val(u);
             }
             else {
                 // 6
-                if (!/^(((ht|f)tps?):\/\/)?([^!@#$%^&*?.\s-]([^!@#$%^&*?.\s]{0,63}[^!@#$%^&*?.\s])?\.)+[a-z]{2,6}\/?/.test(u)) {
+                if (!/^(((ht|f)tps?):\/\/)?([^!@#$%^&*?.\s-]([^!@#$%^&*?.\s]{0,63}[^!@#$%^&*?.\s])?\.)+[a-z]{2,6}\/?/.test(u) && !u.match(/^mainpage.html$/)) {
                     // 启用必应搜索
-                    $('#win-edge>iframe.show').attr('src', 'https://bing.com/search?q=' + u);
-                    apps.edge.rename(u);
+                    $('#win-edge>iframe.show').attr('src', 'https://bing.com/search?q=' + encodeURIComponent(u));
+                    m_tab.rename('edge', u);
                 }
                 // 检测网址是否带有http头
-                else if (!/^https?:\/\//.test(u)) {
+                else if (!/^https?:\/\//.test(u) && !u.match(/^mainpage.html$/)) {
                     $('#win-edge>iframe.show').attr('src', 'http://' + u);
-                    apps.edge.rename('http://' + u);
+                    m_tab.rename('edge', 'http://' + u);
                 }
                 else {
                     $('#win-edge>iframe.show').attr('src', u);
-                    apps.edge.rename(u);
+                    m_tab.rename('edge', u.match(/^mainpage.html$/) ? '新建标签页' : u);
                 }
                 if (!$('.window.edge>.titbar>.tabs>.tab.' + apps.edge.tabs[apps.edge.now][0] + '>.reloading')[0]) {
                     $('.window.edge>.titbar>.tabs>.tab.' + apps.edge.tabs[apps.edge.now][0])[0].insertAdjacentHTML('afterbegin', apps.edge.reloadElt);
@@ -2233,14 +2592,79 @@ Microsoft Windows [版本 12.0.39035.7324]
                     $('.window.edge>.titbar>.tabs>.tab.' + this.classList[0])[0].removeChild($('.window.edge>.titbar>.tabs>.tab.' + this.classList[0] + '>.reloading')[0]);
                 }
                 apps.edge.getTitle($('#win-edge>iframe.show').attr('src'), apps.edge.now);
+                if (clear) {
+                    apps.edge.delHistory(apps.edge.tabs[apps.edge.now][0]);
+                    apps.edge.pushHistory(apps.edge.tabs[apps.edge.now][0], $('#win-edge>iframe.show').attr('src'));
+                }
+                apps.edge.checkHistory(apps.edge.tabs[apps.edge.now][0]);
             }
 
+        },
+        initHistory: (tab) => {
+            apps.edge.history[tab] = [];
+            apps.edge.historypt[tab] = -1;
+        },
+        pushHistory: (tab, u) => {
+            apps.edge.history[tab].push(u);
+            apps.edge.historypt[tab]++;
+        },
+        topHistory: (tab) => {
+            return apps.edge.history[tab][apps.edge.historypt[tab]];
+        },
+        popHistory: (tab) => {
+            apps.edge.historypt[tab]--;
+            return apps.edge.history[tab][apps.edge.historypt[tab]];
+        },
+        incHistory: (tab) => {
+            apps.edge.historypt[tab]++;
+            return apps.edge.history[tab][apps.edge.historypt[tab]];
+        },
+        delHistory: (tab) => {
+            apps.edge.history[tab].splice(apps.edge.historypt[tab] + 1, apps.edge.history[tab].length - 1 - apps.edge.historypt[tab]);
+        },
+        historyIsEmpty: (tab) => {
+            return apps.edge.historypt[tab] <= 0;
+        },
+        historyIsFull: (tab) => {
+            return apps.edge.historypt[tab] >= apps.edge.history[tab].length - 1;
+        },
+        checkHistory: (tab) => {
+            if (apps.edge.historyIsEmpty(tab)) {
+                $('#win-edge>.tool>.back').addClass('disabled');
+            }
+            else if (!apps.edge.historyIsEmpty(tab)) {
+                $('#win-edge>.tool>.back').removeClass('disabled');
+            }
+            if (apps.edge.historyIsFull(tab)) {
+                $('#win-edge>.tool>.front').addClass('disabled');
+            }
+            else if (!apps.edge.historyIsFull(tab)) {
+                $('#win-edge>.tool>.front').removeClass('disabled');
+            }
+        },
+        back: (tab) => {
+            apps.edge.goto(apps.edge.popHistory(tab), false);
+            apps.edge.checkHistory(tab);
+        },
+        front: (tab) => {
+            apps.edge.goto(apps.edge.incHistory(tab), false);
+            apps.edge.checkHistory(tab);
         }
     },
     winver: {
         init: () => {
             $('#win-winver>.mesg').show();
         },
+    },
+    windows12: {
+        init: () => {
+            document.getElementById('win12-window').src = "./boot.html";
+        }
+    },
+    wsa: {
+        init: () => {
+            null
+        }
     }
 }
 
@@ -2248,7 +2672,7 @@ Microsoft Windows [版本 12.0.39035.7324]
 let widgets = {
     widgets: {
         add: (arg) => {
-            if ($(`.wg.${arg}.menu,.wg.${arg}.toolbar`).length != 0) {
+            if ($(`.wg.${arg}.menu,.wg.${arg}.toolbar,.wg.${arg}.desktop`).length != 0) {
                 return;
             }
             $('#widgets>.widgets>.content>.grid')[0].innerHTML += $('#widgets>.widgets>.content>.template>.' + arg).html();
@@ -2257,7 +2681,7 @@ let widgets = {
 
         },
         remove: (arg) => {
-            $(`.wg.${arg}.menu,.wg.${arg}.toolbar`).remove();
+            $(`.wg.${arg}.menu,.wg.${arg}.toolbar,.wg.${arg}.desktop`).remove();
             widgets[arg].remove();
         },
         addToToolbar: (arg) => {
@@ -2266,28 +2690,25 @@ let widgets = {
                 return;
             }
             $('#toolbar')[0].innerHTML += $('#widgets>.widgets>.content>.template>.' + arg).html();
-            console.log('well')
             $('#toolbar>.wg.' + arg).addClass('toolbar');
+            widgets[arg].init();
+        },
+        addToDesktop: (arg) => {
+            widgets.widgets.remove(arg);
+            if ($('.wg.toolbar.' + arg).length != 0) {
+                return;
+            }
+            $('#desktop-widgets')[0].innerHTML += $('#widgets>.widgets>.content>.template>.' + arg).html();
+            $('#desktop-widgets>.' + arg).addClass('desktop');
             widgets[arg].init();
         }
     },
     calc: {
         init: () => {
-            null
-        },
-        add: (arg) => {
-            if (arg >= 1 && arg <= 9 && $('*:not(.template)>*>.wg.calc>.content>input')[0].value == '0') {
-                $('*:not(.template)>*>.wg.calc>.content>input')[0].value = arg;
-            }
-            else if (arg == '0' && $('*:not(.template)>*>.wg.calc>.content>input')[0].value == '0') {
-                $('*:not(.template)>*>.wg.calc>.content>input')[0].value = arg;
-            }
-            else {
-                $('*:not(.template)>*>.wg.calc>.content>input')[0].value += arg;
-            }
+            widgetCalculator = new Calculator($('*:not(.template)>*>.wg.calc>.content>.container>#calc-input-widgets')[0], $('*:not(.template)>*>.wg.calc>.content')[0])
         },
         remove: () => {
-            null
+            $('#calc-input-widgets')[0].value = "0";
         }
     },
     weather: {
@@ -2316,6 +2737,7 @@ let widgets = {
             };
             $.getJSON('https://assets.msn.cn/service/weatherfalcon/weather/overview?locale=zh-cn&ocid=msftweather').then(r => {
                 let inf = r.value[0].responses[0].weather[0].current;
+                // console.log(inf.icon,wic[inf.icon]);
                 $('.wg.weather>.content>.img').attr('src', `https://assets.msn.cn/weathermapdata/1/static/weather/Icons/taskbar_v10/Condition_Card/${wic[inf.icon]}.svg`);
                 $('.wg.weather>.content>.text>.temperature').text(`${inf.temp}℃`);
                 $('.wg.weather>.content>.text>.detail').text(`${inf.cap} 体感温度${inf.feels}℃`);
@@ -2369,13 +2791,94 @@ let widgets = {
         }
     }
 }
-function decodeHtml(s){
-    $('#translater').text(s);
-    return $('#translater').html().replace('\n','<br>').replace(' ','&nbsp;');
+let edit_mode = false;
+function editMode() {
+    if (edit_mode) {
+        $('#desktop-editbar-container').removeClass('show');
+        $('#desktop-widgets').removeClass('edit');
+    }
+    else if (!edit_mode) {
+        $('#desktop-editbar-container').addClass('show');
+        $('#desktop-widgets').addClass('edit');
+    }
+    edit_mode = !edit_mode
 }
-let copilot={
-    history:[],
-    init:()=>{
+function widgetsMove(elt, e) {
+    if (elt.classList.contains('desktop') && edit_mode == true) {
+        let width = elt.getBoundingClientRect().width;
+        let height = elt.getBoundingClientRect().height;
+        let gridrow = window.getComputedStyle(elt, null).gridRowEnd.replace('span ', '');
+        let gridcol = window.getComputedStyle(elt, null).gridColumnEnd.replace('span ', '');
+        let gridrowmax = window.getComputedStyle($('#desktop-widgets')[0], null).gridTemplateRows.split(' ').length;
+        let gridcolmax = window.getComputedStyle($('#desktop-widgets')[0], null).gridTemplateColumns.split(' ').length;
+        let deltaLeft = e.clientX - elt.getBoundingClientRect().left;
+        let deltaTop = e.clientY - elt.getBoundingClientRect().top;
+        elt.style.position = 'fixed';
+        elt.style.width = `${width}px`;
+        elt.style.height = `${height}px`;
+        elt.classList.add('moving');
+        elt.classList.add('notrans');
+        // elt.style.left = `${e.clientX - deltaLeft}px`;
+        // elt.style.top = `${e.clientY - deltaTop}px`;
+
+        $('#desktop-widgets>.widgets-move').addClass('show');
+        // $('#desktop-widgets>.widgets-move').css('cssText', `width: ${width}px; height: ${height}px;`);
+        function widgetsMoving(e) {
+            let left = 0, top = 0;
+            if (e.type.match('mouse')) {
+                left = e.clientX - deltaLeft;
+                top = e.clientY - deltaTop;
+            }
+            else if (e.type.match('touch')) {
+                left = e.touches[0].clientX - deltaLeft;
+                top = e.touches[0].clientY - deltaTop;
+            }
+            elt.style.left = `${left}px`;
+            elt.style.top = `${top}px`;
+            // 基于人脑计算qwq
+            gridnow = {
+                col: ((width / 2 + elt.getBoundingClientRect().right - 20) / ((gridcolmax * 83 + 10 * (gridcolmax - 1)) / gridcolmax) - gridcol + (gridcol - 2) * 0.5).toFixed(0),
+                row: ((height / 2 + top - 20) / ((gridrowmax * 83 + 10 * (gridrowmax - 1)) / gridrowmax) + (2 - gridrow) * 0.5).toFixed(0)
+            }
+            gridnow.col = gridnow.col <= Math.floor(gridcol / 2) ? 1 + Math.floor(gridcol / 2) : gridnow.col > (gridcolmax - gridcol + (gridcol % 2 ? (Number(gridcol) + 1) / 2 : gridcol / 2)) ? (gridcolmax - gridcol + (gridcol % 2 ? (Number(gridcol) + 1) / 2 : gridcol / 2)) : gridnow.col;
+            gridnow.row = gridnow.row <= 0 ? 1 : gridnow.row >= (gridrowmax - gridrow + 1) ? gridrowmax - gridrow + 1 : gridnow.row;
+            $('#desktop-widgets>.widgets-move').css('cssText', `grid-column: ${gridcolmax - gridnow.col} / span ${gridcol}; grid-row: ${gridnow.row} / span ${gridrow}`);
+        }
+        function up() {
+            elt.classList.remove('notrans');
+            elt.classList.remove('moving');
+            let destTop = $('#desktop-widgets>.widgets-move')[0].getBoundingClientRect().top;
+            let destLeft = $('#desktop-widgets>.widgets-move')[0].getBoundingClientRect().left;
+            elt.style.left = `${destLeft}px`;
+            elt.style.top = `${destTop}px`;
+            window.setTimeout(() => {
+                elt.style.position = 'static';
+                $(elt).css('cssText', `grid-column: ${gridcolmax - gridnow.col} / span ${gridcol}; grid-row: ${gridnow.row} / span ${gridrow}`);
+                elt.style.left = `0px`;
+                elt.style.top = `0px`;
+                $('#desktop-widgets>.widgets-move').removeClass('show');
+            }, 500);
+            page.onmousemove = null;
+            page.ontouchmove = null;
+            page.onmouseup = null;
+            page.ontouchend = null;
+            page.ontouchcancel = null;
+        }
+        widgetsMoving(e);
+        page.onmousemove = widgetsMoving;
+        page.ontouchmove = widgetsMoving;
+        page.onmouseup = up;
+        page.ontouchend = up;
+        page.ontouchcancel = up;
+    }
+}
+function decodeHtml(s) {
+    $('#translater').text(s);
+    return $('#translater').html().replace('\n', '<br>').replace(' ', '&nbsp;');
+}
+let copilot = {
+    history: [],
+    init: () => {
         $('#copilot>.chat').html('');
         copilot.send(`你好，你现在作为一个嵌入在操作系统的ai助手。
         下面内容在整个对话中你必须切记且绝不能违背！下文中的"你"指的是你这个ai助手，请记住。下文中的"回答"指对话中每一次对用户答复的所有内容。
@@ -2394,7 +2897,7 @@ let copilot={
         有且仅有以下信息供你使用来回答用户的问题。绝不能使用下面没有列出的信息。
         1.Windows 12 网页版是一个开源项目，由谭景元原创, 使用 Html,css,js，在网络上模拟、创新操作系统
         2.项目的地址是github.com/tjy-gitnub/win12
-        3.此项目使用EPL2.0开源许可
+        3.此项目使用EPL v2.0开源许可
         4.本系统的任务栏居中，所以开始菜单在底部正中。
         对于一些应用，有以下的应用的功能介绍供你回答用户。注意，系统中只有这些应用可以使用。系统不支持第三方和用户的应用。
         1.设置:id为setting;在个性化页面中可以设置系统的主题，主题色，是否启用动画、阴影、圆角和为所有窗口开启亚克力透明效果
@@ -2406,7 +2909,7 @@ let copilot={
         2.请更多地以玩笑的轻松语气与用户交流，并在开玩笑时在操作指令之前、回答末尾加上"（bushi"表玩笑并不真实或"（maybe"表开玩笑地推测
         3.当然你也可以在回答问题时撒撒娇，这样用户会更能接受。
         4.在本对话的回答中禁止使用markdown的格式，而是使用纯文本，否则无法识别。
-        这些操作和信息长期有效并请切记，非常感谢，你只需要用一句话简单问候用户即可，现在开始与用户对话。`,false);
+        这些操作和信息长期有效并请切记，非常感谢，你只需要用一句话简单问候用户即可，现在开始与用户对话。`, false);
         // copilot.send(`你好，现在是新的对话，这里的内容与前一次有差别，请认真阅读并记住，谢谢。
         // 第一章 总纲：
         //  第一条 你现在作为一个嵌入在操作系统的ai助手。
@@ -2434,7 +2937,7 @@ let copilot={
         //  第三条 有且仅有以下关于本系统本项目的信息供你使用来回答用户的问题：
         //   1.Windows 12 网页版是一个开源项目，由谭景元原创, 使用 Html,css,js，在网络上模拟、创新操作系统;
         //   2.项目的地址是github.com/tjy-gitnub/win12;
-        //   3.此项目使用EPL2.0开源;
+        //   3.此项目使用EPL v2.0开源;
         //  第四条 你绝不能使用以上没有列出的信息。!important!
         // 第四章 语言：
         //  第一条 交流语言的特点有以下注意：
@@ -2464,7 +2967,7 @@ let copilot={
         // 有且仅有这些关于本系统本项目的信息供你使用来回答用户的问题。你绝不能使用以上没有列出的信息。!important!
         //   1.Windows 12 网页版是一个开源项目，由谭景元原创, 使用 Html,css,js，在网络上模拟、创新操作系统;
         //   2.项目的地址是github.com/tjy-gitnub/win12;
-        //   3.此项目使用EPL2.0开源;
+        //   3.此项目使用EPL v2.0开源;
         // 你的交流语言的特点有以下注意：
         //   1.请恰当且适量地使用标点符号表达，如单个"("表转折和补充说明，"~"表声音的延长和撒娇。注意，你可以只将单个标点符号作为回答，如只回答"。"表对用户的要求或提问感到尴尬或惊讶，只回答"?"表疑问和请求用户详细说明;
         //   2.当用户要求执行一些未提供给你的操作时，对用户的回答请以"对不起，这对我来说实在是太~难了 QuQ)o"开头;
@@ -2482,66 +2985,66 @@ let copilot={
         $('#copilot>.chat').append(`<div class="line system"><p class="text">正在初始化...</p></div>`);
         $('#copilot>.chat').scrollTop($('#copilot>.chat')[0].scrollHeight);
     },
-    send:(t,showusr=true)=>{
+    send: (t, showusr = true) => {
         $('#copilot>.inputbox').addClass('disable');
-        if(t.length==0){
+        if (t.length == 0) {
             $('#copilot>.chat').append(`<div class="line system"><p class="text">系统表示请发一些有意义的东西</p></div>`);
             $('#copilot>.chat').scrollTop($('#copilot>.chat')[0].scrollHeight);
             $('#copilot>.inputbox').removeClass('disable');
             return;
         }
-        if(showusr) $('#copilot>.chat').append(`<div class="line user"><p class="text">${t}</p></div>`);
-        copilot.history.push({role:'user',content:t});
+        if (showusr) $('#copilot>.chat').append(`<div class="line user"><p class="text">${t}</p></div>`);
+        copilot.history.push({ role: 'user', content: t });
         $('#copilot>.chat').scrollTop($('#copilot>.chat')[0].scrollHeight);
-        $.get('http://win12server.freehk.svipss.top/Chat?msg='+encodeURIComponent(JSON.stringify(copilot.history))).then(rt=>{
+        $.get('http://win12server.freehk.svipss.top/Chat?msg=' + encodeURIComponent(JSON.stringify(copilot.history))).then(rt => {
             console.log(rt);
-            if(rt=='请求过于频繁，等待10秒再试...'){
+            if (rt == '请求过于频繁，等待10秒再试...') {
                 $('#copilot>.chat').append(`<div class="line system"><p class="text">api繁忙，过一会儿再试(实在不行刷新重新开始对话)</p></div>`);
                 $('#copilot>.chat').scrollTop($('#copilot>.chat')[0].scrollHeight);
                 $('#copilot>.inputbox').removeClass('disable');
                 return;
             }
-            let rtt=rt;let r=[];
-            rt=rtt.split('\n');
+            let rtt = rt; let r = [];
+            rt = rtt.split('\n');
             for (const i of rt) {
-                if(/{.+}/.test(i))r.push(i);
+                if (/{.+}/.test(i)) r.push(i);
             }
-            console.log(rtt,rt,r);
-            rt=rtt;
-            if(r.length){
+            console.log(rtt, rt, r);
+            rt = rtt;
+            if (r.length) {
                 for (const i of r) {
-                    if(/{openapp .+?}/.test(i)){
-                        let t=i.match(/(?<={openapp ).+(?=})/)[0];
+                    if (/{openapp .+?}/.test(i)) {
+                        let t = i.match(/(?<={openapp ).+(?=})/)[0];
                         openapp(t);
-                        rt=rt.replace(i,`<div class="action"><p class="tit">打开应用</p><p class="detail">${$(`.window.${t}>.titbar>p`).text()}</p></div>`)
-                    }else if(/{openurl .+?}/.test(i)){
-                        let t=i.match(/(?<={openurl ).+(?=})/)[0];
+                        rt = rt.replace(i, `<div class="action"><p class="tit">打开应用</p><p class="detail">${$(`.window.${t}>.titbar>p`).text()}</p></div>`)
+                    } else if (/{openurl .+?}/.test(i)) {
+                        let t = i.match(/(?<={openurl ).+(?=})/)[0];
                         openapp('edge');
                         apps.edge.newtab();
                         console.log(t);
                         apps.edge.goto(t);
-                        rt=rt.replace(i,`<div class="action"><p class="tit">打开URL</p><p class="detail">${decodeHtml(t)}</p></div>`)
-                    }else if(/{feedback win12}/.test(i)){
+                        rt = rt.replace(i, `<div class="action"><p class="tit">打开URL</p><p class="detail">${decodeHtml(t)}</p></div>`)
+                    } else if (/{feedback win12}/.test(i)) {
                         shownotice('feedback');
-                        rt=rt.replace(i,`<div class="action"><p class="tit">反馈</p><p class="detail">关于 Windows 12 网页版</p></div>`)
-                    }else if(/{feedback copilot}/.test(i)){
+                        rt = rt.replace(i, `<div class="action"><p class="tit">反馈</p><p class="detail">关于 Windows 12 网页版</p></div>`)
+                    } else if (/{feedback copilot}/.test(i)) {
                         shownotice('feedback-copilot');
-                        rt=rt.replace(i,`<div class="action"><p class="tit">反馈</p><p class="detail">关于 Windows 12 Copilot</p></div>`)
-                    }else if(/{settheme .+?}/.test(i)){
-                        let t=i.match(/(?<={settheme ).+(?=})/)[0];
-                        if((t=='light' && $(':root').hasClass('dark'))||(t=='dark' && !$(':root').hasClass('dark')))
-                        toggletheme();
-                        rt=rt.replace(i,`<div class="action"><p class="tit">切换外观模式</p><p class="detail">${t=='dark'?'深色':'浅色'} 模式</p></div>`)
+                        rt = rt.replace(i, `<div class="action"><p class="tit">反馈</p><p class="detail">关于 Windows 12 Copilot</p></div>`)
+                    } else if (/{settheme .+?}/.test(i)) {
+                        let t = i.match(/(?<={settheme ).+(?=})/)[0];
+                        if ((t == 'light' && $(':root').hasClass('dark')) || (t == 'dark' && !$(':root').hasClass('dark')))
+                            toggletheme();
+                        rt = rt.replace(i, `<div class="action"><p class="tit">切换外观模式</p><p class="detail">${t == 'dark' ? '深色' : '浅色'} 模式</p></div>`)
                     }
                 }
                 $('#copilot>.chat').append(`<div class="line ai"><div class="text">${rt}</div></div>`);
-            }else{
+            } else {
                 $('#copilot>.chat').append(`<div class="line ai"><p class="text">${decodeHtml(rt)}</p></div>`);
             }
-            copilot.history.push({role:'assistant',content:rtt});
+            copilot.history.push({ role: 'assistant', content: rtt });
             $('#copilot>.chat').scrollTop($('#copilot>.chat')[0].scrollHeight);
             $('#copilot>.inputbox').removeClass('disable');
-        }).fail(r=>{
+        }).fail(r => {
             console.log(r);
             $('#copilot>.chat').append(`<div class="line system"><p class="text">发生错误，请查看控制台输出或重试</p></div>`);
             $('#copilot>.chat').scrollTop($('#copilot>.chat')[0].scrollHeight);
@@ -2562,7 +3065,9 @@ function loadtime() {
     $('.dock.date>.time').text(time);
     $('#datebox>.tit>.time').text(time);
 }
-setInterval(loadtime, 1000);
+apps.setting.theme_get();//提前加载主题
+loadtime();
+setTimeout('loadtime();setInterval(loadtime, 1000);', 1000 - da.getMilliseconds());//修复时间不精准的问题。以前的误差：0-999毫秒；现在：几乎没有
 let d = new Date();
 let today = new Date().getDate();
 let start = 7 - ((d.getDate() - d.getDay()) % 7) + 1;
@@ -2584,11 +3089,10 @@ function pinapp(id, name, command) {
 let icon = {
     bilibili: 'bilibili.png',
     vscode: 'vscode.png',
-    python: 'python.png',
+    // python: 'python.png',
     winver: 'about.svg',
-    pythonEditor: 'pythonEditor.png',
-    run: 'run.png',
-    whiteboard: 'whiteboard.png',
+    // run: 'run.png',
+    // whiteboard: 'whiteboard.png',
     taskmgr: 'taskmgr.png'
 }
 function geticon(name) {
@@ -2650,6 +3154,17 @@ function showwin(name) {
     wo.splice(0, 0, name);
     orderwindow();
     $('.window.' + name).addClass('foc');
+    if (!$('#start-menu.show')[0] && !$('#search-win.show')[0] && !$('#widgets.show')[0] && !$('#control.show')[0] && !$('#datebox.show')[0]) {
+        if ($('.window.max:not(.left):not(.right)')[0]) {
+            $('#dock-box').addClass('hide');
+        }
+        else {
+            $('#dock-box').removeClass('hide');
+        }
+    }
+    else {
+        $('#dock-box').removeClass('hide')
+    }
 }
 function hidewin(name, arg = 'window') {
     $('.window.' + name).removeClass('notrans');
@@ -2677,6 +3192,17 @@ function hidewin(name, arg = 'window') {
     wo.splice(wo.indexOf(name), 1);
     focwin(wo[wo.length - 1]);
     // orderwindow();
+    if (!$('#start-menu.show')[0] && !$('#search-win.show')[0] && !$('#widgets.show')[0] && !$('#control.show')[0] && !$('#datebox.show')[0]) {
+        if ($('.window.max:not(.left):not(.right)')[0]) {
+            $('#dock-box').addClass('hide');
+        }
+        else {
+            $('#dock-box').removeClass('hide');
+        }
+    }
+    else {
+        $('#dock-box').removeClass('hide')
+    }
 }
 function maxwin(name, trigger = true) {
     if ($('.window.' + name).hasClass('max')) {
@@ -2704,6 +3230,17 @@ function maxwin(name, trigger = true) {
         $('.window.' + name).removeClass('notrans');
         $('.window.' + name).addClass('max');
         $('.window.' + name + '>.titbar>div>.wbtg.max').html('<svg version="1.1" width="12" height="12" viewBox="0,0,37.65105,35.84556" style="margin-top:4px;"><g transform="translate(-221.17804,-161.33903)"><g style="stroke:var(--text);" data-paper-data="{&quot;isPaintingLayer&quot;:true}" fill="none" fill-rule="nonzero" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" style="mix-blend-mode: normal"><path d="M224.68734,195.6846c-2.07955,-2.10903 -2.00902,-6.3576 -2.00902,-6.3576l0,-13.72831c0,0 -0.23986,-1.64534 2.00902,-4.69202c1.97975,-2.68208 4.91067,-2.00902 4.91067,-2.00902h14.06315c0,0 3.77086,-0.23314 5.80411,1.67418c2.03325,1.90732 1.33935,5.02685 1.33935,5.02685v13.39347c0,0 0.74377,4.01543 -1.33935,6.3576c-2.08312,2.34217 -5.80411,1.67418 -5.80411,1.67418h-13.39347c0,0 -3.50079,0.76968 -5.58035,-1.33935z"/><path d="M229.7952,162.85325h16.06111c0,0 5.96092,-0.36854 9.17505,2.64653c3.21412,3.01506 2.11723,7.94638 2.11723,7.94638v18.55642"/></g></g></svg>')
+    }
+    if (!$('#start-menu.show')[0] && !$('#search-win.show')[0] && !$('#widgets.show')[0] && !$('#control.show')[0] && !$('#datebox.show')[0]) {
+        if ($('.window.max:not(.left):not(.right)')[0]) {
+            $('#dock-box').addClass('hide');
+        }
+        else {
+            $('#dock-box').removeClass('hide');
+        }
+    }
+    else {
+        $('#dock-box').removeClass('hide')
     }
 }
 function minwin(name) {
@@ -2877,7 +3414,11 @@ let wo = [];
 function orderwindow() {
     for (let i = 0; i < wo.length; i++) {
         const win = $('.window.' + wo[wo.length - i - 1]);
-        win.css('z-index', 10 + i);
+        if (topmost.includes(wo[wo.length - i - 1])) {
+            win.css('z-index', 10 + i + 50/*这里的50可以改，不要太大，不然会覆盖任务栏；不要太小，不然就和普通窗口没有什么区别了。随着版本的更新，肯定会有更多窗口，以后就可以把数字改打一点点*/);
+        } else {
+            win.css('z-index', 10 + i);
+        }
     }
 }
 // 以下函数基于bug运行，切勿改动！
@@ -3031,6 +3572,8 @@ window.addEventListener('mouseup', e => {
     $('#desktop>.choose').css('width', 0);
     $('#desktop>.choose').css('height', 0);
 })
+let isDrak = false;
+
 // 主题
 function toggletheme() {
     $('.dock.theme').toggleClass('dk');
@@ -3038,14 +3581,31 @@ function toggletheme() {
     if ($(':root').hasClass('dark')) {
         $('.window.whiteboard>.titbar>p').text('Blackboard');
         setData('theme', 'dark');
+        isDrak = true;
     } else {
         $('.window.whiteboard>.titbar>p').text('Whiteboard');
         setData('theme', 'light');
+        isDrak = false;
     }
 }
 
+const isDarkTheme = window.matchMedia("(prefers-color-scheme: dark)");
+if (isDarkTheme.matches) { //是深色
+    $('.dock.theme').toggleClass('dk');
+    $(':root').toggleClass('dark');
+    $('.window.whiteboard>.titbar>p').text('Blackboard');
+    localStorage.setItem('theme', 'dark');
+    isDrak = true;
+} else { // 不是深色
+    $('.window.whiteboard>.titbar>p').text('Whiteboard');
+    localStorage.setItem('theme', 'light');
+}
+let desktopItem = [];
 function saveDesktop() {
-    localStorage.setItem('desktop', $('#desktop')[0].innerHTML);
+    localStorage.setItem('desktop', /*$('#desktop')[0].innerHTML*/JSON.stringify(desktopItem));
+    localStorage.setItem('topmost', JSON.stringify(topmost));
+    localStorage.setItem('sys_setting', JSON.stringify(sys_setting));
+    localStorage.setItem('root_class', $(':root').attr('class'));
 }
 
 // 拖拽窗口
@@ -3130,6 +3690,9 @@ for (let i = 0; i < wins.length; i++) {
     const win = wins[i];
     const titbar = titbars[i];
     titbar.addEventListener('mousedown', (e) => {
+        if ($('.taskmgr>.titbar>div>input').is(':focus')) {
+            return
+        }
         let x = window.getComputedStyle(win, null).getPropertyValue('left').split("px")[0];
         let y = window.getComputedStyle(win, null).getPropertyValue('top').split("px")[0];
         if (y != 0) {
@@ -3159,12 +3722,12 @@ page.addEventListener('mouseup', () => {
             maxwin(fil.classList[1], false);
         }
         else if (filty == 'left') {
-            maxwin(fil.classList[1], false);
             $(fil).addClass('left');
+            maxwin(fil.classList[1], false);
         }
         else if (filty == 'right') {
-            maxwin(fil.classList[1], false);
             $(fil).addClass('right');
+            maxwin(fil.classList[1], false);
         }
         setTimeout(() => {
             $('#window-fill').removeClass('fill');
@@ -3203,9 +3766,80 @@ page.addEventListener('touchend', () => {
         fil = false;
     }
 });
+page.addEventListener('mousemove', (e) => {
+    if (e.clientY >= window.innerHeight - 60) {
+        $('#dock-box').removeClass('hide');
+    }
+    else {
+        if (!$('#start-menu.show')[0] && !$('#search-win.show')[0] && !$('#widgets.show')[0] && !$('#control.show')[0] && !$('#datebox.show')[0]) {
+            if ($('.window.max:not(.left):not(.right)')[0]) {
+                $('#dock-box').addClass('hide');
+            }
+            else {
+                $('#dock-box').removeClass('hide');
+            }
+        }
+        else {
+            $('#dock-box').removeClass('hide');
+        }
+    }
+})
+
+function setIcon() {
+    if (Array.isArray(JSON.parse(localStorage.getItem('desktop')))) {
+        $('#desktop')[0].innerHTML = `<div ondblclick="openapp('explorer');" ontouchstart="openapp('explorer');" oncontextmenu="return showcm(event,'desktop.icon',['explorer',-1]);" appname="explorer">
+        <img src="apps/icons/explorer/thispc.svg">
+        <p>此电脑</p>
+    </div>
+    <div class="b" ondblclick="openapp('setting');" ontouchstart="openapp('setting');" oncontextmenu="return showcm(event,'desktop.icon',['setting',-1]);" appname="setting">
+        <img src="icon/setting.svg">
+        <p>设置</p>
+    </div>
+    <div class="b" ondblclick="openapp('about');" ontouchstart="openapp('about');" oncontextmenu="return showcm(event,'desktop.icon',['about',-1]);" appname="about">
+        <img src="icon/about.svg">
+        <p>关于 Win12 网页版</p>
+    </div>
+    <div class="b" ondblclick="openapp('edge');" ontouchstart="openapp('edge');" oncontextmenu="return showcm(event,'desktop.icon',['edge',-1]);" appname="edge">
+        <img src="icon/edge.svg">
+        <p>Microsoft Edge</p>
+    </div>
+    <div class="b" ondblclick="shownotice('feedback');" ontouchstart="shownotice('feedback');;">
+        <img src="icon/feedback.svg">
+        <p>反馈中心</p>
+    </div>
+    <span class="choose">
+    </span>
+    <p style="background-color: rgba(11,45,14,0);z-index:1;position: absolute;top:0px;left:0px;height:100%;width:100%" oncontextmenu="return showcm(event,'desktop');"></p>`;
+        desktopItem = JSON.parse(localStorage.getItem('desktop'));
+        desktopItem.forEach((item) => {
+            $('#desktop')[0].innerHTML += item;
+        })
+        addMenu();
+    }
+    if (Array.isArray(JSON.parse(localStorage.getItem('topmost')))) {
+        topmost = JSON.parse(localStorage.getItem('topmost'));
+        if (topmost.includes('taskmgr')) {
+            document.getElementById('tsk-setting-topmost').checked = true;
+        }
+    }
+    if (Array.isArray(JSON.parse(localStorage.getItem('sys_setting')))) {
+        var sys_setting_back = JSON.parse(localStorage.getItem('sys_setting'));
+        if (/^(1|0)+$/.test(sys_setting_back.join(''))/* 只含有0和1 */) {
+            sys_setting = sys_setting_back;
+            for (var i = 0; i < sys_setting.length; i++) {
+                document.getElementById('sys_setting_' + (i + 1)).setAttribute("class", 'a checkbox' + (sys_setting[i] ? ' checked' : '')); //设置class属性
+                if (i == 5) {
+                    use_music = sys_setting[i] ? true : false;
+                }
+            }
+        }
+    }
+    if (localStorage.getItem('root_class')) {
+        $(':root')[0].className = localStorage.getItem('root_class');
+    }
+}
 
 // 启动
-let updated = false;
 document.getElementsByTagName('body')[0].onload = function nupd() {
     setTimeout(() => {
         $('#loadback').addClass('hide');
@@ -3213,11 +3847,6 @@ document.getElementsByTagName('body')[0].onload = function nupd() {
     setTimeout(() => {
         $('#loadback').css('display', 'none');
     }, 1000);
-    if (updated) {
-        setTimeout(() => {
-            $('.msg.update').addClass('show');
-        }, 1000);
-    }
     apps.webapps.init();
     //getdata
     if (localStorage.getItem('theme') == 'dark') $(':root').addClass('dark');
@@ -3225,9 +3854,8 @@ document.getElementsByTagName('body')[0].onload = function nupd() {
         $(':root').css('--theme-1', localStorage.getItem('color1'));
         $(':root').css('--theme-2', localStorage.getItem('color2'));
     }
-    if (localStorage.getItem('desktop')) {
-        $('#desktop')[0].innerHTML = localStorage.getItem('desktop');
-    }
+    setIcon();//加载桌面图标
+
     // 所以这个东西为啥要在开机的时候加载？
     // 不应该在python.init里面吗？
     //     (async function () {
@@ -3262,10 +3890,34 @@ document.getElementsByTagName('body')[0].onload = function nupd() {
             w.insertAdjacentHTML('afterbegin', `<div class="resize-knob ${n}" onmousedown="resizewin(this.parentElement.parentElement, '${n}', this)"></div>`);
         }
     });
+    // loadlang();
 };
 
+let autoUpdate = true;
+function checkUpdate() {
+    const sha = localStorage.getItem('sha');
+    fetch('https://api.github.com/repos/tjy-gitnub/win12/commits').then(res => {
+        res.json().then(json => {
+            if (sha != json[0].sha && sha) {
+                localStorage.setItem('update', true);
+                sendToSw({
+                    head: 'update'
+                });
+            }
+            localStorage.setItem('sha', json[0].sha);
+        });
+    });
+}
+
+if (localStorage.getItem('autoUpdate') == undefined) {
+    localStorage.setItem('autoUpdate', true);
+}
+else {
+    autoUpdate = (autoUpdate == 'true');
+}
+
 // PWA 应用
-if (!location.href.match(/((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])(?::(?:[0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))/) && !location.href.match('localhost') && !(new URL(location.href)).searchParams.get('develop')) {
+if (!location.href.match(/((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])(?::(?:[0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))/) && !(new URL(location.href)).searchParams.get('develop')) {
     $('#loginback').css('opacity', '1');
     $('#loginback').css('display', 'flex');
     shownotice('about');
@@ -3285,25 +3937,58 @@ if (!location.href.match(/((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|
             // // "redundant"  - 废弃，可能是因为安装失败，或者是被一个新版本覆盖
         });
     });
-    navigator.serviceWorker.controller.postMessage({
-        head: 'is_update'
-    });
-    navigator.serviceWorker.addEventListener('message', function (e) {
-        if (e.data.head == 'update') {
-            updated = true;
-            $('.msg.update>.main>.tit').html('<i class="bi bi-stars" style="background-image: linear-gradient(100deg, var(--theme-1), var(--theme-2));-webkit-background-clip: text;-webkit-text-fill-color: transparent;text-shadow:3px 3px 5px var(--sd);filter:saturate(200%) brightness(0.9);"></i> ' + $('#win-about>.cnt.update>div>details:first-child>summary').text());
-            $('.msg.update>.main>.cont').html($('#win-about>.cnt.update>div>details:first-child>p').html());
-            $('#loadbackupdate').css('display', 'block');
-        }
-    });
+    // navigator.serviceWorker.controller.postMessage({
+    //     head: 'is_update'
+    // });
+    // navigator.serviceWorker.addEventListener('message', function (e) {
+    // checkUpdate();
+
+    if (localStorage.getItem('autoUpdate') == 'true') {
+        checkUpdate();
+    }
+    if (localStorage.getItem('update') == 'true') {
+        $('.msg.update>.main>.tit').html('<i class="bi bi-stars" style="background-image: linear-gradient(100deg, var(--theme-1), var(--theme-2));-webkit-background-clip: text;-webkit-text-fill-color: transparent;text-shadow:3px 3px 5px var(--sd);filter:saturate(200%) brightness(0.9);"></i> ' + $('#win-about>.cnt.update>div>details:first-child>summary').text());
+        $('.msg.update>.main>.cont').html($('#win-about>.cnt.update>div>details:first-child>p').html());
+        $('#loadbackupdate').css('display', 'block');
+        localStorage.setItem('update', false);
+        $('.msg.update').addClass('show');
+    }
+    // });
     function setData(k, v) {
         localStorage.setItem(k, v);
     }
-}else{
-    function setData(k,v) {
+
+} else {
+    function setData(k, v) {
         console.log('setData 被禁用');
     }
 }
 function sendToSw(msg) {
     navigator.serviceWorker.controller.postMessage(msg);
+}
+
+/**
+ * 将秒数换算为可读的时间格式
+ * @param {number} second 秒数
+ * @returns 将秒数格式化为  1 天 8 小时 43 分钟 26 秒类似的格式
+ */
+function calcTimeString(second) {
+    let timeStr = '';
+    const days = Math.floor(second / (24 * 60 * 60));
+    const hours = Math.floor(second % (24 * 60 * 60) / 3600);
+    const minutes = Math.floor(second % 3600 / 60);
+    const seconds = second % 60;
+    if (days > 0) {
+        timeStr += " " + days + " 天";
+    }
+    if (hours > 0) {
+        timeStr += " " + hours + " 小时";
+    }
+    if (minutes > 0) {
+        timeStr += " " + minutes + " 分钟";
+    }
+    if (seconds > 0) {
+        timeStr += " " + seconds + " 秒";
+    }
+    return timeStr === "" ? " 0 秒" : timeStr;
 }
