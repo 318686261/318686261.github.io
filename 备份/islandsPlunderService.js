@@ -23,8 +23,8 @@ const utils = require('../../../util/utils');
  *            occupyTime: 1,//占领了多久，分钟
  *            userID: 1,//-1自动到期，0被抢
  *            date: Date.now(),//时间
- *            candidate: 1,//1候补，2伪候补
  *            loss: 1,//损失
+ *            candidate: 1,//3被候补顶替，4候补上位，5候补落选，6伪候补
  *        }
  *    ],
  *    //战绩，最多10条战绩，下次进群岛清空
@@ -34,7 +34,7 @@ const utils = require('../../../util/utils');
  *            userID: 1,//攻打者
  *            result: 1,//结果，1攻打成功，2攻打失败    
  *            date: Date.now(),//时间
- *            candidate: 1,//1候补，2伪候补
+ *            candidate: 1,//1候补
  *        }
  *    ],
  *    occupyed: [],//占领的岛屿
@@ -94,7 +94,7 @@ const utils = require('../../../util/utils');
  *
  *    channelCount": 2,//开启频道数量
  *
- *    candidateMaxCount: 30,//最多候补人数
+ *    candidateMaxCount: 10,//最多候补人数
  *    candidateNeedRound: 20,//进入候补回合数
  * 
  *    //所有的岛屿
@@ -239,7 +239,7 @@ exp.getAllInfo = async function (userID, flag, channelID, changeChannel) {
                         }
                     }
                 } else {
-                    if (parseInt(parseInt(islandID) / 1000) >= islandsPlunder.channelCount) {
+                    if (channelID >= islandsPlunder.channelCount) {
                         result.code = 17721;
                         return result;
                     }
@@ -999,6 +999,7 @@ exp.occupyIslandResult = async function (userID, data) {
             //追加自己的候补信息记录
             if (deleteUser.indexOf(userID) == -1) {
                 userIslandInfo.candidate.push(islandID);
+                candidateSort(island);
 
                 await setCurrentCandidate(userID, userIslandInfo);
                 await setIslandCandidateInfo(island);
@@ -1302,6 +1303,25 @@ exp.getCandidateInfo = async function (userID, islandID) {
         await isLandHandle(-1, null, island);
 
         await getIslandCandidateInfo(island);
+        candidateSort(island);
+
+        if (userIslandInfo.candidate && userIslandInfo.candidate.length > 0) {
+            let tmp_Index = userIslandInfo.candidate.indexOf(islandID);
+            if (tmp_Index != -1) {
+                let flag = false;
+                for (let index = 0; index < island.candidate.length; index++) {
+                    if (island.candidate[index].userID == userID) {
+                        flag = true;
+                        break;
+                    }
+                }
+                if (!flag) {
+                    userIslandInfo.candidate.splice(tmp_Index, 1);
+                    await setCurrentCandidate(userID, userIslandInfo);
+                }
+            }
+        }
+
         if (island.candidate && island.candidate.length > 0) {
             for (let index = 0; index < island.candidate.length; index++) {
                 if (island.candidate[index].battleFormation) {
@@ -1313,6 +1333,10 @@ exp.getCandidateInfo = async function (userID, islandID) {
             delete island.battleFormation;
         }
         result.island = island;
+
+        if (island.plunderUserID != -1) {
+            island.head = await getHeadInfo(island.plunderUserID);
+        }
     } else {
         result.code = 17706;
     }
@@ -1345,9 +1369,6 @@ exp.cancelCandidateInfo = async function (userID, islandID) {
         if (island.candidate && island.candidate.length > 0) {
             let has = false;
             for (let index = 0; index < island.candidate.length; index++) {
-                if (island.candidate[index].battleFormation) {
-                    delete island.candidate[index].battleFormation;
-                }
                 if (island.candidate[index].userID == userID) {
                     has = true;
                     island.candidate.splice(index, 1);
@@ -1363,6 +1384,7 @@ exp.cancelCandidateInfo = async function (userID, islandID) {
                     }
                 }
 
+                candidateSort(island);
                 await setCurrentCandidate(userID, userIslandInfo);
                 await setIslandCandidateInfo(island);
             } else {
@@ -1372,11 +1394,19 @@ exp.cancelCandidateInfo = async function (userID, islandID) {
             result.code = 17741;
         }
 
+        for (let index = 0; index < island.candidate.length; index++) {
+            if (island.candidate[index].battleFormation) {
+                delete island.candidate[index].battleFormation;
+            }
+        }
         if (island.battleFormation) {
             delete island.battleFormation;
         }
         result.island = island;
         result.userIslandInfo = userIslandInfo;
+        if (island.plunderUserID != -1) {
+            island.head = await getHeadInfo(island.plunderUserID);
+        }
     } else {
         result.code = 17706;
     }
@@ -2006,13 +2036,31 @@ let getUserIslandInfo = async function (userID) {
     }));
 
     if (userIslandInfo != -1 && userIslandInfo) {
-        userIslandInfo.updateTime = parseInt(userIslandInfo.updateTime);
-        userIslandInfo.dayResidueTimes = parseInt(userIslandInfo.dayResidueTimes);
-        userIslandInfo.dayAddTimes = parseInt(userIslandInfo.dayAddTimes);
+        let flag = true;
+
+        if (userIslandInfo.updateTime && utils.isNumber(userIslandInfo.updateTime)) {
+            userIslandInfo.updateTime = parseInt(userIslandInfo.updateTime);
+        } else {
+            userIslandInfo.updateTime = Date.now();
+            flag = false;
+        }
+        if (userIslandInfo.dayResidueTimes && utils.isNumber(userIslandInfo.dayResidueTimes)) {
+            userIslandInfo.dayResidueTimes = parseInt(userIslandInfo.dayResidueTimes);
+        } else {
+            userIslandInfo.dayResidueTimes = await getUserDayChallengeTimes(userID);
+            flag = false;
+        }
+        if (userIslandInfo.dayAddTimes && utils.isNumber(userIslandInfo.dayAddTimes)) {
+            userIslandInfo.dayAddTimes = parseInt(userIslandInfo.dayAddTimes);
+        } else {
+            userIslandInfo.dayAddTimes = 0;
+            flag = false;
+        }
         if (userIslandInfo.payOccupyTimes && utils.isNumber(userIslandInfo.payOccupyTimes)) {
             userIslandInfo.payOccupyTimes = parseInt(userIslandInfo.payOccupyTimes);
         } else {
             userIslandInfo.payOccupyTimes = 0;
+            flag = false;
         }
         if (userIslandInfo.income && typeof userIslandInfo.income == 'string') {
             userIslandInfo.income = JSON.parse(userIslandInfo.income);
@@ -2036,6 +2084,19 @@ let getUserIslandInfo = async function (userID) {
         }
         if (userIslandInfo.score) {
             userIslandInfo.score = parseInt(userIslandInfo.score);
+        }
+
+        if (!flag) {
+            await (new Promise(function (resolve, reject) {
+                redisClient.hset(userDBkey, 'updateTime', userIslandInfo.updateTime, 'dayResidueTimes', userIslandInfo.dayResidueTimes, 'dayAddTimes', userIslandInfo.dayAddTimes, 'payOccupyTimes', userIslandInfo.payOccupyTimes, function (err, obj) {
+                    if (err != null) {
+                        logger.error(err);
+                        reject(false);
+                    } else {
+                        resolve(true);
+                    }
+                });
+            }));
         }
     }
 
@@ -2093,8 +2154,13 @@ let setIslandCandidateInfo = async function (island) {
     if (!island.candidate) {
         island.candidate = [];
     }
+
+    // let candidateUser = [];
+    // for (let index = 0; index < island.candidate.length; index++) {
+    //     candidateUser.push(island.candidate[index].userID);
+    // }
     // await (new Promise(function (resolve, reject) {
-    //     redisClient.hset('island:' + island.id, 'candidate', JSON.stringify(island.candidate), function (err, obj) {
+    //     redisClient.hset('island:' + island.id, 'candidateUser', JSON.stringify(candidateUser), function (err, obj) {
     //         if (err != null) {
     //             logger.error(err);
     //             reject(false);
@@ -2110,6 +2176,7 @@ let setIslandCandidateInfo = async function (island) {
                 logger.error(err);
                 reject(false);
             } else {
+                redisClient.expire('islandCandidate:' + island.id, MAIL_EXPIRE_TIME);
                 resolve(true);
             }
         });
@@ -2161,7 +2228,7 @@ let getMainCandidate = async function (island) {
         candidateSort(island);
         let tmp_UserIslandInfo;
         for (let index = 0; index < island.candidate.length; index++) {
-            if (island.candidate[index].result == 1) {
+            if (island.candidate[index].result == 1 && island.candidate[index].battleFormation) {
                 return island.candidate[index];
 
                 // tmp_UserIslandInfo = await getUserIslandInfo(island.candidate[index].userID);
