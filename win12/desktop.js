@@ -1,22 +1,177 @@
+'use strict';
+
+/*
+
+Windows 12 网页版
+    GitHub: tjy-gitnub/win12
+
+*/
+
+/********** 禁止格式化此文档！ **********/
+
+console.log('%cWindows 12 网页版 (GitHub: tjy-gitnub/win12)', 'background-image: linear-gradient(to right,rgb(174, 115, 229),rgb(21, 105, 223)); border-radius: 8px; font-size: 1.3em; padding: 10px 15px; color: #fff; ');
+// 好高级，还能这样？？
+
+
+
+function loadlang(code) {
+    $.i18n.properties({
+        name: 'lang',
+        path: 'lang/', // 目录
+        language: code,
+        mode: 'map',
+        callback: function() {
+            $('[data-i18n]').each(function() {
+                // 标签的内容
+                // console.log($(this).data("i18n"));
+                // console.log($.i18n.prop($(this).data("i18n")));
+                // if($.i18n.prop($(this).data("i18n"))!=$(this).html())console.log($(this).data("i18n"),$(this).html());
+                $(this).html($.i18n.prop($(this).data("i18n")));
+            });
+            $('[data-i18n-attr]').each(function() {
+                // 标签的属性
+
+                // if($.i18n.prop($(this).data("i18n-key"))!=$(this).attr($(this).data("i18n-attr")))console.log($(this).data("i18n-key"),$(this).attr($(this).data("i18n-attr")));
+                $(this).attr($(this).data("i18n-attr"),$.i18n.prop($(this).data("i18n-key")));
+            });
+        }
+    });
+}
+
+let nl='zh-TW';
+let langc={
+    'zh-CN':'zh-CN',
+    'zh-cn':'zh-CN',
+    'zh-hans':'zh-CN',
+    'zh-Hans':'zh-CN',
+    'zh-TW':'zh-TW',
+    'zh-tw':'zh-TW',
+    'zh-hant':'zh-TW',
+    'zh-Hant':'zh-TW',
+    'zh-HK':'zh-TW',
+    'zh-hk':'zh-TW',
+    'zh':'zh-CN',
+
+    'en':'en',
+    'en-US':'en',
+    'en-us':'en',
+    'en-GB':'en',
+    'en-gb':'en'
+}
+
+let langcode,lang=(txt,id)=>{
+    return $.i18n.prop(id);
+};
+
+if(localStorage.getItem('lang')!=null){
+    if(localStorage.getItem('lang')=='hans' || localStorage.getItem('lang')=='zh_cn' || localStorage.getItem('lang')=='zh-cn'){
+        localStorage.setItem('lang','zh-CN');
+    }
+}else{
+    if(navigator.language in langc)
+        localStorage.setItem('lang',langc[navigator.language]);
+    else
+        localStorage.setItem('lang','en');
+}
+langcode=localStorage.getItem('lang');
+
+
+if(document.querySelectorAll('#loginback>.langselect>.'+langcode).length!=0){
+    $('#loginback>.langselect>.'+langcode).addClass('selected')
+}else{
+    $('#loginback>.langselect>.en').addClass('selected')
+}
+
+
+if(langcode!='zh-CN')
+    loadlang(langcode);
+
+if(langcode=='zh-CN'){
+    lang=(txt,id)=>{
+        // if(txt!=$.i18n.prop(id))console.log(id,txt);
+        return txt;
+    };
+}
+console.log('?')
+
+
+// 函数 lang(txt,id)
+/// langcode==zh_cn 下返回 txt,
+/// 否则返回语言 properties 文件中键 id 对应的值。
+/// 用例： lang('设置','setting.name')
+// 
+// 为开发方便，故不将简体中文纳入语言考虑
+
+
 // 后端服务器
-// loadlang();
 const server = 'http://win12server.freehk.svipss.top/';
 const pages = {
     'get-title': '', // 获取标题
 };
-//settings page list right hight light <span>       @Junchen Yi 
-document.querySelectorAll(`list.focs`).forEach(li => {
-    li.addEventListener('click', e => {
-        let _ = li.querySelector('span.focs'), la = li.querySelector('a.check'),
-            las = li.querySelectorAll('a');
-        $(_).addClass('cl');
-        $(_).css('top', la.offsetTop - las[las.length - 1].offsetTop);
-        $(_).css('left', la.offsetLeft - li.offsetLeft);
-        setTimeout(() => {
-            $(_).removeClass('cl');
-        }, 500);
-    })
+const page = $('html')[0];
+
+function disableIframes() {
+    $('iframe:not(.nochanges)').css('pointer-events', 'none');
+    $('iframe:not(.nochanges)').css('touch-action', 'none');
+}
+
+function enableIframes() {
+    $('iframe:not(.nochanges)').css('pointer-events', 'auto');
+    $('iframe:not(.nochanges)').css('touch-action', 'auto');
+}
+
+async function api(index, nobase=false) {
+    if (!nobase) index='https://api.github.com/' +index;
+    const token = localStorage.getItem('token');
+    if (token) {
+        const headers = new Headers();
+        headers.append('Authorization', token);
+        const res = await fetch( index, {headers: headers});
+        return res;
+    }
+    else {
+        const res = await fetch( index);
+        return res;
+    }
+}
+
+page.addEventListener('mousedown', disableIframes);
+page.addEventListener('touchstart', disableIframes);
+page.addEventListener('mouseup', enableIframes);
+page.addEventListener('touchend', enableIframes);
+page.addEventListener('touchcancel', enableIframes);
+
+page.addEventListener('click',(event)=>{
+    if($('#start-menu').hasClass('show')&&!$(event.target).closest('#start-menu').length){
+        hide_startmenu();
+    }
 });
+//开始菜单收回
+	
+
+// 上古代码，列表前的小竖线
+document.querySelectorAll('list.focs').forEach(li => {
+    li.addEventListener('click', () => {
+        let _ = li.$$('span.focs')[0], la = li.$$('a.check')[0],
+            las = li.$$('a');
+        if (_.dataset.type == 'abs') {
+            $(_).addClass('cl');
+            $(_).css('top', (la.getBoundingClientRect().top - li.parentElement.getBoundingClientRect().top) + 'px');
+            setTimeout(() => {
+                $(_).removeClass('cl');
+            }, 500);
+        }
+        else {
+            $(_).addClass('cl');
+            $(_).css('top', la.offsetTop - las[las.length - 1].offsetTop);
+            $(_).css('left', la.offsetLeft - li.offsetLeft);
+            setTimeout(() => {
+                $(_).removeClass('cl');
+            }, 500);
+        }
+    });
+});
+
 // 禁止拖拽图片
 $('img').on('dragstart', () => {
     return false;
@@ -33,17 +188,17 @@ $('input,textarea,*[contenteditable=true]').on('contextmenu', (e) => {
     stop(e);
     return true;
 });
+// 给桌面上的图标加右键菜单
 function addMenu() {
-    var parentDiv = document.getElementById('desktop');
-    var childDivs = parentDiv.getElementsByTagName('div');
+    var parentDiv = $('#desktop')[0];
+    var childDivs = parentDiv.$$('#div');
 
     for (var i = 0; i < childDivs.length; i++) {
         if (i <= 4) {//win12内置的5个图标不添加
             continue;
         }
-        var div = childDivs[i];
+        let div = childDivs[i];
         div.setAttribute('iconIndex', i - 5);
-        console.log(i - 5, div.getAttribute('appname'))
         div.addEventListener('contextmenu', (event) => {
             if (div.getAttribute('appname') != undefined) {
                 return showcm(event, 'desktop.icon', [div.getAttribute('appname'), div.getAttribute('iconIndex')]);
@@ -53,77 +208,96 @@ function addMenu() {
     }
 }
 var run_cmd = '';
-let nomax = { 'calc': 0 /* 其实，计算器是可以最大化的...*/, 'notepad-fonts': 0, 'camera-notice': 0, 'winver': 0, 'run': 0, 'wsa': 0 };
-let nomin = { 'notepad-fonts': 0, 'camera-notice': 0, 'run': 0 };
+const nomax = { 'calc': 0 , 'notepad-fonts': 0, 'camera-notice': 0, 'winver': 0, 'run': 0, 'wsa': 0 };
+const nomin = { 'notepad-fonts': 0, 'camera-notice': 0, 'run': 0 };
 var topmost = [];
-var sys_setting = [1, 1, 1, 0, 0, 1];
+var sys_setting = [1, 1, 1, 0, 0, 1, 1];
 var use_music = true;
-let cms = {
+var use_mic_voice = true;
+
+// 右键菜单
+/* 参考 desktop.html 开头信息
+    每个标识对应一个列表，每一项为一个右键菜单中显示的项，可以有以下形式：
+1. 'text', 文本信息
+2. ['text','script'], 分别为显示内容，点击执行的代码
+3. arg => {
+        ...
+        return ...
+    }
+    形参 arg 为 showcm() 方法第三个位置的用以传参的参数内容，
+    返回内容或为 'null' 表示跳过此项，或参考条目 2 的格式
+*/
+const cms = {
+    'save-bar':[
+      arg => {
+        return ['<i class="bi bi-window-x"></i> 移除', `removeEdgeSaveUrl('${arg}')`];
+      }
+    ],
     'titbar': [
-        function (arg) {
+        arg => {
             if (arg in nomax) {
                 return 'null';
             }
-            if ($('.window.' + arg).hasClass("max")) {
-                return ['<i class="bi bi-window-stack"></i> 还原', `maxwin('${arg}')`];
+            if ($('.window.' + arg).hasClass('max')) {
+                return ['<i class="bi bi-window-stack"></i> '+lang('还原','window.restore'), `maxwin('${arg}')`];
             }
             else {
-                return ['<i class="bi bi-window-fullscreen"></i> 最大化', `maxwin('${arg}')`];
+                return ['<i class="bi bi-window-fullscreen"></i> '+lang('最大化','window.max'), `maxwin('${arg}')`];
             }
         },
-        function (arg) {
+        arg => {
             if (arg in nomin) {
                 return 'null';
             }
             else {
-                return ['<i class="bi bi-window-dash"></i> 最小化', `minwin('${arg}')`];
+                return ['<i class="bi bi-window-dash"></i> '+lang('最小化','window.min'), `minwin('${arg}')`];
             }
         },
-        function (arg) {
+        arg => {
             if (arg in nomin) {
-                return ['<i class="bi bi-window-x"></i> 关闭', `hidewin('${arg}', 'configs')`];
+                return ['<i class="bi bi-window-x"></i> '+lang('关闭','close'), `hidewin('${arg}', 'configs')`];
             }
             else {
-                return ['<i class="bi bi-window-x"></i> 关闭', `hidewin('${arg}')`];
+                return ['<i class="bi bi-window-x"></i> '+lang('关闭','close'), `hidewin('${arg}')`];
             }
         },
     ],
     'taskbar': [
-        function (arg) {
-            return ['<i class="bi bi-window-x"></i> 关闭', `hidewin('${arg}')`];
+        arg => {
+            return ['<i class="bi bi-window-x"></i> '+lang('关闭','close'), `hidewin('${arg}')`];
         }
     ],
     'desktop': [
-        ['<i class="bi bi-arrow-clockwise"></i> 刷新', `$('#desktop').css('opacity','0');setTimeout(()=>{$('#desktop').css('opacity','1');},100);setIcon();`],
-        ['<i class="bi bi-circle-square"></i> 切换主题', 'toggletheme()'],
-        `<a onmousedown="window.open('https://github.com/tjy-gitnub/win12','_blank');" win12_title="https://github.com/tjy-gitnub/win12" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)"><i class="bi bi-github"></i> 在 Github 中查看此项目</a>`,
-        function (arg) {
+        [`<i class="bi bi-arrow-clockwise"></i> ${lang('刷新','refresh')} <info>F5</info>`, '$(\'#desktop\').css(\'opacity\',\'0\');setTimeout(()=>{$(\'#desktop\').css(\'opacity\',\'1\');},100);setIcon();'],
+        ['<i class="bi bi-circle-square"></i> '+lang('切换主题','desktop.tgltheme'), 'toggletheme()'],
+        `<a onmousedown="window.open(\'https://github.com/tjy-gitnub/win12\',\'_blank\');" win12_title="https://github.com/tjy-gitnub/win12" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)"><i class="bi bi-github"></i> ${lang('在 Github 中查看此项目','desktop.vogithub')}</a>`,
+        arg => {
             if (edit_mode) {
-                return ['<i class="bi bi-pencil"></i> 退出编辑模式', 'editMode();'];
+                return ['<i class="bi bi-pencil"></i> '+lang('退出编辑模式','desktop.exitedit'), 'editMode();'];
             }
             else if (!edit_mode) {
-                return ['<i class="bi bi-pencil"></i> 进入编辑模式', 'editMode();'];
+                return ['<i class="bi bi-pencil"></i> '+lang('进入编辑模式','desktop.enteredit'), 'editMode();'];
             }
         },
-        ['<i class="bi bi-info-circle"></i> 关于 Win12 网页版', `$('#win-about>.about').addClass('show');$('#win-about>.update').removeClass('show');openapp('about');if($('.window.about').hasClass('min'))minwin('about');`],
-        ['<i class="bi bi-brush"></i> 个性化', `openapp('setting');$('#win-setting > div.menu > list > a.enable.appearance')[0].click()`]
+        ['<i class="bi bi-info-circle"></i> '+lang('关于 Win12 网页版','about.name'), '$(\'#win-about>.about\').addClass(\'show\');$(\'#win-about>.update\').removeClass(\'show\');openapp(\'about\');if($(\'.window.about\').hasClass(\'min\'))minwin(\'about\');'],
+        ['<i class="bi bi-brush"></i> '+lang('个性化','psnl'), 'openapp(\'setting\');$(\'#win-setting > div.menu > list > a.enable.appearance\')[0].click()']
     ],
     'desktop.icon': [
-        function (arg) {
-            return ['<i class="bi bi-folder2-open"></i> 打开', 'openapp(`' + arg[0] + '`)']
+        arg => {
+            return ['<i class="bi bi-folder2-open"></i> '+lang('打开','open'), 'openapp(`' + arg[0] + '`)'];
         },
-        function (arg) {
+        arg => {
             if (arg[1] >= 0) {
-                return ['<i class="bi bi-trash3"></i> 删除', 'desktopItem.splice(' + (arg[1] - 1) + ', 1);saveDesktop();setIcon();addMenu();'];
+                return ['<i class="bi bi-trash3"></i> '+lang('删除','del'), 'desktopItem.splice(' + (arg[1]) + ', 1);saveDesktop();setIcon();addMenu();'];
             } else {
                 return 'null';
             }
         }
     ],
     'winx': [
-        function (arg) {
-            if ($('#start-menu').hasClass("show")) {
-                return ['<i class="bi bi-box-arrow-in-down"></i> 关闭开始菜单', `hide_startmenu()`];
+        arg => {
+            if ($('#start-menu').hasClass('show')) {
+                return ['<i class="bi bi-box-arrow-in-down"></i> 关闭开始菜单', 'hide_startmenu()'];
             }
             else {
                 return ['<i class="bi bi-box-arrow-in-up"></i> 打开开始菜单', `$('#start-btn').addClass('show');
@@ -134,54 +308,54 @@ let cms = {
             }
         },
         '<hr>',
-        ['<i class="bi bi-gear"></i> 设置', `openapp('setting')`],
-        ['<i class="bi bi-terminal"></i> 运行', `openapp('run')`],
-        ['<i class="bi bi-folder2-open"></i> 文件资源管理器', `openapp('explorer')`],
+        ['<i class="bi bi-gear"></i> '+lang('设置','setting.name'), 'openapp(\'setting\')'],
+        ['<i class="bi bi-terminal"></i> '+lang('运行','run.name'), 'openapp(\'run\')'],
+        ['<i class="bi bi-folder2-open"></i> '+lang('文件资源管理器','explorer.name'), 'openapp(\'explorer\')'],
         ['<i class="bi bi-search"></i> 搜索', `$('#search-btn').addClass('show');hide_startmenu();
         $('#search-win').addClass('show-begin');setTimeout(() => {$('#search-win').addClass('show');
         $('#search-input').focus();}, 0);`],
         '<hr>',
-        ['<i class="bi bi-power"></i> 关机', `window.location='shutdown.html'`],
-        ['<i class="bi bi-arrow-counterclockwise"></i> 重启', `window.location='reload.html'`],
+        ['<i class="bi bi-power"></i> 关机', 'window.location=\'shutdown.html\''],
+        ['<i class="bi bi-arrow-counterclockwise"></i> 重启', 'window.location=\'reload.html\''],
     ],
     'smapp': [
-        function (arg) {
-            return ['<i class="bi bi-window"></i> 打开', `openapp('${arg[0]}');hide_startmenu();`];
+        arg => {
+            return ['<i class="bi bi-window"></i> '+lang('打开','open'), `openapp('${arg[0]}');hide_startmenu();`];
         },
-        function (arg) {
-            return ['<i class="bi bi-link-45deg"></i> 在桌面创建链接', "var s=`<div class='b' ondblclick=openapp('" + arg[0] + "')  ontouchstart=openapp('" + arg[0] + "') appname='" + arg[0] + "'><img src='icon/" + geticon(arg[0]) + "'><p>" + arg[1] + "</p></div>`;$('#desktop').append(s);desktopItem[desktopItem.length]=s;addMenu();saveDesktop();"];
+        arg => {
+            return ['<i class="bi bi-link-45deg"></i> 在桌面创建链接', 'var s=`<div class=\'b\' ondblclick=openapp(\'' + arg[0] + '\')  ontouchstart=openapp(\'' + arg[0] + '\') appname=\'' + arg[0] + '\'><img src=\'icon/' + geticon(arg[0]) + '\'><p>' + arg[1] + '</p></div>`;$(\'#desktop\').append(s);desktopItem[desktopItem.length]=s;addMenu();saveDesktop();'];
         },
-        function (arg) {
+        arg => {
             return ['<i class="bi bi-x"></i> 取消固定', `$('#s-m-r>.pinned>.apps>.sm-app.${arg[0]}').remove()`];
         }
     ],
     'smlapp': [
-        function (arg) {
-            return ['<i class="bi bi-window"></i> 打开', `openapp('${arg[0]}');hide_startmenu();`];
+        arg => {
+            return ['<i class="bi bi-window"></i> '+lang('打开','open'), `openapp('${arg[0]}');hide_startmenu();`];
         },
-        function (arg) {
-            return ['<i class="bi bi-link-45deg"></i> 在桌面创建链接', "var s=`<div class='b' ondblclick=openapp('" + arg[0] + "')  ontouchstart=openapp('" + arg[0] + "') appname='" + arg[0] + "'><img src='icon/" + geticon(arg[0]) + "'><p>" + arg[1] + "</p></div>`;$('#desktop').append(s);desktopItem[desktopItem.length]=s;addMenu();saveDesktop();"];
+        arg => {
+            return ['<i class="bi bi-link-45deg"></i> 在桌面创建链接', 'var s=`<div class=\'b\' ondblclick=openapp(\'' + arg[0] + '\')  ontouchstart=openapp(\'' + arg[0] + '\') appname=\'' + arg[0] + '\'><img src=\'icon/' + geticon(arg[0]) + '\'><p>' + arg[1] + '</p></div>`;$(\'#desktop\').append(s);desktopItem[desktopItem.length]=s;addMenu();saveDesktop();'];
         },
-        function (arg) {
-            return ['<i class="bi bi-pin-angle"></i> 固定到开始菜单', "pinapp('" + arg[0] + "', '" + arg[1] + "', 'openapp(&quot;" + arg[0] + "&quot;);hide_startmenu();')"];
+        arg => {
+            return ['<i class="bi bi-pin-angle"></i> 固定到开始菜单', 'pinapp(\'' + arg[0] + '\', \'' + arg[1] + '\', \'openapp(&quot;' + arg[0] + '&quot;);hide_startmenu();\')'];
         }
     ],
     'msgupdate': [
         ['<i class="bi bi-layout-text-window-reverse"></i> 查看详细', `openapp('about');if($('.window.about').hasClass('min'))
         minwin('about');$('#win-about>.about').removeClass('show');$('#win-about>.update').addClass('show');
         $('#win-about>.update>div>details:first-child').attr('open','open')`],
-        ['<i class="bi bi-box-arrow-right"></i> 关闭', `$('.msg.update').removeClass('show')`]
+        ['<i class="bi bi-box-arrow-right"></i> 关闭', '$(\'.msg.update\').removeClass(\'show\')']
     ],
     'explorer.folder': [
         arg => {
-            return ['<i class="bi bi-folder2-open"></i> 打开', `apps.explorer.goto('${arg}')`];
+            return ['<i class="bi bi-folder2-open"></i> '+lang('打开','open'), `apps.explorer.goto('${arg}')`];
         },
         arg => {
             return ['<i class="bi bi-arrow-up-right-square"></i> 在新标签页中打开', `apps.explorer.newtab('${arg}');`];
         },
         arg => {
             if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
-                return ['<i class="bi bi-trash3"></i> 删除', `apps.explorer.del('${arg}')`];
+                return ['<i class="bi bi-trash3"></i> '+lang('删除','del'), `apps.explorer.del('${arg}')`];
             return 'null';
         },
         arg => {
@@ -202,15 +376,15 @@ let cms = {
     ],
     'explorer.file': [
         arg => {
-            return ['<i class="bi bi-folder2-open"></i> 打开（目前毛用没有）', ``];
+            return ['<i class="bi bi-folder2-open"></i> 打开（目前毛用没有）', ''];
         },
         arg => {
             if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
-                return ['<i class="bi bi-trash3"></i> 删除', `apps.explorer.del('${arg}')`];
+                return ['<i class="bi bi-trash3"></i> '+lang('删除','del'), `apps.explorer.del('${arg}')`];
             return 'null';
         },
         arg => {
-            if ($('#win-explorer>.path>.tit>.path>div.text')[0].innerHTML != "此电脑")
+            if ($('#win-explorer>.path>.tit>.path>div.text')[0].innerHTML != '此电脑')
                 return ['<i class="bi bi-files"></i> 复制', `apps.explorer.copy_or_cut('${arg}','copy')`];
             return 'null';
         },
@@ -227,23 +401,23 @@ let cms = {
     'explorer.content': [
         arg => {
             if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
-                return ['<i class="bi bi-file-earmark-plus"></i> 新建文件', `apps.explorer.add($('#win-explorer>.path>.tit')[0].dataset.path,'新建文本文档.txt')`];
+                return ['<i class="bi bi-file-earmark-plus"></i> 新建文件', 'apps.explorer.add($(\'#win-explorer>.path>.tit\')[0].dataset.path,\'新建文本文档.txt\')'];
             return 'null';
         },
         arg => {
             if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
-                return ['<i class="bi bi-folder-plus"></i> 新建文件夹', `apps.explorer.add($('#win-explorer>.path>.tit')[0].dataset.path,'新建文件夹',type='files')`];
+                return ['<i class="bi bi-folder-plus"></i> 新建文件夹', 'apps.explorer.add($(\'#win-explorer>.path>.tit\')[0].dataset.path,\'新建文件夹\',type=\'files\')'];
             return 'null';
         },
         arg => {
             if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
-                return ['<i class="bi bi-file-earmark-arrow-down"></i> 粘贴', `apps.explorer.paste($('#win-explorer>.path>.tit')[0].dataset.path,'新建文件夹',type='files')`];
+                return ['<i class="bi bi-file-earmark-arrow-down"></i> 粘贴', 'apps.explorer.paste($(\'#win-explorer>.path>.tit\')[0].dataset.path,\'新建文件夹\',type=\'files\')'];
             return 'null';
         },
         arg => {
             if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
-                return ['<i class="bi bi-arrow-clockwise"></i> 刷新', `apps.explorer.goto($('#win-explorer>.path>.tit')[0].dataset.path, false)`];
-            return ['<i class="bi bi-arrow-clockwise"></i> 刷新', `apps.explorer.reset()`];
+                return ['<i class="bi bi-arrow-clockwise"></i> 刷新', 'apps.explorer.goto($(\'#win-explorer>.path>.tit\')[0].dataset.path, false)'];
+            return ['<i class="bi bi-arrow-clockwise"></i> 刷新', 'apps.explorer.reset()'];
         }
     ],
     'explorer.tab': [
@@ -261,16 +435,10 @@ let cms = {
     ],
     'taskmgr.processes': [
         arg => {
-            return ['<i class="bi bi-x"></i> 结束任务', `apps.taskmgr.taskkill('${arg}')`]
+            return ['<i class="bi bi-x"></i> 结束任务', `apps.taskmgr.taskkill('${arg}')`];
         }
     ]
-}
-window.onkeydown = function (event) {
-    if (event.keyCode == 116/*F5被按下(刷新)*/) {
-        event.preventDefault();/*取消默认刷新行为*/
-        $('#desktop').css('opacity', '0'); setTimeout(() => { $('#desktop').css('opacity', '1'); }, 100); setIcon();
-    }
-}
+};
 
 function showcm(e, cl, arg) {
     if ($('#cm').hasClass('show-begin')) {
@@ -291,13 +459,11 @@ function showcm(e, cl, arg) {
                 else {
                     h += `<a class="a" onmousedown="${item[1]}">${item[0]}</a>\n`;
                 }
-            })
+            });
             $('#cm>list')[0].innerHTML = h;
             $('#cm').addClass('show-begin');
             $('#cm>.foc').focus();
-            // 这个.foc是用来模拟焦点的，这句是将焦点放在右键菜单上，注释掉后果不堪设想 >u-)o
-            // 噢 可是如果设置焦点的话在移动设备上会显示虚拟键盘啊 QAQ (By: User782Tec)
-            // (By: tjy-gitnub)
+            // .foc是用来模拟焦点的，将焦点放在右键菜单上
             setTimeout(() => {
                 $('#cm').addClass('show');
             }, 0);
@@ -317,8 +483,7 @@ function showcm(e, cl, arg) {
     let h = '';
     cms[cl].forEach(item => {
         if (typeof (item) == 'function') {
-            ret = item(arg);
-            console.log(arg, ret);
+            let ret = item(arg);
             if (ret == 'null') {
                 return true;
             }
@@ -328,7 +493,7 @@ function showcm(e, cl, arg) {
         } else {
             h += `<a class="a" onmousedown="${item[1]}">${item[0]}</a>\n`;
         }
-    })
+    });
     $('#cm>list')[0].innerHTML = h;
     $('#cm').addClass('show-begin');
     $('#cm>.foc').focus();
@@ -354,18 +519,18 @@ $('#cm>.foc').blur(() => {
 let font_window = false;
 
 // 下拉菜单
-dps = {
+const dps = {
     'notepad.file': [
         ['<i class="bi bi-file-earmark-plus"></i> 新建', `hidedp(true);$('#win-notepad>.text-box').addClass('down');
         setTimeout(()=>{$('#win-notepad>.text-box').val('');$('#win-notepad>.text-box').removeClass('down')},200);`],
         ['<i class="bi bi-box-arrow-right"></i> 另存为', `hidedp(true);$('#win-notepad>.save').attr('href', window.URL.createObjectURL(new Blob([$('#win-notepad>.text-box').html()])));
         $('#win-notepad>.save')[0].click();`],
         '<hr>',
-        ['<i class="bi bi-x"></i> 退出', `isOnDp=false;hidedp(true);hidewin('notepad')`],
+        ['<i class="bi bi-x"></i> 退出', 'isOnDp=false;hidedp(true);hidewin(\'notepad\')'],
     ],
     'notepad.edit': [
         ['<i class="bi bi-files"></i> 复制 <info>Ctrl+C</info>', 'document.execCommand(\'copy\')'],
-        ['<i class="bi bi-clipboard"></i> 粘贴 <info>Ctrl+V</info>', `document.execCommand(\'paste\')`],
+        ['<i class="bi bi-clipboard"></i> 粘贴 <info>Ctrl+V</info>', 'document.execCommand(\'paste\')'],
         ['<i class="bi bi-scissors"></i> 剪切 <info>Ctrl+X</info>', 'document.execCommand(\'cut\')'],
         '<hr>',
         ['<i class="bi bi-arrow-return-left"></i> 撤销 <info>Ctrl+Z</info>', 'document.execCommand(\'undo\')'],
@@ -383,16 +548,16 @@ dps = {
         '<hr>',
         ['<i class="bi bi-fonts"></i> 字体', 'font_window=true;hidedp(true);showwin(\'notepad-fonts\');apps.notepadFonts.reset();'],
     ]
-}
+};
 
 function playWindowsBackground() {
-    var audio = new Audio("./media/Windows Background.wav")
-    audio.play()
+    var audio = new Audio('./media/Windows Background.wav');
+    audio.play();
 }
 
 let dpt = null, isOnDp = false;
-$('#dp')[0].onmouseover = () => { isOnDp = true };
-$('#dp')[0].onmouseleave = () => { isOnDp = false; hidedp() };
+$('#dp')[0].onmouseover = () => { isOnDp = true; };
+$('#dp')[0].onmouseleave = () => { isOnDp = false; hidedp(); };
 function showdp(e, cl, arg) {
     if ($('#dp').hasClass('show-begin')) {
         $('#dp').removeClass('show');
@@ -407,13 +572,13 @@ function showdp(e, cl, arg) {
         return;
     }
     // dpt = e;
-    let off = $(e).offset();
+    const off = $(e).offset();
     $('#dp').css('left', off.left);
     $('#dp').css('top', off.top + e.offsetHeight);
     let h = '';
     dps[cl].forEach(item => {
         if (typeof (item) == 'function') {
-            ret = item(arg);
+            let ret = item(arg);
             if (ret == 'null') {
                 return true;
             }
@@ -423,7 +588,7 @@ function showdp(e, cl, arg) {
         } else {
             h += `<a class="a" onclick="${item[1]}">${item[0]}</a>\n`;
         }
-    })
+    });
     $('#dp>list')[0].innerHTML = h;
     $('#dp').addClass('show-begin');
     setTimeout(() => {
@@ -453,7 +618,7 @@ function hidedp(force = false) {
 document.querySelectorAll('*[win12_title]:not(.notip)').forEach(a => {
     a.addEventListener('mouseenter', showdescp);
     a.addEventListener('mouseleave', hidedescp);
-})
+});
 function showdescp(e) {
     $(e.target).attr('data-descp', 'waiting');
     setTimeout(() => {
@@ -484,10 +649,13 @@ function hidedescp(e) {
     }, 100);
 }
 
-// 提示
-let nts = {
+// 提示窗
+/* 参考 desktop.html 开头信息，
+格式、功能较简单，自行研究，不作赘述*/
+
+const nts = {
     'about': {
-        cnt: `<p class="tit">Windows 12 网页版</p>
+        cnt: lang(`<p class="tit">Windows 12 网页版</p>
             <p>Windows 12 网页版是一个开放源项目,<br />
             希望让用户在网络上预先体验 Windows 12,<br />
             内容可能与 Windows 12 正式版本不一致。<br />
@@ -495,48 +663,47 @@ let nts = {
             此项目绝不附属于微软,且不应与微软操作系统或产品混淆,<br />
             这也不是 Windows365 cloud PC<br />
             本项目中微软、Windows和其他示范产品是微软公司的商标<br />
-            本项目中谷歌、Android和其他示范产品是谷歌公司的商标</p>`,
+            本项目中 Android 是谷歌公司的商标。</p>`,'nts.about'),
         btn: [
-            { type: 'main', text: '关闭', js: 'closenotice();' },
-            { type: 'detail', text: '更多', js: "closenotice();openapp('about');if($('.window.about').hasClass('min'))minwin('about');$('.dock.about').removeClass('show')" },
+            { type: 'main', text: lang(lang('关闭','close'),'close'), js: 'closenotice();' },
+            { type: 'detail', text: lang('更多','more'), js: 'closenotice();openapp(\'about\');if($(\'.window.about\').hasClass(\'min\'))minwin(\'about\');$(\'.dock.about\').removeClass(\'show\')' },
         ]
     },
     'feedback': {
-        cnt: `<p class="tit">反馈</p>
-            <p>我们非常注重用户的体验与反馈</p>
+        cnt: `<p class="tit">${lang('反馈','nts.feedback.name')}</p>
+            <p>${lang('我们非常注重用户的体验与反馈','nts.feedback.txt')}</p>
             <list class="new">
-                <a class="a" onclick="window.open('https://github.com/tjy-gitnub/win12/issues','_blank');" win12_title="在浏览器新窗口打开链接" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)">在github上提交issue(需要github账户，会得到更高重视)</a>
-                <a class="a" onclick="window.open('https://forms.office.com/Pages/ResponsePage.aspx?id=DQSIkWdsW0yxEjajBLZtrQAAAAAAAAAAAAO__SDw7SZURjUzOUo0VEVXU1pMWlFTSUVGWDNYWU1EWS4u','_blank');" win12_title="在浏览器新窗口打开链接" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)">在Microsoft Forms上发送反馈(不需要账户，也会重视)</a>
+                <a class="a" onclick="window.open('https://github.com/tjy-gitnub/win12/issues','_blank');" win12_title="在浏览器新窗口打开链接" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)">${lang('在github上提交issue (需要github账户)','nts.feedback.github')}</a>
             </list>`,
         btn: [
-            { type: 'main', text: '关闭', js: 'closenotice();' },
+            { type: 'main', text: lang(lang('关闭','close'),'close'), js: 'closenotice();' },
         ]
     },
     'widgets': {
         cnt: `
-            <p class="tit">添加小组件</p>
+            <p class="tit">${lang('添加小组件','nts.addwg')}</p>
             <list class="new">
-                <a class="a" onclick="closenotice(); widgets.widgets.add('calc');">计算器</a>
-                <a class="a" onclick="closenotice(); widgets.widgets.add('weather');">天气</a>
-                <a class="a" onclick="closenotice(); widgets.widgets.add('monitor');">系统性能监视器</a>
+                <a class="a" onclick="closenotice(); widgets.widgets.add('calc');">${lang('计算器','calc.name')}</a>
+                <a class="a" onclick="closenotice(); widgets.widgets.add('weather');">${lang('天气','nts.addwg.weather')}</a>
+                <a class="a" onclick="closenotice(); widgets.widgets.add('monitor');">${lang('系统性能监视器','nts.addwg.monitor')}</a>
             </list>`,
         btn: [
-            { type: 'cancel', text: '取消', js: 'closenotice();' }
+            { type: 'cancel', text: lang('取消','cancel'), js: 'closenotice();' }
         ]
     },
     'ZeroDivision': {//计算器报错窗口
-        // 甚至还报错我真的哭死，直接输入框显示给error啥的不就完了。。
-        cnt: `<p class="tit">错误</p>
-            <p>除数不得等于0</p>`,
+        // 甚至还报错我真的哭死，直接输入框显示error啥的不就完了。。
+        cnt: lang(`<p class="tit">错误</p>
+            <p>除数不得等于0</p>`,'calc.error.zero'),
         btn: [
-            { type: 'main', text: '确定', js: 'closenotice();' },
+            { type: 'main', text: lang('确定','ok'), js: 'closenotice();' },
         ]
     },
     'Can-not-open-file': {
-        cnt: `<p class="tit">` + run_cmd + `</p>
-        <p>Windows 找不到文件 '` + run_cmd + `'。请确定文件名是否正确后，再试一次。</p> `,
+        cnt: '<p class="tit">' + run_cmd + `</p>
+        <p>Windows 找不到文件 '` + run_cmd + '\'。请确定文件名是否正确后，再试一次。</p> ',
         btn: [
-            { type: 'main', text: '确定', js: 'closenotice();' },
+            { type: 'main', text: lang('确定','ok'), js: 'closenotice();' },
             { type: 'detail', text: '在 Micrsoft Edge 中搜索', js: 'closenotice();openapp(\'edge\');window.setTimeout(() => {apps.edge.newtab();apps.edge.goto(' + run_cmd + ');}, 300);' }
         ]
     },
@@ -552,40 +719,47 @@ let nts = {
             <a class="a" onclick="closenotice(); widgets.monitor.type = 'gpu';">GPU利用率</a>
         </list>`,
         btn: [
-            { type: 'cancel', text: '取消', js: 'closenotice();' }
+            { type: 'cancel', text: lang('取消','cancel'), js: 'closenotice();' }
         ]
     },
     'widgets.desktop': {
         cnt: `
             <p class="tit">添加桌面小组件</p>
             <list class="new">
-                <a class="a" onclick="closenotice(); widgets.widgets.add('calc'); widgets.widgets.addToDesktop('calc');">计算器</a>
-                <a class="a" onclick="closenotice(); widgets.widgets.add('weather'); widgets.widgets.addToDesktop('weather');">天气</a>
-                <a class="a" onclick="closenotice(); widgets.widgets.add('monitor'); widgets.widgets.addToDesktop('monitor');">系统性能监视器</a>
+                <a class="a" onclick="closenotice(); widgets.widgets.addToDesktop('calc');">计算器</a>
+                <a class="a" onclick="closenotice(); widgets.widgets.addToDesktop('weather');">天气</a>
+                <a class="a" onclick="closenotice(); widgets.widgets.addToDesktop('monitor');">系统性能监视器</a>
             </list>`,
         btn: [
-            { type: 'cancel', text: '取消', js: 'closenotice();' }
+            { type: 'cancel', text: lang('取消','cancel'), js: 'closenotice();' }
         ]
+    },
+    'widgets.news.source': {
+        cnt: `
+            <p class="tit">切换新闻源</p>
+            <list class="new">
+                新闻源未加载，请检查网络连接
+            </list>`,
+        btn: [{ type: 'cancel', text: lang('取消','cancel'), js: 'closenotice();' }],
     },
     'duplication file name': {
         cnt: `
             <p class="tit">错误</p>
             <p>文件名重复</p>`,
         btn: [
-            { type: 'cancel', text: '取消', js: 'closenotice();' }
+            { type: 'cancel', text: lang('取消','cancel'), js: 'closenotice();' }
         ]
     },
     'about-copilot': {
         cnt: `
             <p class="tit">关于 Windows 12 Copilot</p>
-            <p>你可以使用此AI助手帮助你更快地完成工作 (有人用win12工作?)<br>
-            由于chatgpt3.5理解力较差，所以间歇性正常工作。<br>
-            有任何关于本ai的反馈请让ai帮你打开copilot反馈界面<br>
-            因为chatgpt是白嫖来的，所以请适量使用不要太猖狂。<br>
-            也请适当使用，不要谈论敏感、违规话题，号被封了所有人都没，<br>请有身为一个人类最基本的道德底线。<br>
-            小项目难免会有bug，见谅，后端由 github@NB-Bgroup 提供</p>`,
+            <p>你可以使用此 AI 助手帮助你更快地完成工作，此AI助手基于GPT-5 nano AI模型 (有人用Win12工作?)<br>
+            由于所用模型理解力较差，所以间歇性正常工作。<br>
+            有任何关于本 AI 的反馈请让 AI 帮你打开 AI Copilot反馈界面<br>
+            也请适当使用，不要谈论敏感、违规话题，<br>请有身为一个人类最基本的道德底线。<br>
+            在此特别感谢云智api(api.jkyai.top)提供的公益接口!</p>`,
         btn: [
-            { type: 'main', text: '确定', js: 'closenotice();' },
+            { type: 'main', text: lang('确定','ok'), js: 'closenotice();' },
         ]
     },
     'feedback-copilot': {
@@ -597,7 +771,7 @@ let nts = {
         </list>
             `,
         btn: [
-            { type: 'main', text: '关闭', js: 'closenotice();' }
+            { type: 'main', text: lang('关闭','close'), js: 'closenotice();' }
         ]
     },
     'shutdown': {
@@ -605,7 +779,7 @@ let nts = {
         <p class="tit">即将注销你的登录</p>
         <p>Windows 将在 114514 分钟后关闭。</p>`,
         btn: [
-            { type: 'main', text: '关闭', js: 'closenotice();' }
+            { type: 'main', text: lang('关闭','close'), js: 'closenotice();' }
         ]
     },
     'setting.update': {
@@ -617,13 +791,50 @@ let nts = {
             { type: 'main', text: '立即重启', js: 'location.href = `./reload.html`;' },
             { type: 'detail', text: '稍后重启', js: 'closenotice();' }
         ]
+    },
+    'recognition' : {
+        cnt: `
+        <p class="tit">语音输入法使用须知</p>
+        <p>本语音输入法由@nb-group开发<br>
+        使用的语音识别api 仅可在使用 Chromium 内核的浏览器上使用，<br>
+        包括Microsoft Edge，Google Chrome等，<br>
+        api（理论上）完全离线.<br>
+        我们绝不会窃取您的输入信息，请放心使用。<br><br>
+        每次语音识别都会重新申请一下麦克风，这是浏览器的问题，<br>
+        可以在浏览器设置里选择始终允许。<br><br>
+        哦对了，关掉提示窗口之后再点一次语音球才能开始识别。
+        </p>
+         `,
+        btn: [
+            { type: 'main', text: lang('确定','ok'), js: 'closenotice();' },
+        ]
+    },
+    'setting.down': {
+        cnt: `
+        <p class="tit">下载完毕</p>
+        <p>请立即重新启动以应用更改</p>
+        `,
+        btn: [
+            { type: 'main', text: '重新启动', js: 'closenotice(); setTimeout(() => {window.location=`reload.html`;},200);' }
+        ]
+    },
+    'whiteboard-saveas': {
+        cnt: `
+        <p class="tit">${lang('另存为','whiteboard.saveas.title')}</p>
+        <p>${lang('请输入文件名:','whiteboard.saveas.prompt')}</p>
+        <input type="text" id="whiteboard-filename" placeholder="Whiteboard_${new Date().toISOString().slice(0,10)}" style="width: 100%; padding: 8px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;">
+        `,
+        btn: [
+            { type: 'main', text: lang('保存','whiteboard.saveas.save'), js: 'apps.whiteboard.doSaveAs();' },
+            { type: 'detail', text: lang('取消','whiteboard.saveas.cancel'), js: 'closenotice();' }
+        ]
     }
-}
+};
 function shownotice(name) {
     $('#notice>.cnt').html(nts[name].cnt);
     let tmp = '';
     nts[name].btn.forEach(btn => {
-        tmp += `<a class="a btn ${btn.type}" onclick="${btn.js}">${btn.text}</a>`
+        tmp += `<a class="a btn ${btn.type}" onclick="${btn.js}">${btn.text}</a>`;
     });
     $('#notice>.btns').html(tmp);
     $('#notice-back').addClass('show');
@@ -637,13 +848,364 @@ function closenotice() {
         $('#notice-back').removeClass('show');
     }, 200);
 }
+
+function closeVideo() {
+  var video = apps.camera.video
+  if (video) {
+    try {
+      var stream = video.srcObject;
+      var tracks = stream.getTracks();
+      tracks.forEach(function (track) {
+        track.stop();
+      });
+      video.srcObject = null;
+    } catch (error) {}
+  }
+}
+
 var shutdown_task = []; //关机任务，储存在这个数组里
 // 为什么要数组？
+
 // 运行的指令
 function runcmd(cmd, inTerminal=false) {
-    if (cmd.slice(0, 3) == "cmd") {
+    if (cmd.slice(0, 3) == 'cmd') {
         run_cmd = cmd;
-        openapp('terminal');
+        if (!inTerminal) {
+            openapp('terminal');
+        }
+        return true;
+    }
+    else if (cmd === 'cls') {
+        if (inTerminal) {
+            $('#win-terminal>.text-cmd').html('');
+        }
+        return true;
+    }
+    else if (cmd === 'help') {
+        if (inTerminal) {
+            $('#win-terminal>.text-cmd').append(`
+${lang('有关某个命令的详细信息，请键入 HELP 命令名','terminal.help.title')}
+DIR             ${lang('显示目录中的文件和子目录列表','terminal.help.dir')}
+LS              ${lang('显示目录中的文件和子目录列表 (DIR的别名)','terminal.help.ls')}
+DEL             ${lang('删除一个或多个文件','terminal.help.del')}
+CD              ${lang('显示当前目录的名称或将其更改','terminal.help.cd')}
+CLS             ${lang('清除屏幕','terminal.help.cls')}
+HELP            ${lang('提供 Windows 命令的帮助信息','terminal.help.help')}
+SYSTEMINFO      ${lang('显示系统信息','terminal.help.systeminfo')}
+SHUTDOWN        ${lang('关闭计算机','terminal.help.shutdown')}
+CMD             ${lang('打开新的命令提示符窗口','terminal.help.cmd')}
+EXIT            ${lang('退出命令提示符程序','terminal.help.exit')}
+
+${lang('彩蛋命令:','terminal.help.easter')}
+HELLO           ${lang('打个招呼','terminal.help.hello')}
+MATRIX          ${lang('黑客帝国特效','terminal.help.matrix')}
+SNOW            ${lang('下雪特效','terminal.help.snow')}
+DANCE           ${lang('让窗口跳舞','terminal.help.dance')}
+STARWARS        ${lang('原力觉醒','terminal.help.starwars')}
+`);
+        }
+        return true;
+    }
+    else if (cmd === 'dir' || cmd === 'ls') {
+        if (inTerminal) {
+            $('#win-terminal>.text-cmd').append(`
+ 驱动器 C 中的卷没有标签。
+ 卷的序列号是 3E47-2B9A
+
+ C:\\Windows\\System32 的目录
+
+${new Date().toLocaleDateString()}  ${new Date().toLocaleTimeString()}    <DIR>          .
+${new Date().toLocaleDateString()}  ${new Date().toLocaleTimeString()}    <DIR>          ..
+2023/10/01  10:30:00             1,024 calc.exe
+2023/10/01  10:30:00               512 cmd.exe
+2023/10/01  10:30:00             2,048 notepad.exe
+2023/10/01  10:30:00             4,096 taskmgr.exe
+2023/10/01  10:30:00               256 winver.exe
+               5 个文件          7,936 字节
+               2 个目录  21,474,836,480 可用字节
+`);
+        }
+        return true;
+    }
+    else if (cmd.startsWith('del ')) {
+        if (inTerminal) {
+            const fileName = cmd.substring(4).trim();
+            if (fileName.toLowerCase().includes('system32') || fileName.toLowerCase().includes('windows') || fileName.toLowerCase().includes('program files')) {
+                $('#win-terminal>.text-cmd').append(`错误: 拒绝访问。无法删除系统关键文件或目录。\n`);
+            } else {
+                $('#win-terminal>.text-cmd').append(`找不到文件 "${fileName}"。\n`);
+            }
+        }
+        return true;
+    }
+    else if (cmd.startsWith('cd ')) {
+        if (inTerminal) {
+            const path = cmd.substring(3).trim();
+            if (path === '..') {
+                $('#win-terminal>.text-cmd').append(`C:\\Windows\n`);
+            } else if (path === '\\' || path === '/') {
+                $('#win-terminal>.text-cmd').append(`C:\\\n`);
+            } else {
+                $('#win-terminal>.text-cmd').append(`C:\\Windows\\System32\\${path}\n`);
+            }
+        }
+        return true;
+    }
+    else if (cmd.toLowerCase() === 'hello') {
+        if (inTerminal) {
+            const greetings = [
+                '你好呀! 今天也是元气满满的一天呢! (◍•ᴗ•◍)',
+                'Hello! 欢迎来到 Windows 12! ╰(*°▽°*)╯',
+                '嗨! 很高兴见到你! (｡♥‿♥｡)',
+                '你好! 我是 Windows 12 终端, 有什么可以帮你的吗? (❁´◡`❁)'
+            ];
+            $('#win-terminal>.text-cmd').append(greetings[Math.floor(Math.random() * greetings.length)] + '\n');
+        }
+        return true;
+    }
+    else if (cmd.toLowerCase() === 'matrix') {
+        if (inTerminal) {
+            const chars = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ1234567890'; // 哈？(from stsc)
+            let matrix = '';
+            
+            // 创建一个专门的容器来放置 matrix 效果
+            const matrixContainer = $('<div class="matrix-container" style="font-family: monospace; line-height: 1.2;"></div>');
+            $('#win-terminal>.text-cmd').append(matrixContainer);
+            
+            for (let i = 0; i < 15; i++) {
+                let line = '';
+                for (let j = 0; j < 50; j++) {
+                    const rand = Math.random();
+                    if (rand < 0.3) {
+                        line += `<span style="color: #0f0; text-shadow: 0 0 8px #0f0;">${chars[Math.floor(Math.random() * chars.length)]}</span>`;
+                    } else if (rand < 0.4) {
+                        line += `<span style="color: #fff; text-shadow: 0 0 8px #fff;">${chars[Math.floor(Math.random() * chars.length)]}</span>`;
+                    } else {
+                        line += `<span style="color: #050;">${chars[Math.floor(Math.random() * chars.length)]}</span>`;
+                    }
+                }
+                matrix += line + '\n';
+            }
+            matrixContainer.html(matrix);
+            
+            // 添加动画效果
+            const interval = setInterval(() => {
+                const newLine = Array.from({length: 50}, () => {
+                    const rand = Math.random();
+                    if (rand < 0.3) {
+                        return `<span style="color: #0f0; text-shadow: 0 0 8px #0f0;">${chars[Math.floor(Math.random() * chars.length)]}</span>`;
+                    } else if (rand < 0.4) {
+                        return `<span style="color: #fff; text-shadow: 0 0 8px #fff;">${chars[Math.floor(Math.random() * chars.length)]}</span>`;
+                    } else {
+                        return `<span style="color: #050;">${chars[Math.floor(Math.random() * chars.length)]}</span>`;
+                    }
+                }).join('');
+                
+                const matrixContent = matrixContainer.html().split('\n');
+                matrixContent.shift();
+                matrixContent.push(newLine);
+                matrixContainer.html(matrixContent.join('\n'));
+            }, 100);
+
+            // 10秒后停止动画并移除容器
+            setTimeout(() => {
+                clearInterval(interval);
+                setTimeout(() => {
+                    matrixContainer.fadeOut(500, function() {
+                        $(this).remove();
+                    });
+                }, 500);
+            }, 10000);
+        }
+        return true;
+    }
+    else if (cmd.toLowerCase() === 'snow') {
+        if (inTerminal) {
+            $('#win-terminal>.text-cmd').append('让整个屏幕下雪吧! ❄️\n');
+            if (!$('#snow-container').length) {
+                $('body').append(`
+                    <div id="snow-container" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9999;">
+                        <div id="snow-pile" style="position: absolute; bottom: 0; left: 0; width: 100%; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center; perspective: 1000px; transform-style: preserve-3d;"></div>
+                    </div>
+                `);
+            }
+            
+            const snowflakes = ['❄', '❅', '❆', '✻', '✼', '❉'];
+            const pileFlakes = ['❄', '❅', '❆'];
+            const colors = ['#fff', '#eef', '#ddf'];
+            let pileCount = 0;
+            let lastPilePosition = 50; // 用于记录上一个堆积位置
+            
+            function createSnowflake() {
+                const flake = snowflakes[Math.floor(Math.random() * snowflakes.length)];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const size = Math.random() * 1.2 + 0.6;
+                const left = Math.random() * 100;
+                const fallDuration = 3 + Math.random() * 2;
+                const $snowflake = $(`<span class="snowflake" style="position: absolute; left: ${left}%; top: -10%; font-size: ${size}em; color: ${color}; text-shadow: 0 0 5px ${color}; transition: all ${fallDuration}s linear; opacity: 0.8; transform: rotate(0deg) translateZ(0);">${flake}</span>`);
+                
+                $('#snow-container').append($snowflake);
+                
+                setTimeout(() => {
+                    const rotation = Math.random() * 360;
+                    const finalLeft = left + (Math.random() - 0.5) * 20;
+                    $snowflake.css({
+                        transform: `rotate(${rotation}deg) translateZ(0)`,
+                        top: '90%',
+                        left: `${finalLeft}%`
+                    });
+                }, 50);
+
+                setTimeout(() => {
+                    $snowflake.css({
+                        transition: 'all 0.5s ease-out',
+                        opacity: 0
+                    });
+                    
+                    if (pileCount < 200) {
+                        const pileFlake = pileFlakes[Math.floor(Math.random() * pileFlakes.length)];
+                        const pileSize = Math.random() * 0.4 + 0.3; // 减小堆积雪花的大小
+                        
+                        // 计算新的堆积位置，使其更自然
+                        const deviation = (Math.random() - 0.5) * 30;
+                        lastPilePosition = Math.max(10, Math.min(90, lastPilePosition + deviation));
+                        const pileLeft = lastPilePosition;
+                        
+                        // 计算堆积高度，使其形成自然的山形
+                        const baseHeight = Math.sin((pileLeft - 50) * Math.PI / 180) * 20;
+                        const pileHeight = Math.max(0, 20 - Math.abs(pileLeft - 50) / 2.5 + baseHeight);
+                        
+                        const $pile = $(`<span style="position: absolute; left: ${pileLeft}%; bottom: ${pileHeight}px; font-size: ${pileSize}em; opacity: 0; transform: scale(0) translateZ(${Math.random() * 50}px); transition: all 0.3s ease-out;">${pileFlake}</span>`);
+                        $('#snow-pile').append($pile);
+                        
+                        setTimeout(() => {
+                            $pile.css({
+                                transform: `scale(1) translateZ(${Math.random() * 50}px) rotate(${Math.random() * 30 - 15}deg)`,
+                                opacity: 0.85
+                            });
+                        }, 50);
+                        
+                        pileCount++;
+                    }
+                    
+                    setTimeout(() => $snowflake.remove(), 500);
+                }, fallDuration * 1000);
+            }
+
+            // 持续创建新雪花
+            const snowInterval = setInterval(() => {
+                if ($('#snow-container .snowflake').length < 100) {
+                    createSnowflake();
+                }
+            }, 200);
+
+            // 30秒后停止动画并缓慢消失
+            setTimeout(() => {
+                clearInterval(snowInterval);
+                // 让所有堆积的雪花缓慢消失
+                $('#snow-pile span').each(function(i) {
+                    const $pile = $(this);
+                    setTimeout(() => {
+                        $pile.css({
+                            transition: 'all 0.5s ease-in',
+                            opacity: 0,
+                            transform: 'scale(0) translateY(10px)'
+                        });
+                    }, Math.random() * 2000);
+                });
+                // 让飘落的雪花消失
+                $('#snow-container .snowflake').each(function(i) {
+                    const $flake = $(this);
+                    setTimeout(() => {
+                        $flake.css({
+                            transition: 'all 1s ease-in',
+                            opacity: 0
+                        });
+                    }, Math.random() * 2000);
+                });
+                setTimeout(() => {
+                    $('#snow-container').fadeOut(1000, function() {
+                        $(this).remove();
+                    });
+                }, 2500);
+            }, 30000);
+        }
+        return true;
+    }
+    else if (cmd.toLowerCase() === 'dance') {
+        if (inTerminal) {
+            $('#win-terminal>.text-cmd').append('窗口开始跳舞啦! ♪(^∇^*)\n');
+            const windows = $('.window:not(.min)');
+            const danceSteps = [
+                { transform: 'rotate(5deg) translateY(-10px)' },
+                { transform: 'rotate(-5deg) translateY(0px)' },
+                { transform: 'rotate(5deg) translateX(10px)' },
+                { transform: 'rotate(-5deg) translateX(-10px)' },
+                { transform: 'rotate(0deg) translate(0, 0)' }
+            ];
+            
+            windows.each(function() {
+                const win = $(this);
+                let danceCount = 0;
+                const danceInterval = setInterval(() => {
+                    danceCount++;
+                    win.css({
+                        transition: 'transform 0.3s ease-in-out',
+                        transform: danceSteps[danceCount % danceSteps.length].transform
+                    });
+                    
+                    // 跳舞15次后停止
+                    if (danceCount >= 15) {
+                        clearInterval(danceInterval);
+                        win.css({
+                            transition: 'transform 0.5s ease-out',
+                            transform: 'none'
+                        });
+                    }
+                }, 300);
+            });
+        }
+        return true;
+    }
+    else if (cmd === 'systeminfo') {
+        if (inTerminal) {
+            const d = new Date();
+            $('#win-terminal>.text-cmd').append(`
+主机名:                 WIN12-WEB
+OS 名称:               Microsoft Windows 12 网页版
+OS 版本:               12.0.39035.7324
+OS 制造商:             Microsoft Corporation
+OS 配置:               主要工作站
+OS 构建类型:           Multiprocessor Free
+注册的所有人:          Web User
+注册的组织:            Web Organization
+产品 ID:               12345-67890-09876-54321
+初始安装日期:          ${d.toLocaleDateString()}
+系统启动时间:          ${d.toLocaleString()}
+系统制造商:            Web Browser
+系统型号:              Virtual Machine
+系统类型:              x64-based PC
+处理器:                AMD64 Family Web Browser
+BIOS 版本:             Web Browser Virtual BIOS
+Windows 目录:          C:\\Windows
+系统目录:              C:\\Windows\\System32
+启动设备:              \\Device\\HarddiskVolume1
+系统区域设置:          zh-cn;中文(中国)
+输入法区域设置:        zh-cn;中文(中国)
+时区:                  (UTC+08:00)北京，重庆，香港特别行政区，乌鲁木齐
+物理内存总量:          8,192 MB
+可用的物理内存:        4,096 MB
+虚拟内存: 最大值:      16,384 MB
+虚拟内存: 可用:        12,288 MB
+虚拟内存: 使用中:      4,096 MB
+页面文件位置:          C:\\pagefile.sys
+域:                    WORKGROUP
+登录服务器:            \\\\WIN12-WEB
+修补程序:              0 个修补程序已安装
+网卡:                  1 个 NIC 已安装
+                      [01]: Ethernet Browser Adapter
+`);
+        }
         return true;
     }
     else if (cmd in apps) {
@@ -651,18 +1213,24 @@ function runcmd(cmd, inTerminal=false) {
         return true;
     }
     else if (cmd.replace('.exe', '') in apps) {
-        openapp(cmd.replace('.exe', ''))
+        openapp(cmd.replace('.exe', ''));
         return true;
     }
-    else if (cmd.includes("shutdown")) {//关机指令
-        run_cmd = cmd
+    else if (cmd.includes('shutdown')) {//关机指令 by fzlzjerry
+        // 保存当前命令以供后续使用
+        run_cmd = cmd;
+        // 将命令按空格分割成数组以便解析参数
         var cmds = cmd.split(' ');
-        if ((cmds[0] == "shutdown") || (cmds[0] == "shutdown.exe")) { //帮助
+        // 检查命令是否为shutdown或shutdown.exe
+        if ((cmds[0] == 'shutdown') || (cmds[0] == 'shutdown.exe')) {
+            // 如果没有参数，显示帮助信息
             if (cmds.length == 1) {
+                // 如果不是在终端中执行，则打开终端
                 if(!inTerminal){
                     openapp('terminal');
-                    $('#win-terminal').html(`<pre class="text-cmd"></pre>`);
+                    $('#win-terminal').html('<pre class="text-cmd"></pre>');
                 }
+                // 显示帮助信息
                 $('#win-terminal>.text-cmd').append(`
 shutdown [-s] [-r] [-f] [-a] [-t time]
 -s:关机
@@ -671,2403 +1239,476 @@ shutdown [-s] [-r] [-f] [-a] [-t time]
 -a:取消之前的操作
 -t time:指定在 time秒 后操作
 
-其余不多做介绍了` + (inTerminal?`` : `
-请按任意键继续.&nbsp;.&nbsp;.<input type="text" onkeydown="hidewin('terminal')"></input>`)); 
-                // 所以你是没事干吗？。。提示：github并不是以行数来计算贡献的哦   from @tjy-gitnub
-                $('#win-terminal>pre>input').focus()
+其余不多做介绍了` + (inTerminal?'' : `
+请按任意键继续.&nbsp;.&nbsp;.<input type="text" onkeydown="hidewin('terminal')"></input>`));
+                if (!inTerminal) {
+                    $('#win-terminal>pre>input').focus();
+                }
+                return true;
             }
-            else if (cmds.includes("-s") || cmds.includes("/s")) {//关机
-                if ((cmds.indexOf("-t") != -1 && cmd.length/*判断是否-t后有其他参数*/ >= cmds.indexOf("-t") + 2/*先加一，获取当下标是从1开始的时候的下标索引；再加一，获取下一项。配合数组.length使用*/) || (cmds.indexOf("/t") != -1 && cmd.length/*判断是否-t后有其他参数*/ >= cmds.indexOf("/t") + 2)) {
-                    str = "";
-                    if (cmds.includes("-t")) { str = "-t"; }
-                    if (cmds.includes("/t")) { str = "/t"; }
-                    if (!isNaN(cmds[cmds.indexOf(str) + 1]/*这里只加一是因为下标是从0开始的*/)) {
-                        num = parseInt(cmds[cmds.indexOf(str) + 1])
-                        nts['shutdown'] = {
-                            cnt: `
-                            <p class="tit">即将注销你的登录</p>
-                            <p>Windows 将在 ` + calcTimeString(num) + ` 后关闭。</p>`, // 如果必须原生样式的，建议改为 num<60 ? 1 : Math.floor(num / 60) + ` 分钟后关闭。</p>`,
-                            btn: [
-                                { type: 'main', text: '关闭', js: 'closenotice();' },
-                            ]
-                        };
-                        shutdown_task[shutdown_task.length] = setTimeout("window.location.href = './shutdown.html'", num * 1000);
-                        if (!(cmds.includes("/f") || cmds.includes("-f"))) {
-                            shownotice('shutdown');
-                        }
-                    }
+            
+            // 初始化参数变量
+            let hasTime = false;      // 是否指定了时间
+            let timeValue = 0;        // 延迟时间值（秒）
+            let operation = '';       // 操作类型（关机/重启/注销）
+            let forceMode = false;    // 是否为强制模式（不显示通知）
+
+            // 检查并解析时间参数 (-t 或 /t)
+            if (cmds.includes('-t') || cmds.includes('/t')) {
+                const timeFlag = cmds.includes('-t') ? '-t' : '/t';
+                const timeIndex = cmds.indexOf(timeFlag);
+                // 检查时间参数是否有效
+                if (timeIndex < cmds.length - 1 && !isNaN(cmds[timeIndex + 1])) {
+                    hasTime = true;
+                    timeValue = parseInt(cmds[timeIndex + 1]);
+                } else {
+                    // 时间参数无效时显示错误信息
+                    $('#win-terminal>.text-cmd').append(`错误: 无效的时间参数\n`);
+                    return true;
                 }
             }
-            else if (cmds.includes("-r") || cmds.includes("/r")) {//重启
-                if ((cmds.indexOf("-t") != -1 && cmd.length >= cmds.indexOf("-t") + 2) || (cmds.indexOf("/t") != -1 && cmd.length >= cmds.indexOf("/t") + 2)) {/*详见上面的注释*/
-                    str = "";
-                    if (cmds.includes("-t")) { str = "-t"; }
-                    if (cmds.includes("/t")) { str = "/t"; }
-                    if (!isNaN(cmds[cmds.indexOf(str) + 1])) {
-                        num = parseInt(cmds[cmds.indexOf(str) + 1])
-                        nts['shutdown'] = {
-                            cnt: `
-                            <p class="tit">即将注销你的登录</p>
-                            <p>Windows 将在 ` + calcTimeString(num) + ` 后关闭。</p>`, // 如果必须原生样式的，建议改为 num<60 ? 1 : Math.floor(num / 60) + ` 分钟后关闭。</p>`,
-                            btn: [
-                                { type: 'main', text: '关闭', js: 'closenotice();' },
-                            ]
-                        };
-                        shutdown_task[shutdown_task.length] = setTimeout("window.location.href = './reload.html'", num * 1000);
-                        if (!(cmds.includes("/f") || cmds.includes("-f"))) {
-                            shownotice('shutdown');
-                        }
-                    }
-                }
+
+            // 检查是否为强制模式 (-f 或 /f)
+            if (cmds.includes('-f') || cmds.includes('/f')) {
+                forceMode = true;
             }
-            else if (cmds.includes("-a") || cmds.includes("/a")) {//取消电源操作
+
+            // 检查是否为取消操作 (-a 或 /a)
+            if (cmds.includes('-a') || cmds.includes('/a')) {
+                // 如果有正在进行的关机任务
                 if (shutdown_task.length > 0) {
-                    for (var i = 0; i < shutdown_task.length; i++) {
-                        if (shutdown_task[i] != null) {
+                    // 清除所有关机任务
+                    for (let task of shutdown_task) {
+                        if (task != null) {
                             try {
-                                clearTimeout(shutdown_task[i]);
+                                clearTimeout(task);
                             } catch (err) { console.log(err); }
-                            shutdown_task[i] = null;
                         }
                     }
+                    shutdown_task = [];
+                    // 显示取消通知
                     nts['shutdown'] = {
                         cnt: `
                         <p class="tit">注销已取消</p>
                         <p>计划的关闭已取消。</p>`,
                         btn: [
-                            { type: 'main', text: '关闭', js: 'closenotice();' },
+                            { type: 'main', text: lang('关闭','close'), js: 'closenotice();' },
                         ]
                     };
                     shownotice('shutdown');
+                } else {
+                    // 如果没有正在进行的关机任务，显示错误信息
+                    $('#win-terminal>.text-cmd').append(`错误: 没有正在进行的关机操作\n`);
                 }
+                return true;
+            }
+
+            // 确定操作类型
+            if (cmds.includes('-s') || cmds.includes('/s')) {
+                operation = 'shutdown';    // 关机
+            }
+            else if (cmds.includes('-r') || cmds.includes('/r')) {
+                operation = 'restart';     // 重启
+            }
+            else if (cmds.includes('-f') || cmds.includes('/f')) {
+                operation = 'logoff';      // 注销
+            }
+            else {
+                // 如果没有指定有效的操作类型，显示错误信息
+                $('#win-terminal>.text-cmd').append(`错误: 无效的操作参数\n`);
+                return true;
+            }
+
+            // 计算延迟时间和显示文本
+            const delay = hasTime ? timeValue * 1000 : 0;  // 将秒转换为毫秒
+            const timeString = hasTime ? calcTimeString(timeValue) : '立即';
+            
+            // 准备通知内容
+            nts['shutdown'] = {
+                cnt: `
+                <p class="tit">即将${operation === 'restart' ? '重启' : operation === 'logoff' ? '注销' : '关机'}</p>
+                <p>Windows 将在 ${timeString} 后${operation === 'restart' ? '重启' : operation === 'logoff' ? '注销' : '关机'}。</p>`,
+                btn: [
+                    { type: 'main', text: lang('关闭','close'), js: 'closenotice();' },
+                ]
+            };
+
+            // 创建定时任务
+            const task = setTimeout(() => {
+                // 根据操作类型跳转到相应页面
+                if (operation === 'restart') {
+                    window.location.href = './reload.html';
+                } else if (operation === 'logoff') {
+                    window.location.href = './login.html';
+                } else {
+                    window.location.href = './shutdown.html';
+                }
+            }, delay);
+
+            // 将任务添加到任务列表
+            shutdown_task.push(task);
+            
+            // 如果不是强制模式，显示通知
+            if (!forceMode) {
+                shownotice('shutdown');
             }
             return true;
         }
     }
+    else if (cmd.toLowerCase() === 'starwars') {
+        if (inTerminal) {
+            $('#win-terminal>.text-cmd').append('原力与你同在... ⚔️\n');
+            
+            // 创建星球大战容器
+            const starWarsContainer = $('<div class="starwars-container" style="font-family: monospace; perspective: 400px; color: #ffd700; position: relative; height: 400px; overflow: hidden; background: #000;"></div>');
+            $('#win-terminal>.text-cmd').append(starWarsContainer);
+            
+            // 添加星球大战文本
+            const text = `
+            Episode XII
+            WIN12 STRIKES BACK
+
+            在遥远的未来，一个充满
+            科技的银河系中...
+
+            Windows操作系统已经
+            进化到了第12代。
+
+            然而，这个系统不仅仅
+            是一个操作系统，它是
+            一个充满原力的存在。
+
+            此刻，一股神秘的力量
+            正在你的电脑中觉醒...
+
+            你，就是那个被选中的人，
+            将带领这个系统走向新的
+            纪元...
+
+            愿原力与你同在！
+            `;
+            
+            const crawl = $(`<div class="crawl" style="position: relative; top: 400px; transform-origin: 50% 100%; transform: rotateX(60deg); text-align: center; font-size: 24px; line-height: 1.5; white-space: pre-line; text-shadow: 0 0 10px #ffd700;"></div>`);
+            crawl.html(text);
+            starWarsContainer.append(crawl);
+            
+            // 添加动态背景星星
+            for (let i = 0; i < 200; i++) {
+                const size = Math.random() * 2 + 1;
+                const speed = Math.random() * 3 + 1;
+                const star = $(`<div class="star" style="position: absolute; width: ${size}px; height: ${size}px; background: #fff; left: ${Math.random() * 100}%; top: ${Math.random() * 100}%; animation: twinkle ${speed}s infinite alternate;"></div>`);
+                starWarsContainer.append(star);
+            }
+
+            // 添加CSS动画
+            const style = $(`<style>
+                @keyframes twinkle {
+                    0% { opacity: 0.2; }
+                    100% { opacity: 1; }
+                }
+                .star {
+                    border-radius: 50%;
+                    box-shadow: 0 0 3px #fff;
+                }
+                .crawl {
+                    animation: crawl 30s linear;
+                }
+                @keyframes crawl {
+                    0% { top: 400px; opacity: 1; }
+                    90% { opacity: 1; }
+                    100% { top: -1000px; opacity: 0; }
+                }
+            </style>`);
+            starWarsContainer.append(style);
+            
+            // 30秒后清理
+            setTimeout(() => {
+                starWarsContainer.fadeOut(2000, function() {
+                    $(this).remove();
+                });
+            }, 30000);
+        }
+        return true;
+    }
     return false;
 }
-// 应用
-let apps = {
-    setting: {
-        init: () => {
-            $('#win-setting>.menu>list>a.home')[0].click();
-            $('#win-setting>.page>.cnt.update>.setting-list>div:last-child>.alr>a.checkbox')[localStorage.getItem('autoUpdate') == 'true' ? 'addClass' : 'removeClass']('checked');
-            apps.setting.checkUpdate();
-        },
-        page: (name) => {
-            $('#win-setting>.page>.cnt.' + name).scrollTop(0);
-            $('#win-setting>.page>.cnt.show').removeClass('show');
-            $('#win-setting>.page>.cnt.' + name).addClass('show');
-            $('#win-setting>.menu>list>a.check').removeClass('check');
-            $('#win-setting>.menu>list>a.' + name).addClass('check');
-        },
-        theme_get: () => {
-            $('#set-theme').html(`<loading><svg width="30px" height="30px" viewBox="0 0 16 16">
-            <circle cx="8px" cy="8px" r="7px" style="stroke:#7f7f7f50;fill:none;stroke-width:3px;"></circle>
-            <circle cx="8px" cy="8px" r="7px" style="stroke:#2983cc;stroke-width:3px;"></circle></svg></loading>`)
-            // 实时获取主题
-            $.get('https://api.github.com/repos/tjy-gitnub/win12-theme/contents').then(cs => {
-                cs.forEach(c => {
-                    if (c.type == 'dir') {
-                        $.get(c.url).then(cnt => {
-                            $('#set-theme').html('');
-                            cnt.forEach(cn => {
-                                if (cn.name == 'theme.json') {
-                                    $.getJSON('https://tjy-gitnub.github.io/win12-theme/' + cn.path).then(inf => {
-                                        infjs = inf;
-                                        if ($('#set-theme>loading').length)
-                                            $('#set-theme').html('');
-                                        $('#set-theme').append(`<a class="a act" onclick="apps.setting.theme_set('${c.name}')" style="background-image:url('https://tjy-gitnub.github.io/win12-theme/${c.name}/view.jpg')">${c.name}</a>`);
-                                    })
-                                }
-                            })
-                        })
-                    }
-                });
-            });
-        },
-        theme_set: (infp) => {
-            $.get('https://api.github.com/repos/tjy-gitnub/win12-theme/contents/' + infp).then(cnt => {
-                console.log('https://api.github.com/repos/tjy-gitnub/win12-theme/contents/' + infp);
-                cnt.forEach(cn => {
-                    if (cn.name == 'theme.json') {
-                        $.getJSON('https://tjy-gitnub.github.io/win12-theme/' + cn.path).then(inf => {
-                            infjs = inf;
-                            cnt.forEach(fbg => {
-                                console.log(fbg, infjs);
-                                if (fbg.name == infjs.bg) {
-                                    $(':root').css('--bgul', `url('https://tjy-gitnub.github.io/win12-theme/${fbg.path}')`);
-                                    $(':root').css('--theme-1', infjs.color1);
-                                    $(':root').css('--theme-2', infjs.color2);
-                                    $(':root').css('--href', infjs.href);
-                                    // $('#set-theme').append(`<a class="a act" onclick="apps.setting.theme_set(\`(${inf})\`)" style="background-image:url('https://tjy-gitnub.github.io/win12-theme/${fbg.path}')">${c.name}</a>`);
-                                }
-                            })
-                        })
-                    }
-                })
-            })
-        },
-        checkUpdate: () => {
-            $('#win-setting>.page>.cnt.update>.lo>.update-main .notice')[0].innerText = '正在检查更新...';
-            $('#win-setting>.page>.cnt.update>.lo>.update-main .detail')[0].innerHTML = '&nbsp;';
-            $('#win-setting>.page>.cnt.update>.setting-list>.update-now').addClass('disabled');
-            $('#win-setting>.page>.cnt.update>.setting-list>.update-now>div>p:first-child')[0].innerText = '正在检查更新...';
-            $('#win-setting>.page>.cnt.update>.setting-list>.update-now>div>p:last-child')[0].innerHTML = '&nbsp;';
-            $('#win-setting>.page>.cnt.update>.lo>.update-main>div:last-child').addClass('disabled');
-            fetch('https://api.github.com/repos/tjy-gitnub/win12/commits').then(res => {
-                res.json().then(json => {
-                    const sha = localStorage.getItem('sha');
-                    if (sha != json[0].sha) {
-                        let msg = json[0].commit.message.split('\n\n')[0];
-                        if (msg.match(/v[0-9]*\.[0-9]*\.[0-9]*/)) {
-                            msg = msg.match(/v[0-9]*\.[0-9]*\.[0-9]*/)[0];
-                            window.setTimeout(() => {
-                                $('#win-setting>.page>.cnt.update>.lo>.update-main .notice')[0].innerText = 'Windows 12 有更新可用';
-                                $('#win-setting>.page>.cnt.update>.lo>.update-main .detail')[0].innerText = `目前最新版本: ${msg}`;
-                                $('#win-setting>.page>.cnt.update>.lo>.update-main>div:last-child').removeClass('disabled');
-                                $('#win-setting>.page>.cnt.update>.setting-list>.update-now>div>p:first-child')[0].innerText = '更新已就绪';
-                                $('#win-setting>.page>.cnt.update>.setting-list>.update-now>div>p:last-child')[0].innerText = msg;
-                                $('#win-setting>.page>.cnt.update>.setting-list>.update-now').removeClass('disabled');
-                            }, 6000);
-                        }
-                        else {
-                            window.setTimeout(() => {
-                                let da = new Date();
-                                $('#win-setting>.page>.cnt.update>.lo>.update-main .notice')[0].innerText = 'Windows 12 目前是最新版本';
-                                $('#win-setting>.page>.cnt.update>.lo>.update-main .detail')[0].innerText = `上次检查时间: ${da.getFullYear()}年${da.getMonth() + 1}月${da.getDate()}日，${da.getHours()}: ${da.getMinutes()}`;
-                                $('#win-setting>.page>.cnt.update>.lo>.update-main>div:last-child').removeClass('disabled');
-                                $('#win-setting>.page>.cnt.update>.setting-list>.update-now>div>p:first-child')[0].innerText = '无更新可用';
-                                $('#win-setting>.page>.cnt.update>.setting-list>.update-now>div>p:last-child')[0].innerText = 'Windows 12 目前是最新版本';
-                            }, 6000)
-                        }
-                    }
-                });
-            });
-        }
-    },
-    run: {
-        init: () => {
-            $('#win-run>.open>input').val(run_cmd);   //在windows中，运行输入的内容会被保留
-            window.setTimeout(() => {
-                $('#win-run>.open>input').focus();
-                $('#win-run>.open>input').select();
-            }, 300);
-        },
-        run: (cmd) => {
-            if (!runcmd(cmd)) {
-                if (cmd != '') {
-                    try {
-                        cmd = cmd.replace(/\/$/, '');
-                        var pathl = cmd.split('/');
-                        let tmp = apps.explorer.path;
-                        let valid = true;
-                        pathl.forEach(name => {
-                            if (tmp['folder'].hasOwnProperty(name)) {
-                                tmp = tmp['folder'][name];
-                            }
-                            else {
-                                valid = false;
-                                return false;
-                            }
-                        });
-                        if (valid == true) {
-                            run_cmd = cmd;
-                            openapp('explorer');
-                            window.setTimeout(() => {
-                                apps.explorer.goto(cmd);
-                            }, 300);
-                        }
-                        else {
-                            nts['Can-not-open-file'] = {
-                                cnt: `<p class="tit">` + cmd + `</p>
-                                <p>Windows 找不到文件 '` + cmd + `'。请确定文件名是否正确后，再试一次。</p> `,
-                                btn: [
-                                    { type: 'main', text: '确定', js: "closenotice();showwin('run');$('#win-run>.open>input').select();" },
-                                    { type: 'cancel', text: '在 Micrsoft Edge 中搜索', js: "closenotice();openapp(\'edge\');window.setTimeout(() => {apps.edge.newtab();apps.edge.goto('https://www.bing.com/search?q=" + encodeURIComponent(cmd) + "');}, 300);" }
-                                ]
-                            }
-                            shownotice('Can-not-open-file');
-                        }
-                    }
-                    catch {
-                        nts['Can-not-open-file'] = {
-                            cnt: `<p class="tit">` + cmd + `</p>
-                            <p>Windows 找不到文件 '` + cmd + `'。请确定文件名是否正确后，再试一次。</p> `,
-                            btn: [
-                                { type: 'main', text: '确定', js: "closenotice();showwin('run');$('#win-run>.open>input').select();" },
-                                { type: 'cancel', text: '在 Micrsoft Edge 中搜索', js: "closenotice();openapp(\'edge\');window.setTimeout(() => {apps.edge.newtab();apps.edge.goto('https://www.bing.com/search?q=" + encodeURIComponent(cmd) + "');}, 300);" }
-                            ]
-                        }
-                        shownotice('Can-not-open-file');
-                    }
-                }
-            }
-        }
-    },
-    taskmgr: {
-        sortType: 'cpu',
-        sortOrder: 'up-down',
-        tasks: structuredClone(taskmgrTasks),
-        cpu: 0,
-        cpuCtx: null,
-        cpuCanvas: null,
-        cpuLastPos: [0, 0],
-        cpuBgCanvas: null,
-        cpuBgCtx: null,
-        cpuRunningTime: 0,
-        memory: 0,
-        memoryCtx: null,
-        memoryCanvas: null,
-        memoryLastPos: [0, 0],
-        memoryBgCanvas: null,
-        memoryBgCtx: null,
-        memoryCanvas2: null,
-        memoryCtx2: null,
-        disk: 0,
-        diskSpeed: {
-            read: 0,
-            write: 0
-        },
-        diskCanvas: null,
-        diskCtx: null,
-        diskLastPos: [0, 0],
-        diskBgCanvas: null,
-        diskBgCtx: null,
-        diskCanvas2: null,
-        diskCtx2: null,
-        diskBgCanvas2: null,
-        diskBgCtx2: null,
-        diskLastPos2: {
-            read: [0, 0],
-            write: [0, 0]
-        },
-        wifi: [0, 0],
-        wifiCanvas: null,
-        wifiCtx: null,
-        wifiLastPos: [[0, 0], [0, 0]],
-        wifiBgCanvas: null,
-        wifiBgCtx: null,
-        gpu: {
-            d3: 0,
-            copy: 0,
-            videod: 0,
-            videop: 0,
-            usage: 0
-        },
-        gpuMemory: {
-            private: 0,
-            public: 0
-        },
-        gpuCtx: [null, null, null, null],
-        gpuCanvas: [null, null, null, null],
-        gpuLastPos: [[0, 0], [0, 0], [0, 0], [0, 0]],
-        gpuBgCanvas: [null, null, null, null],
-        gpuBgCtx: [null, null, null, null],
-        gpuCanvas2: [null, null],
-        gpuCtx2: [null, null],
-        gpuLastPos2: [[0, 0], [0, 0]],
-        gpuBgCanvas2: [null, null],
-        gpuBgCtx2: [null, null],
-        gpuCanvas3: null,
-        gpuCtx3: null,
-        gpuLastPos3: [0, 0],
-        processList: [],
-        handle: 0,
-        init: () => {
-            $('#win-taskmgr>.menu>list.focs>a')[0].click();
-        },
-        load: (init_all = true) => {
-            if (init_all == true) {
-                $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-cpu>.information>.left>div:nth-child(3)>.value')[0].innerText = apps.taskmgr.tasks.length;
 
-                apps.taskmgr.cpuCanvas = $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-cpu canvas.chart')[0];
-                apps.taskmgr.cpuBgCanvas = $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-cpu canvas.bg')[0];
-                apps.taskmgr.initgraph('cpu', '#2983cc');
 
-                apps.taskmgr.memoryCanvas = $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-memory canvas.chart')[0];
-                apps.taskmgr.memoryBgCanvas = $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-memory canvas.bg')[0];
-                apps.taskmgr.initgraph('memory', '#660099');
-                apps.taskmgr.memoryCanvas2 = $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-memory canvas.chart2')[0];
-                apps.taskmgr.memoryCtx2 = apps.taskmgr.memoryCanvas2.getContext('2d');
-                apps.taskmgr.memoryCtx2.fillStyle = '#66009922';
-                apps.taskmgr.memoryCtx.lineWidth = 4;
+// 语音球
 
-                apps.taskmgr.diskCanvas = $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-disk canvas.chart')[0];
-                apps.taskmgr.diskBgCanvas = $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-disk canvas.bg')[0];
-                apps.taskmgr.initgraph('disk', '#008000');
-                apps.taskmgr.diskCanvas2 = $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-disk canvas.chart2')[0];
-                apps.taskmgr.diskLastPos2 = {
-                    read: [apps.taskmgr.diskCanvas2.width, apps.taskmgr.diskCanvas2.height],
-                    write: [apps.taskmgr.diskCanvas2.width, apps.taskmgr.diskCanvas2.height]
-                }
-                apps.taskmgr.diskCtx2 = apps.taskmgr.diskCanvas2.getContext('2d');
-                apps.taskmgr.diskCtx2.strokeStyle = '#008000';
-                apps.taskmgr.diskCtx2.fillStyle = '#00800022';
-                apps.taskmgr.diskCtx2.lineWidth = 3;
-                apps.taskmgr.diskBgCanvas2 = $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-disk canvas.bg2')[0];
-                apps.taskmgr.diskBgCtx2 = apps.taskmgr.diskBgCanvas2.getContext('2d');
-                apps.taskmgr.diskBgCtx2.strokeStyle = '#aeaeae';
-                apps.taskmgr.diskBgCtx2.lineWidth = 1;
+var voiceBall = document.getElementById("voiceBall");
+var nbFlag = true;
+var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+var isDragging = false;
 
-                for (var i = 0; i < 4; i++) {
-                    apps.taskmgr.gpuCanvas[i] = $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-gpu>.graphs>.graph' + (i + 1) + '>.chart>canvas.chart')[0];
-                    apps.taskmgr.gpuBgCanvas[i] = $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-gpu>.graphs>.graph' + (i + 1) + '>.chart>canvas.bg')[0];
-                    apps.taskmgr.gpuCtx[i] = apps.taskmgr.gpuCanvas[i].getContext('2d');
-                    apps.taskmgr.gpuBgCtx[i] = apps.taskmgr.gpuBgCanvas[i].getContext('2d');
-                    apps.taskmgr.gpuCtx[i].strokeStyle = '#2983cc';
-                    apps.taskmgr.gpuCtx[i].fillStyle = '#2983cc22';
-                    apps.taskmgr.gpuCtx[i].lineWidth = 4;
-                    apps.taskmgr.gpuLastPos[i] = [apps.taskmgr.gpuCanvas[i].width, apps.taskmgr.gpuCanvas[i].height];
-                    apps.taskmgr.gpuBgCtx[i].strokeStyle = '#aeaeae';
-                    apps.taskmgr.gpuBgCtx[i].lineWidth = 3;
-                    apps.taskmgr.initgrids(apps.taskmgr.gpuBgCtx[i]);
-                }
-                for (var i = 0; i < 2; i++) {
-                    apps.taskmgr.gpuCanvas2[i] = $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-gpu>.gpu2-' + (i + 1) + '>canvas.chart2')[0];
-                    apps.taskmgr.gpuBgCanvas2[i] = $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-gpu>.gpu2-' + (i + 1) + '>canvas.bg2')[0];
-                    apps.taskmgr.gpuCtx2[i] = apps.taskmgr.gpuCanvas2[i].getContext('2d');
-                    apps.taskmgr.gpuBgCtx2[i] = apps.taskmgr.gpuBgCanvas2[i].getContext('2d');
-                    apps.taskmgr.gpuCtx2[i].strokeStyle = '#2983cc';
-                    apps.taskmgr.gpuCtx2[i].fillStyle = '#2983cc22';
-                    apps.taskmgr.gpuCtx2[i].lineWidth = 3;
-                    apps.taskmgr.gpuLastPos2[i] = [apps.taskmgr.gpuCanvas2[i].width, apps.taskmgr.gpuCanvas2[i].height];
-                    apps.taskmgr.gpuBgCtx2[i].strokeStyle = '#aeaeae';
-                    apps.taskmgr.gpuBgCtx2[i].lineWidth = 1;
-                    apps.taskmgr.initgrids(apps.taskmgr.gpuBgCtx2[i]);
-                }
-                apps.taskmgr.gpuCanvas3 = $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-gpu>.graphs>canvas.usage')[0];
-                apps.taskmgr.gpuCtx3 = apps.taskmgr.gpuCanvas3.getContext('2d');
-                apps.taskmgr.gpuCtx3.strokeStyle = '#2983cc';
-                apps.taskmgr.gpuCtx3.fillStyle = '#2983cc22';
-                apps.taskmgr.gpuCtx3.lineWidth = 4;
-                apps.taskmgr.gpuLastPos3 = [apps.taskmgr.gpuCanvas3.width, apps.taskmgr.gpuCanvas3.height];
+voiceBall.addEventListener("mousedown", dragMouseDown);
+voiceBall.addEventListener("mouseup", stopDrag);
 
-                apps.taskmgr.wifiCanvas = $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-wifi canvas.chart')[0];
-                apps.taskmgr.wifiBgCanvas = $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-wifi canvas.bg')[0];
-                apps.taskmgr.initgraph('wifi', '#8e5829', false);
-                apps.taskmgr.wifiLastPos = [
-                    [apps.taskmgr.wifiCanvas.width, apps.taskmgr.wifiCanvas.height],
-                    [apps.taskmgr.wifiCanvas.width, apps.taskmgr.wifiCanvas.height]
-                ]
-            }
+function dragMouseDown(e) {
+    e.preventDefault();
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    document.addEventListener("mousemove", elementDrag);
+    isDragging = false;
+}
 
-            if (apps.taskmgr.preLoaded != true && apps.taskmgr.loaded != true) {
-                apps.taskmgr.gpuMemory.private = Number((Math.random() * 4).toFixed(2));
-                apps.taskmgr.gpuMemory.public = Number((Math.random() * 4).toFixed(2));
-                apps.taskmgr.generateProcesses();
-                apps.taskmgr.sort();
-                apps.taskmgr.loadProcesses();
-                apps.taskmgr.performanceLoad();
-            }
+function elementDrag(e) {
+    e.preventDefault();
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    voiceBall.style.top = (voiceBall.offsetTop - pos2) + "px";
+    voiceBall.style.left = (voiceBall.offsetLeft - pos1) + "px";
+    isDragging = true;
+}
 
-            if (init_all == true) {
-                apps.taskmgr.loadProcesses();
-                apps.taskmgr.generateProcesses();
-                apps.taskmgr.sort();
-                apps.taskmgr.performanceLoad();
-                apps.taskmgr.graphLoad();
-                apps.taskmgr.initgrids(apps.taskmgr.cpuBgCtx);
-                apps.taskmgr.initgrids(apps.taskmgr.memoryBgCtx);
-                apps.taskmgr.initgrids(apps.taskmgr.diskBgCtx);
-                apps.taskmgr.initgrids(apps.taskmgr.diskBgCtx2);
-                apps.taskmgr.initgrids(apps.taskmgr.wifiBgCtx);
-                window.setInterval(() => {
-                    apps.taskmgr.loadProcesses();
-                    apps.taskmgr.generateProcesses();
-                    apps.taskmgr.sort();
-                    apps.taskmgr.performanceLoad();
-                    apps.taskmgr.graphLoad();
-                    apps.taskmgr.gridLine();
-                }, 1000);
-            }
-            else if (apps.taskmgr.loaded != true && apps.taskmgr.preLoaded != true) {
-                window.setInterval(() => {
-                    apps.taskmgr.loadProcesses();
-                    apps.taskmgr.generateProcesses();
-                    apps.taskmgr.sort();
-                    apps.taskmgr.performanceLoad();
-                }, 1000);
-            }
-        },
-        page: (name) => {
-            $('#win-taskmgr>.main>.cnt.' + name).scrollTop(0);
-            $('#win-taskmgr>.main>.cnt.show').removeClass('show');
-            $('#win-taskmgr>.main>.cnt.' + name).addClass('show');
-            $('#win-taskmgr>.menu>list.focs>a.check').removeClass('check');
-            $('#win-taskmgr>.menu>list.focs>a.' + name).addClass('check');
-            if (!(name == 'processes' || name == '404')) {
-                document.getElementById('tsk-search').style.display = 'none';
-            } else {
-                document.getElementById('tsk-search').style.display = '';
-            }
-        },
-        graph: (name) => {
-            $('#win-setting>.page>.cnt.' + name).scrollTop(0);
-            $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.show').removeClass('show');
-            $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.' + name).addClass('show');
-            $('#win-taskmgr>.main>.cnt.performance>.content>.select-menu>.check').removeClass('check');
-            $('#win-taskmgr>.main>.cnt.performance>.content>.select-menu>.' + name).addClass('check');
-        },
-        generateProcesses: () => {
-            let processList = [];
-            let max = 100 / apps.taskmgr.tasks.length;
-            let cpusum = 0, memorysum = 0, disksum = 0, diskUsing = Number(Math.random()) > 0.7/*, color = window.getComputedStyle(page, null).getPropertyValue('--href')*/;
-            var Search_length = 0;
-            for (const elt of apps.taskmgr.tasks) {
-                let cpu = Number((Math.random() * max).toFixed(1)),
-                    memory = apps.taskmgr.memory != 0 ? apps.taskmgr.memory / apps.taskmgr.tasks.length + Number(((Math.random() - 0.5) / 5).toFixed(1)) : Number((Math.random() * max).toFixed(1)),
-                    disk = Number((Math.random() * max).toFixed(1)) > (max / 1.2) && diskUsing ? max * Number(Math.random().toFixed(1)) : 0;
-                cpusum = Number((cpusum + cpu).toFixed(1));
-                memorysum = Number((memorysum + memory).toFixed(1));
-                disksum = Number((disksum + disk).toFixed(1));
-                if (document.getElementById('tsk-search').value != '' && document.getElementById('tsk-search').style.display == '' && (!elt.name.toLowerCase().includes(document.getElementById('tsk-search').value.toLowerCase()/* 搜索时转换成小写 */))) {
-                    continue //搜索
-                }
-                processList.splice(processList.length, 0, {
-                    name: elt.name,
-                    icon: elt.icon || '',
-                    system: elt.system,
-                    cpu: cpu,
-                    memory: memory,
-                    disk: disk
-                });
-                Search_length++;
-            }
-            if (Search_length == 0) {
-                apps.taskmgr.page('404')
-            } else {
-                if (document.getElementById('tsk-search').value != '' && document.getElementById('tsk-search').style.display == '') {
-                    apps.taskmgr.page('processes')
-                }
-            }
-            apps.taskmgr.cpu = cpusum;
-            apps.taskmgr.memory = memorysum;
-            apps.taskmgr.disk = disksum;
-            apps.taskmgr.processList = processList;
+function stopDrag() {
+    document.removeEventListener("mousemove", elementDrag);
+    if (!isDragging) {
+        startSpeechRecognition();
+    }
+}
 
-        },
-        loadProcesses: (processList = apps.taskmgr.processList) => {
-            const processContainer = $('#win-taskmgr>.main>.cnt.processes tbody.view')[0];
-            const values = $('#win-taskmgr>.main>.cnt.processes thead>tr>th>.value');
-            const cpu = values[0], memory = values[1], disk = values[2];
-            let selected;
-            if ($('#win-taskmgr>.main>.cnt.processes tbody.view>tr.select>td:first-child>.text')[0]) {
-                selected = $('#win-taskmgr>.main>.cnt.processes tbody.view>tr.select>td:first-child>.text')[0].innerText;
-            }
-            let max = 100 / apps.taskmgr.tasks.length;
-            processContainer.innerHTML = '';
-            for (const elt of processList) {
-                const newElt = document.createElement('tr');
-                newElt.classList.add('notrans');
-                newElt.innerHTML = `<td><div class="text"><div class="icon" style="background-image: url('${elt.icon ? elt.icon : ''}');"></div>${elt.name}</div></td><td style="text-align: right;background-color: ${page.classList.contains('dark') ? '#193662' : '#7ec6ec'}${elt.cpu >= (max / 1.3) ? 'ff' : 'aa'};">${elt.cpu.toFixed(1)}%</td><td style="text-align: right;background-color: ${page.classList.contains('dark') ? '#193662' : '#7ec6ec'}${elt.memory >= (max / 1.3) ? 'ff' : 'aa'};">${elt.memory.toFixed(1)}%</td><td style="text-align: right;background-color: ${page.classList.contains('dark') ? '#193662' : '#7ec6ec'}${elt.disk >= (max / 1.3) ? 'ff' : 'aa'};">${elt.disk.toFixed(1)}%</td><td>${['非常低', '非常低', '非常低', '低', '中'][Math.floor(Math.random() * 5)]}</td>`;
-                if (elt.name == selected) {
-                    newElt.classList.add('select');
-                }
-                processContainer.appendChild(newElt);
-                newElt.onclick = function () {
-                    apps.taskmgr.selectProcess(this);
-                }
-                newElt.oncontextmenu = function (e) {
-                    return showcm(e, 'taskmgr.processes', elt.name);
-                }
-                window.setTimeout(() => {
-                    newElt.classList.remove('notrans');
-                }, 100);
-            }
-            cpu.innerText = apps.taskmgr.cpu.toFixed(1) + '%';
-            memory.innerText = apps.taskmgr.memory.toFixed(1) + '%';
-            disk.innerText = apps.taskmgr.disk.toFixed(1) + '%';
-        },
-        sort: (processList = apps.taskmgr.processList, type = apps.taskmgr.sortType, order = apps.taskmgr.sortOrder) => {
-            processList.sort((a, b) => {
-                if (a[type] > b[type]) {
-                    return order == 'up-down' ? -1 : 1;
-                }
-                else if (a[type] <= b[type]) {
-                    return order == 'up-down' ? 1 : -1;
-                }
-            });
-            apps.taskmgr.processList = processList;
-        },
-        performanceLoad: () => {
-            $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-cpu>.information>.left>div:nth-child(1)>.value')[0].innerText = `${apps.taskmgr.cpu.toFixed(1)}%`;
-            $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-cpu>.information>.left>div:nth-child(2)>.value')[0].innerText = `${(3200 / 100 * apps.taskmgr.cpu).toFixed(1)} GHz`;
-            $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-cpu>.information>.left>div:nth-child(4)>.value')[0].innerText = `${apps.taskmgr.tasks.length * (5 + Math.floor(Math.random() * 5))}`;
-            $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-cpu>.information>.left>div:nth-child(5)>.value')[0].innerText = `${apps.taskmgr.tasks.length * (10 + Math.floor(Math.random() * 20))}`;
-            let sec = apps.taskmgr.cpuRunningTime;
-            let min = Math.floor(sec / 60);
-            sec %= 60;
-            let hour = Math.floor(min / 60);
-            min %= 60;
-            let day = Math.floor(hour / 24);
-            hour %= 24;
-            $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-cpu>.information>.left>div:nth-child(6)>.value')[0].innerText = `${day}:${String(hour).length < 2 ? '0' : ''}${hour}:${String(min).length < 2 ? '0' : ''}${min}:${String(sec).length < 2 ? '0' : ''}${sec}`;
-            $('#win-taskmgr>.main>.cnt.performance>.content>.select-menu>.graph-cpu>.right>.data>.value1')[0].innerText = `${apps.taskmgr.cpu.toFixed(1)}%`;
-            $('#win-taskmgr>.main>.cnt.performance>.content>.select-menu>.graph-cpu>.right>.data>.value2')[0].innerText = `${(3200 / 100 * apps.taskmgr.cpu).toFixed(1)}GHz`;
-
-            $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-memory>.information>.left>div:nth-child(1)>.value')[0].innerText = `${apps.taskmgr.memory.toFixed(1)} GB (0 MB)`;
-            $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-memory>.information>.left>div:nth-child(2)>.value')[0].innerText = `${(100 - apps.taskmgr.memory).toFixed(1)} GB`;
-            $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-memory>.information>.left>div:nth-child(3)>.value')[0].innerText = `${(apps.taskmgr.memory - 2).toFixed(1)} / 100 GB`;
-            $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-memory>.information>.left>div:nth-child(4)>.value')[0].innerText = `${(apps.taskmgr.memory / 2).toFixed(2)} GB`;
-            $('#win-taskmgr>.main>.cnt.performance>.content>.select-menu>.graph-memory>.right>.data>.value1')[0].innerText = `${apps.taskmgr.memory.toFixed(1)} / 100 GB`;
-            $('#win-taskmgr>.main>.cnt.performance>.content>.select-menu>.graph-memory>.right>.data>.value2')[0].innerText = `${apps.taskmgr.memory.toFixed(1)}%`;
-
-            apps.taskmgr.diskSpeed.read = apps.taskmgr.disk != 0 ? (Math.random() * 100).toFixed(2) : 0;
-            apps.taskmgr.diskSpeed.write = apps.taskmgr.disk != 0 ? (Math.random() * 100).toFixed(2) : 0;
-            $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-disk>.information>.left>div:nth-child(1)>.value')[0].innerText = `${apps.taskmgr.disk}%`;
-            $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-disk>.information>.left>div:nth-child(2)>.value')[0].innerText = `${apps.taskmgr.disk != 0 ? Math.random().toFixed(2) : 0} 毫秒`;
-            $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-disk>.information>.left>div:nth-child(3)>.value')[0].innerText = `${apps.taskmgr.diskSpeed.read} ${apps.taskmgr.disk != 0 ? 'MB/秒' : 'KB/秒'}`;
-            $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-disk>.information>.left>div:nth-child(4)>.value')[0].innerText = `${apps.taskmgr.diskSpeed.write} ${apps.taskmgr.disk != 0 ? 'MB/秒' : 'KB/秒'}`;
-            $('#win-taskmgr>.main>.cnt.performance>.content>.select-menu>.graph-disk>.right>.data>.value2')[0].innerText = `${apps.taskmgr.disk}%`;
-
-            $('#win-taskmgr>.main>.cnt.performance>.content>.select-menu>.graph-gpu>.right>.data>.value2')[0].innerText = `${apps.taskmgr.gpu.usage.toFixed(1)}%`;
-
-            apps.taskmgr.gpu.d3 = Number((Math.random() * 15).toFixed(2));
-            apps.taskmgr.gpu.copy = Number((Math.random() * 15).toFixed(2));
-            apps.taskmgr.gpu.videop = Number((Math.random() * 15).toFixed(2));
-            apps.taskmgr.gpu.videod = Number((Math.random() * 15).toFixed(2));
-            apps.taskmgr.gpu.usage = Number(((apps.taskmgr.gpu.d3 + apps.taskmgr.gpu.copy + apps.taskmgr.gpu.videop + apps.taskmgr.gpu.videod) / 4).toFixed(1));
-
-            apps.taskmgr.wifi[0] = Number((Math.random() * 100).toFixed(2));
-            apps.taskmgr.wifi[1] = Number((Math.random() * 100).toFixed(2));
-            $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-wifi>.information>.left>div:nth-child(1)>.value')[0].innerText = `${apps.taskmgr.wifi[1].toFixed(2)} Mbps`;
-            $('#win-taskmgr>.main>.cnt.performance>.content>.performance-graph>.graph-wifi>.information>.left>div:nth-child(2)>.value')[0].innerText = `${apps.taskmgr.wifi[0].toFixed(2)} Mbps`;
-            $('#win-taskmgr>.main>.cnt.performance>.content>.select-menu>.graph-wifi>.right>.data>.value2')[0].innerText = `发送: ${apps.taskmgr.wifi[1]} 接收: ${apps.taskmgr.wifi[0]} Mbps`;
-        },
-        graphLoad: () => {
-            $('#win-taskmgr>.main>.cnt.performance>.content>.select-menu>*>.left>.graph-view-cpu')[0].style.backgroundImage = `url("${apps.taskmgr.drawgraph(apps.taskmgr.cpuCtx, 'cpuLastPos', apps.taskmgr.cpu)}")`;
-            $('#win-taskmgr>.main>.cnt.performance>.content>.select-menu>*>.left>.graph-view-memory')[0].style.backgroundImage = `url("${apps.taskmgr.drawgraph(apps.taskmgr.memoryCtx, 'memoryLastPos', apps.taskmgr.memory)}")`;
-            w = apps.taskmgr.memoryCanvas2.width;
-            h = apps.taskmgr.memoryCanvas2.height;
-            apps.taskmgr.memoryCtx2.clearRect(0, 0, w, h);
-            apps.taskmgr.memoryCtx2.fillRect(0, 0, w / 100 * apps.taskmgr.memory, h);
-            $('#win-taskmgr>.main>.cnt.performance>.content>.select-menu>*>.left>.graph-view-disk')[0].style.backgroundImage = `url("${apps.taskmgr.drawgraph(apps.taskmgr.diskCtx, 'diskLastPos', apps.taskmgr.disk)}")`;
-            // 绘制磁盘传输速率
-            w = apps.taskmgr.diskCanvas2.width;
-            h = apps.taskmgr.diskCanvas2.height;
-            data = apps.taskmgr.diskCtx2.getImageData(w / 60, 0, w - w / 60, h);
-            apps.taskmgr.diskCtx2.clearRect(0, 0, w, h);
-            apps.taskmgr.diskCtx2.putImageData(data, 0, 0);
-            // 读取速度
-            apps.taskmgr.diskCtx2.fillStyle = '#00800022';
-            apps.taskmgr.diskCtx2.setLineDash([]);
-            apps.taskmgr.drawgraph(apps.taskmgr.diskCtx2, apps.taskmgr.diskLastPos2.read, apps.taskmgr.diskSpeed.read, false, false);
-            apps.taskmgr.diskLastPos2.read = [w - w / 60, h / 100 * (100 - apps.taskmgr.diskSpeed.read)];
-            // 写入速度
-            apps.taskmgr.diskCtx2.fillStyle = '#00000000';
-            apps.taskmgr.diskCtx2.setLineDash([4, 4]);
-            apps.taskmgr.drawgraph(apps.taskmgr.diskCtx2, apps.taskmgr.diskLastPos2.write, apps.taskmgr.diskSpeed.write, false, false);
-            apps.taskmgr.diskLastPos2.write = [w - w / 60, h / 100 * (100 - apps.taskmgr.diskSpeed.write)];
-            // 绘制网络
-            w = apps.taskmgr.wifiCanvas.width;
-            h = apps.taskmgr.wifiCanvas.height;
-            data = apps.taskmgr.wifiCtx.getImageData(w / 60, 0, w - w / 60, h);
-            apps.taskmgr.wifiCtx.clearRect(0, 0, w, h);
-            apps.taskmgr.wifiCtx.putImageData(data, 0, 0);
-            // 接收
-            apps.taskmgr.wifiCtx.fillStyle = '#8e582922';
-            apps.taskmgr.wifiCtx.setLineDash([]);
-            apps.taskmgr.drawgraph(apps.taskmgr.wifiCtx, apps.taskmgr.wifiLastPos[0], apps.taskmgr.wifi[0], false, false);
-            apps.taskmgr.wifiLastPos[0] = [w - w / 60, h / 100 * (100 - apps.taskmgr.wifi[0])];
-            // 发送
-            apps.taskmgr.wifiCtx.fillStyle = '#8e582900';
-            apps.taskmgr.wifiCtx.setLineDash([4, 4]);
-            $('#win-taskmgr>.main>.cnt.performance>.content>.select-menu>*>.left>.graph-view-wifi')[0].style.backgroundImage = `url("${apps.taskmgr.drawgraph(apps.taskmgr.wifiCtx, apps.taskmgr.wifiLastPos[1], apps.taskmgr.wifi[1], false, false)}")`;
-            apps.taskmgr.wifiLastPos[1] = [w - w / 60, h / 100 * (100 - apps.taskmgr.wifi[1])];
-            // 绘制显卡
-            for (var i = 0; i < 4; i++) {
-                w = apps.taskmgr.gpuCanvas[i].width;
-                h = apps.taskmgr.gpuCanvas[i].height;
-                apps.taskmgr.drawgraph(apps.taskmgr.gpuCtx[i], apps.taskmgr.gpuLastPos[i], apps.taskmgr.gpu[['d3', 'copy', 'videod', 'videop'][i]], false);
-                apps.taskmgr.gpuLastPos[i] = [w - w / 60, h / 100 * (100 - apps.taskmgr.gpu[['d3', 'copy', 'videod', 'videop'][i]])];
-            }
-            for (var i = 0; i < 2; i++) {
-                w = apps.taskmgr.gpuCanvas2[i].width;
-                h = apps.taskmgr.gpuCanvas2[i].height;
-                apps.taskmgr.drawgraph(apps.taskmgr.gpuCtx2[i], apps.taskmgr.gpuLastPos2[i], apps.taskmgr.gpuMemory[['private', 'public'][i]], setPos = false, move = true, max = [16, 32][i]);
-                apps.taskmgr.gpuLastPos2[i] = [w - w / 60, h / [16, 32][i] * ([16, 32][i] - apps.taskmgr.gpuMemory[['private', 'public'][i]])];
-            }
-            $('#win-taskmgr>.main>.cnt.performance>.content>.select-menu>*>.left>.graph-view-gpu')[0].style.backgroundImage = `url("${apps.taskmgr.drawgraph(apps.taskmgr.gpuCtx3, 'gpuLastPos3', apps.taskmgr.gpu.usage)}")`
-        },
-        changeSort: (elt, type) => {
-            for (const _elt of $('#win-taskmgr>.main>.cnt.processes thead>tr>th>i')) {
-                _elt.className = 'bi';
-            }
-            if (apps.taskmgr.sortOrder == 'up-down' && apps.taskmgr.sortType == type) {
-                elt.className = 'bi bi-chevron-up';
-                apps.taskmgr.sortOrder = 'down-up';
-                apps.taskmgr.sort(apps.taskmgr.processList, type, 'down-up');
-            }
-            else {
-                elt.className = 'bi bi-chevron-down';
-                apps.taskmgr.sortOrder = 'up-down';
-                apps.taskmgr.sortType = type;
-                apps.taskmgr.sort(apps.taskmgr.processList, type, 'up-down');
-            }
-        },
-        gridLine: () => {
-            apps.taskmgr.changeGrids(apps.taskmgr.memoryBgCtx);
-            apps.taskmgr.changeGrids(apps.taskmgr.cpuBgCtx);
-            apps.taskmgr.changeGrids(apps.taskmgr.diskBgCtx);
-            apps.taskmgr.changeGrids(apps.taskmgr.diskBgCtx2);
-            apps.taskmgr.changeGrids(apps.taskmgr.wifiBgCtx);
-            apps.taskmgr.gpuBgCtx.forEach(function (ctx) {
-                apps.taskmgr.changeGrids(ctx);
-            });
-            apps.taskmgr.gpuBgCtx2.forEach(function (ctx) {
-                apps.taskmgr.changeGrids(ctx);
-            });
-        },
-        selectProcess: (elt) => {
-            $('#win-taskmgr>.main>.cnt.processes tbody.view>.select').removeClass('select');
-            $(elt).addClass('select');
-        },
-        taskkill: (name) => {
-            if (name == 'System') {
-                window.location = 'bluescreen.html';
-            }
-            else {
-                apps.taskmgr.tasks.splice(apps.taskmgr.tasks.findIndex(elt => elt.name == name), 1);
-                if (taskmgrTasks.find(elt => elt.name == name).link != null) {
-                    hidewin(taskmgrTasks.find(elt => elt.name == name).link);
-                }
-            }
-        },
-        initgraph: (prefix, color, setPos = true) => {
-            if (setPos == true) {
-                apps.taskmgr[prefix + 'LastPos'] = [apps.taskmgr[prefix + 'Canvas'].width, apps.taskmgr[prefix + 'Canvas'].height];
-            }
-
-            apps.taskmgr[prefix + 'Ctx'] = apps.taskmgr[prefix + 'Canvas'].getContext('2d');
-            apps.taskmgr[prefix + 'BgCtx'] = apps.taskmgr[prefix + 'BgCanvas'].getContext('2d');
-            apps.taskmgr[prefix + 'Ctx'].strokeStyle = color;
-            console.log(color, color + '22', prefix)
-            apps.taskmgr[prefix + 'Ctx'].fillStyle = color + '22';
-            console.log(apps.taskmgr[prefix + 'Ctx'].fillStyle)
-            apps.taskmgr[prefix + 'Ctx'].lineWidth = 4;
-            apps.taskmgr[prefix + 'BgCtx'].strokeStyle = '#aeaeae';
-            apps.taskmgr[prefix + 'BgCtx'].lineWidth = 3;
-        },
-        initgrids: (ctx) => {
-            for (var i = 0; i <= 10; i++) {
-                ctx.beginPath();
-                ctx.moveTo(0, ctx.canvas.height / 10 * i);
-                ctx.lineTo(ctx.canvas.width, ctx.canvas.height / 10 * i);
-                ctx.stroke();
-                ctx.closePath();
-            }
-            for (var i = 0; i <= 20; i++) {
-                ctx.beginPath();
-                ctx.moveTo(ctx.canvas.width / 20 * i, 0);
-                ctx.lineTo(ctx.canvas.width / 20 * i, ctx.canvas.height);
-                ctx.stroke();
-                ctx.closePath();
-            }
-        },
-        drawgraph(ctx, lastPos, num, setPos = true, move = true, max = 100) {
-            let w = ctx.canvas.width, h = ctx.canvas.height;
-            if (move == true) {
-                data = ctx.getImageData(w / 60, 0, w - w / 60, h);
-                ctx.clearRect(0, 0, w, h);
-                ctx.putImageData(data, 0, 0);
-            }
-            ctx.beginPath();
-            if (setPos == true) {
-                ctx.moveTo(apps.taskmgr[lastPos][0], apps.taskmgr[lastPos][1]);
-            }
-            else {
-                ctx.moveTo(lastPos[0], lastPos[1]);
-            }
-            ctx.lineTo(w, h / max * (max - num));
-            ctx.stroke();
-            ctx.lineTo(w, h);
-            ctx.lineTo(w - w / 60, h);
-            ctx.fill();
-            if (setPos == true) {
-                apps.taskmgr[lastPos] = [w - w / 60, h / max * (max - num)];
-            }
-            return ctx.canvas.toDataURL();
-        },
-        changeGrids: (ctx) => {
-            let left = ctx.getImageData(0, 0, ctx.canvas.width / 30 * 29, ctx.canvas.height);
-            let right = ctx.getImageData(ctx.canvas.width / 30 * 29, 0, ctx.canvas.width / 30, ctx.canvas.height);
-            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            ctx.putImageData(left, ctx.canvas.width / 30, 0);
-            ctx.putImageData(right, 0, 0);
-        }
-    },
-    whiteboard: {
-        canvas: null,
-        ctx: null,
-        windowResizeObserver: null,
-        color: 'red',
-        init: () => {
-            apps.whiteboard.ctx.lineJoin = 'round';
-            apps.whiteboard.ctx.lineCap = 'round';
-            apps.whiteboard.changeColor(apps.whiteboard.color);
-            if ($(':root').hasClass('dark')) {
-                $('.window.whiteboard>.titbar>p').text('Blackboard');
-            } else {
-                $('.window.whiteboard>.titbar>p').text('Whiteboard');
-            }
-        },
-        changeColor: (color) => {
-            apps.whiteboard.color = color;
-            if (color == 'eraser') {
-                apps.whiteboard.ctx.strokeStyle = 'black';
-                apps.whiteboard.ctx.lineWidth = 35;
-                apps.whiteboard.ctx.globalCompositeOperation = 'destination-out';
-            }
-            else {
-                apps.whiteboard.ctx.strokeStyle = color;
-                apps.whiteboard.ctx.globalCompositeOperation = 'source-over';
-                apps.whiteboard.ctx.lineWidth = 8;
-            }
-        },
-        changePen: function () {
-            const pens = $('#win-whiteboard>.toolbar>.tools>*');
-            for (const elt of pens) {
-                elt.classList.remove('active');
-            }
-            this.classList.add('active');
-            apps.whiteboard.changeColor(this.dataset.color);
-        },
-        load: () => {
-            apps.whiteboard.canvas = $('#win-whiteboard>canvas')[0];
-            apps.whiteboard.ctx = apps.whiteboard.canvas.getContext('2d');
-            apps.whiteboard.windowResizeObserver = new ResizeObserver(apps.whiteboard.resize);
-            apps.whiteboard.windowResizeObserver.observe($('.window.whiteboard')[0], { box: 'border-box' });
-        },
-        resize: () => {
-            try {
-                const imgData = apps.whiteboard.ctx.getImageData(0, 0, apps.whiteboard.canvas.width, apps.whiteboard.canvas.height);
-                apps.whiteboard.canvas.width = $('#win-whiteboard')[0].clientWidth;
-                apps.whiteboard.canvas.height = $('#win-whiteboard')[0].clientHeight;
-                apps.whiteboard.ctx.putImageData(imgData, 0, 0);
-            }
-            catch {
-                apps.whiteboard.canvas.width = $('#win-whiteboard')[0].clientWidth;
-                apps.whiteboard.canvas.height = $('#win-whiteboard')[0].clientHeight;
-            }
-            apps.whiteboard.init();
-        },
-        draw: (e) => {
-            let offsetX, offsetY, left = $('#win-whiteboard')[0].getBoundingClientRect().left, top = $('#win-whiteboard')[0].getBoundingClientRect().top;
-            if (e.type.match('mouse')) {
-                offsetX = e.clientX - left, offsetY = e.clientY - top;
-            }
-            else if (e.type.match('touch')) {
-                offsetX = e.touches[0].clientX - left, offsetY = e.touches[0].clientY - top;
-            }
-            apps.whiteboard.ctx.beginPath();
-            apps.whiteboard.ctx.moveTo(offsetX, offsetY);
-            page.onmousemove = apps.whiteboard.drawing;
-            page.ontouchmove = apps.whiteboard.drawing;
-            page.onmouseup = apps.whiteboard.up;
-            page.ontouchend = apps.whiteboard.up;
-            page.ontouchcancel = apps.whiteboard.up;
-        },
-        drawing: (e) => {
-            let offsetX, offsetY, left = $('#win-whiteboard')[0].getBoundingClientRect().left, top = $('#win-whiteboard')[0].getBoundingClientRect().top;
-            if (e.type.match('mouse')) {
-                offsetX = e.clientX - left, offsetY = e.clientY - top;
-            }
-            else if (e.type.match('touch')) {
-                offsetX = e.touches[0].clientX - left, offsetY = e.touches[0].clientY - top;
-            }
-            apps.whiteboard.ctx.lineTo(offsetX, offsetY);
-            apps.whiteboard.ctx.stroke();
-        },
-        up: () => {
-            apps.whiteboard.ctx.stroke();
-            page.onmousemove = null;
-            page.ontouchmove = null;
-            page.onmouseup = null;
-            page.ontouchend = null;
-            page.ontouchcancel = null;
-        },
-        download: () => {
-            const url = apps.whiteboard.canvas.toDataURL();
-            $('#win-whiteboard>a.download')[0].href = url;
-            $('#win-whiteboard>a.download')[0].click();
-        },
-        delete: () => {
-            apps.whiteboard.ctx.clearRect(0, 0, apps.whiteboard.canvas.width, apps.whiteboard.canvas.height);
-        }
-    },
-    webapps: {
-        apps: ['vscode', 'bilibili'],
-        init: () => {
-            for (const app of apps.webapps.apps) {
-                apps[app].load();
-            }
-        }
-    },
-    vscode: {
-        init: () => {
-            return null;
-        },
-        load: () => {
-            $('#win-vscode')[0].insertAdjacentHTML('afterbegin', '<iframe src="https://github1s.com/" frameborder="0" style="width: 100%; height: 100%;" loading="lazy"></iframe>')
-        }
-    },
-    bilibili: {
-        init: () => {
-            return null;
-        },
-        load: () => {
-            $('#win-bilibili')[0].insertAdjacentHTML('afterbegin', '<iframe src="https://bilibili.com/" frameborder="0" style="width: 100%; height: 100%;" loading="lazy"></iframe>')
-        }
-    },
-    defender: {
-        init: () => {
-
-        }
-    },
-    camera: {
-        init: () => {
-            if (!localStorage.getItem('camera')) {
-                showwin('camera-notice');
-                return;
-            }
-            if (localStorage.getItem('camera')) {
-                apps.camera.streaming = false;
-                apps.camera.video = $('#win-camera video')[0];
-                apps.camera.canvas = $('#win-camera canvas')[0];
-                apps.camera.context = apps.camera.canvas.getContext('2d');
-                apps.camera.context.fillStyle = '#aaa';
-                apps.camera.downloadLink = $('#win-camera a')[0];
-                // apps.camera.control = document.querySelector('#win-camera>.control')
-                navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-                    .then(stream => {
-                        apps.camera.video.srcObject = stream;
-                        apps.camera.video.play();
-                    })
-                    .catch(() => {
-                        hidewin('camera');
-                    });
-                apps.camera.video.addEventListener('canplay', () => {
-                    if (!apps.camera.streaming) {
-                        apps.camera.aspectRatio = apps.camera.video.videoWidth / apps.camera.video.videoHeight;
-                        apps.camera.canvas.width = apps.camera.video.videoWidth;
-                        apps.camera.canvas.height = apps.camera.video.videoHeight;
-                        apps.camera.windowResizeObserver = new ResizeObserver(apps.camera.resize);
-                        apps.camera.windowResizeObserver.observe($('.window.camera')[0], { box: 'border-box' });
-                        apps.camera.streaming = true;
-                    }
-                });
-            }
-            else {
-                hidewin('camera');
-            }
-        },
-        clearCanvas: () => {
-            apps.camera.context.fillRect(0, 0, canvas.width, canvas.height);
-        },
-        takePhoto: () => {
-            apps.camera.context.drawImage(apps.camera.video, 0, 0, apps.camera.canvas.width, apps.camera.canvas.height);
-            apps.camera.downloadLink.href = apps.camera.canvas.toDataURL('image/png');
-            apps.camera.downloadLink.download = "photo.png";
-            apps.camera.downloadLink.click();
-        },
-        notice: () => {
-            if (!localStorage.getItem('camera')) {
-                showwin('camera-notice');
-            }
-            else {
-                openapp('camera');
-            }
-        },
-        resize: () => {
-            let w = $('#win-camera')[0].offsetWidth,
-                h = $('#win-camera')[0].offsetHeight;
-            if (w / apps.camera.aspectRatio <= h) {
-                if (!$('#win-camera').hasClass('v')) {
-                    $('#win-camera').removeClass('h')
-                    $('#win-camera').addClass('v');
-                }
-            }
-            else if (w / apps.camera.aspectRatio >= h) {
-                if (!$('#win-camera').hasClass('h')) {
-                    $('#win-camera').removeClass('v')
-                    $('#win-camera').addClass('h');
-                }
-            }
-        }
-    },
-    explorer: {
-        init: () => {
-            apps.explorer.tabs = [];
-            apps.explorer.len = 0;
-            apps.explorer.newtab();
-            // apps.explorer.reset();
-            apps.explorer.Process_Of_Select = "";
-            apps.explorer.is_use = 0;//千万不要删除它，它依托bug运行
-            apps.explorer.is_use2 = 0;//千万不要删除它，它依托bug运行
-            apps.explorer.old_name = "";
-            apps.explorer.clipboard = null;
-            document.addEventListener('keydown', function (event) {
-                if (event.key === 'Delete' && $('.window.foc')[0].classList[1] == "explorer") {
-                    apps.explorer.del(apps.explorer.Process_Of_Select);
-                }
-            });
-        },
-        tabs: [],
-        now: null,
-        len: 0,
-        newtab: (path = '') => {
-            // if(path==''){
-            //     m_tab.newtab('explorer','此电脑');
-            //     apps.explorer.tabs[apps.explorer.tabs.length-1][2]='';
-            //     m_tab.tab('explorer',apps.explorer.tabs.length - 1);
-            // }else{
-            m_tab.newtab('explorer', '');
-            apps.explorer.tabs[apps.explorer.tabs.length - 1][2] = path;
-            apps.explorer.initHistory(apps.explorer.tabs[apps.explorer.tabs.length - 1][0]);
-            apps.explorer.checkHistory(apps.explorer.tabs[apps.explorer.tabs.length - 1][0]);
-            m_tab.tab('explorer', apps.explorer.tabs.length - 1);
-            // }
-        },
-        settab: (t, i) => {
-            return `<div class="tab ${t[0]}" onclick="m_tab.tab('explorer',${i})" oncontextmenu="showcm(event,'explorer.tab',${i});stop(event);return false" onmousedown="m_tab.moving('explorer',this,event,${i});stop(event);" ontouchstart="m_tab.moving('exploer',this,event,${i});stop(event);"><p>${t[1]}</p><span class="clbtn bi bi-x" onclick="m_tab.close('explorer',${i});stop(event);"></span></div>`;
-        },
-        tab: (c, load = true) => {
-            if (load) {
-                if (!apps.explorer.tabs[c][2].length) apps.explorer.reset();
-                else apps.explorer.goto(apps.explorer.tabs[c][2]);
-            }
-            apps.explorer.checkHistory(apps.explorer.tabs[c][0]);
-        },
-        reset: (clear = true) => {
-            $('#win-explorer>.page>.main>.content>.view')[0].innerHTML = `<style>#win-explorer>.page>.main>.content>.view>.class{margin: 5px 0 0 10px;display: flex;}
-            #win-explorer>.page>.main>.content>.view>.class>img{width: 20px;height: 20px;margin-top: 3px;margin-right: 5px;filter:brightness(0.9);}
-            #win-explorer>.page>.main>.content>.view>.group{display: flex;flex-wrap: wrap;padding: 10px 20px;}
-            #win-explorer>.page>.main>.content>.view>.group>.item{width: 280px;margin: 5px;height:80px;
-    box-shadow: 0 1px 2px var(--s3d);
-                background: radial-gradient(circle, var(--card),var(--card));border-radius: 10px;display: flex;}
-            #win-explorer>.page>.main>.content>.view>.group>.item:hover{background-color: var(--hover);}
-            #win-explorer>.page>.main>.content>.view>.group>.item:active{transform: scale(0.97);}
-            #win-explorer>.page>.main>.content>.view>.group>.item>img{width: 55px;height: 55px;margin-top: 18px;margin-left: 10px;}
-            #win-explorer>.page>.main>.content>.view>.group>.item>div{flex-grow: 1;padding: 5px 5px 0 0;}
-            #win-explorer>.page>.main>.content>.view>.group>.item>div>.bar{width: calc(100% - 10px);height: 8px;border-radius: 10px;
-                background-color: var(--hover-b);margin: 5px 5px;}
-            #win-explorer>.page>.main>.content>.view>.group>.item>div>.bar>.content{height: 100%;background-image: linear-gradient(90deg, var(--theme-1), var(--theme-2));
-                border-radius: 10px;}
-            #win-explorer>.page>.main>.content>.view>.group>.item>div>.info{color: #959595;font-size: 14px;}</style>
-            <p class="class"><img src="apps/icons/explorer/disk.svg"> 设备和驱动器</p><div class="group">
-            <a class="a item act" ondblclick="apps.explorer.goto('C:')" ontouchend="apps.explorer.goto('C:')" oncontextmenu="showcm(event,'explorer.folder','C:');return stop(event);">
-            <img src="apps/icons/explorer/diskwin.svg"><div><p class="name">本地磁盘 (C:)</p>
-            <div class="bar"><div class="content" style="width: 88%;"></div>
-            </div><p class="info">32.6 GB 可用, 共 143 GB</p></div></a><a class="a item act" ondblclick="apps.explorer.goto('D:')" ontouchend="apps.explorer.goto('D:')"
-            oncontextmenu="showcm(event,'explorer.folder','D:');return stop(event);">
-            <img src="apps/icons/explorer/disk.svg"><div><p class="name">本地磁盘 (D:)</p><div class="bar"><div class="content" style="width: 15%;"></div>
-            </div><p class="info">185.3 GB 可用, 共 216 GB</p></div></a></div>`;
-            $('#win-explorer>.path>.tit')[0].innerHTML = '<div class="icon" style="background-image: url(\'./apps/icons/explorer/thispc.svg\')"></div><div class="path"><div class="text" onclick="apps.explorer.reset()">此电脑</div><div class="arrow">&gt;</div></div>';
-            // if(rename){
-            m_tab.rename('explorer', '<img src="./apps/icons/explorer/thispc.svg"> 此电脑');
-            apps.explorer.tabs[apps.explorer.now][2] = '';
-            if (clear) {
-                apps.explorer.delHistory(apps.explorer.tabs[apps.explorer.now][0]);
-                apps.explorer.pushHistory(apps.explorer.tabs[apps.explorer.now][0], '此电脑');
-            }
-            // }
-        },
-        select: (path, id) => {
-            var elements = document.querySelectorAll('#win-explorer > .main > .content > .view > .select');
-            for (var i = 0; i < elements.length; i++) {
-                elements[i].classList.remove('select');
-            }
-            apps.explorer.Process_Of_Select = path;
-            var element = document.getElementById(id);
-            element.classList.add('select');
-            apps.explorer.is_use += 1;
-        },
-        copy_or_cut: (path, operate) => { //operate只能为copy或cut
-            var pathl = path.split('/');
-            var name = pathl[pathl.length - 1];
-            pathl.pop();
-            let tmp = apps.explorer.path;
-            pathl.forEach(name => {
-                tmp = tmp['folder'][name];
-            });
-
-            if (Object.keys(tmp["folder"]).includes(name)) {
-                apps.explorer.clipboard = ["folder", [name], tmp["folder"][name]];
-                if (operate == "cut")
-                    delete tmp["folder"][name];
-            }
-            else {
-                for (var i = 0; i < tmp["file"].length; i++) {
-                    if (tmp["file"][i]["name"] == name) {
-                        apps.explorer.clipboard = ["file", tmp["file"][i]];
-                        if (operate == "cut")
-                            delete tmp["file"][i];
-                    }
-                }
-            }
-            apps.explorer.goto($('#win-explorer>.path>.tit')[0].dataset.path, false);
-        },
-        paste: (path) => {
-            var pathl = path.split('/');
-            let tmp = apps.explorer.path, thisPath = '';
-            $('#win-explorer>.path>.tit>.path')[0].innerHTML = '';
-            if (pathl[pathl.length - 1] == 'C:') {
-                $('#win-explorer>.path>.tit>.icon')[0].style.marginTop = '3px';
-                $('#win-explorer>.path>.tit>.icon')[0].style.backgroundImage = 'url("./apps/icons/explorer/diskwin.svg")';
-            }
-            else if (pathl[pathl.length - 1] == 'D:') {
-                $('#win-explorer>.path>.tit>.icon')[0].style.marginTop = '0px';
-                $('#win-explorer>.path>.tit>.icon')[0].style.backgroundImage = 'url("./apps/icons/explorer/disk.svg")';
-            }
-            else {
-                $('#win-explorer>.path>.tit>.icon')[0].style.marginTop = '0px';
-                $('#win-explorer>.path>.tit>.icon')[0].style.backgroundImage = 'url("./apps/icons/explorer/folder.svg")';
-            }
-            pathl.forEach(name => {
-                thisPath += name + '/';
-                tmp = tmp['folder'][name];
-                $('#win-explorer>.path>.tit>.path')[0].insertAdjacentHTML('beforeend', `<div class="text" onmousedown="apps.explorer.goto('${thisPath.substring(0, thisPath.length - 1)}');stop(event);">${name}</div> <div class="arrow">></div> `)
-            });
-            var clipboard = apps.explorer.clipboard;
-
-            if (apps.explorer.traverseDirectory(tmp, clipboard[1][0]) || apps.explorer.traverseDirectory(tmp, clipboard[1]['name'])) {
-                shownotice("duplication file name");
-                return;
-            }
-            if (apps.explorer.traverseDirectory(tmp, clipboard[1][0]))
-                // {
-                //     clipboard[1][0] += " - 副本";
-                // }
-                // if (apps.explorer.traverseDirectory(tmp,clipboard[1]['name']))
-                // {
-                //     clipboard[1][0] += " - 副本";
-                // }
-                // 这段注释了的代码可以调试一下，会有神奇的bug。
-
-                if (clipboard[0] == "file") {
-                    tmp["file"].push(clipboard[1]);
-                }
-                else {
-                    tmp['folder'][clipboard[1][0]] = clipboard[2];
-                }
-            apps.explorer.goto(path);
-        },
-        del_select: () => {
-            if (apps.explorer.is_use >= 1 && apps.explorer.is_use2 != apps.explorer.is_use) {
-                apps.explorer.is_use2 = apps.explorer.is_use;
-                return;
-            }
-            var elements = document.querySelectorAll('#win-explorer>.page>.main>.content>.view>.change');
-            console.log(elements);
-            for (var i = 0; i < elements.length; i++) {
-                elements[i].classList.remove('change');
-                let aTag = elements[i];
-                var on = apps.explorer.old_name;
-                let inputTag = aTag.querySelector("#new_name");
-                var pathl = $('#win-explorer>.path>.tit')[0].dataset.path.split('/');
-                let tmp = apps.explorer.path;
-                pathl.forEach(name => {
-                    tmp = tmp['folder'][name];
-                });
-                if (inputTag.value == '' || apps.explorer.traverseDirectory(tmp, inputTag.value) || on == inputTag.value) {
-                    if (apps.explorer.traverseDirectory(tmp, inputTag.value) && on != inputTag.value) {
-                        shownotice("duplication file name");
-                    }
-                    var element = document.getElementById("new_name");
-                    element.parentNode.removeChild(element);
-                    aTag.innerHTML += on;
-                    continue;
-                }
-                name_1 = inputTag.value.split(".");
-                if (name_1[0].indexOf('/') > -1) alert('恭喜你发现了这个bug,但是太懒了不想修qwq');
-                console.log(name_1);
-                if (name_1[1] == "txt") {
-                    icon_ = "icon/files/txt.png";
-                }
-                else if (name_1[1] == "png" || name_1[1] == "jpg" | name_1[1] == "bmp") {
-                    icon_ = "icon/files/picture.png";
-                }
-                else {
-                    icon_ = "icon/files/none.png";
-                }
-                //这边可以适配更多的文件类型
-
-                aTag.innerHTML += inputTag.value;
-                for (var i = 0; i < tmp["file"].length; i++) {
-                    if (tmp["file"][i]['name'] == on) {
-                        tmp["file"][i]['name'] = inputTag.value;
-                        tmp["file"][i]['ico'] = icon_;
-                    }
-                }
-                const keys = Object.keys(tmp["folder"]);
-                for (var i = 0; i < keys.length; i++) {
-                    if (keys[i] == on) {
-                        keys[i] = inputTag.value;
-                        tmp["folder"][inputTag.value] = tmp["folder"][on];
-                        delete tmp["folder"][on];
-                    }
-                }
-                var element = document.getElementById("new_name");
-                element.parentNode.removeChild(element);
-                apps.explorer.goto($('#win-explorer>.path>.tit')[0].dataset.path, false);
-
-            }
-            delete elements;
-            apps.explorer.is_use2 = apps.explorer.is_use;
-            var elements = document.querySelectorAll('#win-explorer>.page>.main>.content>.view>.select');
-            for (var i = 0; i < elements.length; i++) {
-                elements[i].classList.remove('select');
-            }
-            apps.explorer.Process_Of_Select = "";
-        },
-        goto: (path, clear = true) => {
-            apps.explorer.Process_Of_Select = "";
-            $('#win-explorer>.page>.main>.content>.view')[0].innerHTML = '';
-            var pathl = path.split('/');
-            var pathqwq = '';
-            var index_ = 0;
-            let tmp = apps.explorer.path;
-            if (path == '此电脑') {
-                apps.explorer.reset(clear);
-                return null;
-            }
-            $('#win-explorer>.path>.tit')[0].dataset.path = path;
-            $('#win-explorer>.path>.tit>.path')[0].innerHTML = '<div class="text" onclick="apps.explorer.reset()">此电脑</div><div class="arrow">&gt;</div>';
-            $('#win-explorer>.path>.tit>.icon')[0].style.marginTop = '0px';
-            if (pathl[pathl.length - 1] == 'C:') {
-                $('#win-explorer>.path>.tit>.icon')[0].style.backgroundImage = 'url("apps/icons/explorer/diskwin.svg")';
-                $('#win-explorer>.path>.tit>.icon')[0].style.marginTop = '2.5px';
-                m_tab.rename('explorer', '<img src="./apps/icons/explorer/diskwin.svg" style="margin-top:2.5px">' + pathl[pathl.length - 1]);
-            }
-            else if (pathl[pathl.length - 1] == 'D:') {
-                $('#win-explorer>.path>.tit>.icon')[0].style.backgroundImage = 'url("apps/icons/explorer/disk.svg")';
-                m_tab.rename('explorer', '<img src="./apps/icons/explorer/disk.svg">' + pathl[pathl.length - 1]);
-            }
-            else {
-                $('#win-explorer>.path>.tit>.icon')[0].style.backgroundImage = 'url("apps/icons/explorer/folder.svg")';
-                m_tab.rename('explorer', '<img src="./apps/icons/explorer/folder.svg">' + pathl[pathl.length - 1]);
-            }
-            // if(rename){
-            apps.explorer.tabs[apps.explorer.now][2] = path;
-            // }
-            pathl.forEach(name => {
-                pathqwq += name;
-                $('#win-explorer>.path>.tit>.path')[0].innerHTML += `<div class="text" onclick="apps.explorer.goto('${pathqwq}')">${name}</div><div class="arrow">&gt;</div>`;
-                tmp = tmp['folder'][name];
-                pathqwq += '/';
-            });
-            var path_ = path
-            if (Object.keys(tmp["folder"]) == 0 && tmp["file"].length == 0) {
-                $('#win-explorer>.page>.main>.content>.view')[0].innerHTML = '<p class="info">此文件夹为空。</p>';
-            }
-            else {
-                let ht = '';
-                for (folder in tmp['folder']) {
-                    ht += `<a class="a item files" id="file${index_}" onclick="apps.explorer.select('${path}/${folder}','file${index_}');" ondblclick="apps.explorer.goto('${path}/${folder}')" ontouchend="apps.explorer.goto('${path}/${folder}')" oncontextmenu="showcm(event,'explorer.folder','${path}/${folder}');return stop(event);">
-                        <img src="apps/icons/explorer/folder.svg">${folder}</a>`;
-                    index_ += 1;
-                }
-                if (tmp['file']) {
-                    tmp['file'].forEach(file => {
-                        ht += `<a class="a item act file" id="file${index_}" onclick="apps.explorer.select('${path_}/${file['name']}','file${index_}');" ondblclick="${file['command']}" ontouchend="${file['command']}" oncontextmenu="showcm(event,'explorer.file','${path_}/${file['name']}');return stop(event);">
-                            <img src="${file['ico']}">${file['name']}</a>`;
-                        index_ += 1;
-                    });
-                }
-                $('#win-explorer>.page>.main>.content>.view')[0].innerHTML = ht;
-            }
-            if (pathl.length == 1) {
-                $('#win-explorer>.path>.goback').attr('onclick', 'apps.explorer.reset()');
-            } else {
-                $('#win-explorer>.path>.goback').attr('onclick', `apps.explorer.goto('${path.substring(0, path.length - pathl[pathl.length - 1].length - 1)}')`);
-            }
-
-            if (clear) {
-                apps.explorer.delHistory(apps.explorer.tabs[apps.explorer.now][0]);
-                apps.explorer.pushHistory(apps.explorer.tabs[apps.explorer.now][0], $('#win-explorer>.path>.tit')[0].dataset.path);
-            }
-            apps.explorer.checkHistory(apps.explorer.tabs[apps.explorer.now][0]);
-
-            // $('#win-explorer>.path>.tit')[0].innerHTML = path;
-        },
-        add: (path, name_, type = "file", command = "", icon = "") => { //type为文件类型，只有文件夹files和文件file
-            var pathl = path.split('/');
-            var icon_ = "";
-            let tmp = apps.explorer.path;
-            pathl.forEach(name => {
-                tmp = tmp['folder'][name];
-            });
-            if (tmp == null) {
-                tmp = { folder: {}, file: [] };
-            }
-            if (apps.explorer.traverseDirectory(tmp, name_)) {
-                shownotice("duplication file name");
-                return;
-            }
-            name_1 = name_.split(".");
-
-            if (type == "file") {
-                if (name_1[1] == "txt") {
-                    icon_ = "icon/files/txt.png";
-                    if (command == "")
-                        command = "openapp('notepad')";
-                }
-                else if (name_1[1] == "png" || name_1[1] == "jpg" | name_1[1] == "bmp") {
-                    icon_ = "icon/files/picture.png";
-                }
-                else {
-                    icon_ = "icon/files/none.png";
-                }
-                //这边可以适配更多的文件类型
-                if (icon != "") {
-                    icon_ = icon;
-                }
-                try {
-                    tmp.file.push({ name: name_, ico: icon_, command: command });
-                }
-                catch {
-                    tmp.push(file);
-                    tmp.file.push({ name: name_, ico: icon_, command: command });
-                }
-            }
-            else {
-                tmp.folder[name_] = { folder: {}, file: [] };
-            }
-            apps.explorer.goto(path);
-            apps.explorer.rename(path + "/" + name_);
-        },
-        rename: (path) => {
-            var pathl = path.split('/');
-            var name = pathl[pathl.length - 1];
-            apps.explorer.old_name = name;
-            pathl.pop();
-            let tmp = apps.explorer.path;
-            pathl.forEach(name => {
-                tmp = tmp['folder'][name];
-            });
-            let element = document.querySelector('#' + apps.explorer.get_file_id(name));
-            let img = element.querySelector("img").outerHTML;
-            element.innerHTML = img;
-            let input = document.createElement("input");
-            // input.style.cssText = '';
-            input.id = "new_name";
-            input.className = "input";
-            input.value = apps.explorer.old_name;
-            element.appendChild(input);
-            setTimeout(() => { $("#new_name").focus(); $("#new_name").select(); }, 200);
-
-            element.classList.add("change");
-            var input_ = document.getElementById("new_name");
-            input_.addEventListener("keyup", function (event) {
-                if (event.key === "Enter") {
-                    event.preventDefault();
-                    apps.explorer.del_select();
-                }
-            });
-        },
-        get_file_id: (name) => {  //只能找到已经打开了的文件夹的元素id
-            var elements = document.getElementsByClassName("item");
-            for (var i = 0; i < elements.length; i++) {
-                var element = elements[i];
-                if (element.innerText == name) {
-                    return element.id;
-                }
-            }
-        },
-        del: (path) => {
-            var pathl = path.split('/');
-            var name = pathl[pathl.length - 1];
-            pathl.pop();
-            let tmp = apps.explorer.path;
-            pathl.forEach(name => {
-                tmp = tmp['folder'][name];
-            });
-            tmp_file = tmp['file'];
-            for (var i = 0; i < tmp_file.length; i++) {
-                if (tmp_file[i]['name'] == name) {
-                    tmp_file.splice(i, 1);
-                }
-            }
-            tmp_files = tmp['folder'];
-            delete tmp_files[name];
-            apps.explorer.goto(pathl.join("/"));
-            apps.explorer.history.forEach(item => {
-                while (item.includes(path)) {
-                    item.splice(item.findIndex(elt => { return elt == path; }), 1);
-                }
-            });
-        },
-        traverseDirectory(dir, name) {
-            if (dir["file"] == null && dir["folder"] == null)
-                return false;
-            for (var i = 0; i < dir["file"].length; i++) {
-                if (dir["file"][i]['name'] == name) {
-                    return true;
-                }
-            }
-            const keys = Object.keys(dir["folder"]);
-            for (var i = 0; i < keys.length; i++) {
-                if (keys[i] == name) {
-                    return true;
-                }
-            }
-            return false;
-        },
-        // 禁止奇奇怪怪的缩进！尽量压行，不要毫无意义地全部格式化和展开！ 
-        path: {folder:{'C:':{folder:{'Program Files':{folder:{'WindowsApps':{folder:{},file:[]},'Microsoft':{folder:{},file:[]}},file:[{name:'about.exe',ico:'icon/about.svg',command:"openapp('about')"},{name:'setting.exe',ico:'icon/setting.svg',command:"openapp('setting')"},]},'Program Files (x86)':{folder:{'Microsoft':{folder:{'Edge':{folder:{'Application':{folder:{'SetupMetrics':{folder:{},file:[]}},file:[{name:'msedge.exe',ico:'icon/edge.svg',command:"openapp('edge')"}]}}}}}}},'Windows':{folder:{'Boot':{folder:{},file:[]},'System':{folder:{},file:[]},'SysWOW64':{folder:{},file:[]},'System32':{folder:{},file:[{name:'calc.exe',ico:'icon/calc.svg',command:"openapp('calc')"},{name:'cmd.exe',ico:'icon/terminal.svg',command:"openapp('terminal')"},{name:'notepad.exe',ico:'icon/notepad.svg',command:"openapp('notepad')"},{name:'taskmgr.exe',ico:'icon/taskmgr.png',command:"openapp('taskmgr')"},{name:'winver.exe',ico:'icon/about.svg',command:"openapp('winver')"},]}},file:[{name:'explorer.exe',ico:'icon/explorer.svg',command:"apps.explorer.newtab()"},{name:'notepad.exe',ico:'icon/notepad.svg',command:"openapp('notepad')"},{name:'py.exe',ico:'icon/python.png',command:"openapp('python')"},]},'用户':{folder:{'Administrator':{folder:{'文档':{folder:{'IISExpress':{folder:{},file:[]},'PowerToys':{folder:{},file:[]}},file:[{name:'瓶盖介绍.doc',ico:'icon/files/word.png',command:''},{name:'瓶盖质量统计分析.xlsx',ico:'icon/files/excel.png',command:''},]},'图片':{folder:{'本机照片':{folder:{},file:[]},'屏幕截图':{folder:{},file:[]}},file:[{name:'瓶盖构造图.png',ico:'icon/files/img.png',command:''},{name:'可口可乐瓶盖.jpg',ico:'icon/files/img.png',command:''},]},'AppData':{folder:{'Local':{folder:{'Microsoft':{folder:{'Windows':{folder:{'Fonts':{},'TaskManager':{},'Themes':{},'Shell':{},'应用程序快捷方式':{},}},}},'Programs':{folder:{'Python':{folder:{'Python310':{folder:{'DLLs':{},'Doc':{},'include':{},'Lib':{folder:{'site-packages':{},'tkinter':{},}},'libs':{},'Script':{},'share':{},'tcl':{},'Tools':{}},file:[{name:'python.exe',ico:'icon/python.png',command:"openapp('python')"}]}},}}},'Temp':{folder:{}},}},'LocalLow':{folder:{'Microsoft':{folder:{'Windows':{},}},}},'Roaming':{folder:{'Microsoft':{folder:{'Windows':{folder:{'「开始」菜单':{folder:{'程序':{folder:{}},}},}},}},}},},file:[]},'音乐':{folder:{'录音机':{folder:{},file:[]}}}}},'公用':{folder:{'公用文档':{folder:{'IISExpress':{folder:{},file:[]},'PowerToys':{folder:{},file:[]}},file:[]},'公用图片':{folder:{'本机照片':{folder:{},file:[]},'屏幕截图':{folder:{},file:[]}},file:[]},'公用音乐':{folder:{'录音机':{folder:{},file:[]}}}}}}}},file:[]},'D:':{folder:{'Microsoft':{folder:{},file:[]}},file:[{name:'瓶盖结构说明.docx',ico:'icon/files/word.png',command:''},{name:'可口可乐瓶盖历史.pptx',ico:'icon/files/ppt.png',command:''},]}}},
-        history: [],
-        historypt: [],
-        initHistory: (tab) => {
-            apps.explorer.history[tab] = [];
-            apps.explorer.historypt[tab] = -1;
-        },
-        pushHistory: (tab, u) => {
-            apps.explorer.history[tab].push(u);
-            apps.explorer.historypt[tab]++;
-        },
-        topHistory: (tab) => {
-            return apps.explorer.history[tab][apps.explorer.historypt[tab]];
-        },
-        popHistory: (tab) => {
-            apps.explorer.historypt[tab]--;
-            return apps.explorer.history[tab][apps.explorer.historypt[tab]];
-        },
-        incHistory: (tab) => {
-            apps.explorer.historypt[tab]++;
-            return apps.explorer.history[tab][apps.explorer.historypt[tab]];
-        },
-        delHistory: (tab) => {
-            apps.explorer.history[tab].splice(apps.explorer.historypt[tab] + 1, apps.explorer.history[tab].length - 1 - apps.explorer.historypt[tab]);
-        },
-        historyIsEmpty: (tab) => {
-            return apps.explorer.historypt[tab] <= 0;
-        },
-        historyIsFull: (tab) => {
-            return apps.explorer.historypt[tab] >= apps.explorer.history[tab].length - 1;
-        },
-        checkHistory: (tab) => {
-            if (apps.explorer.historyIsEmpty(tab)) {
-                $('#win-explorer>.path>.back').addClass('disabled');
-            }
-            else if (!apps.explorer.historyIsEmpty(tab)) {
-                $('#win-explorer>.path>.back').removeClass('disabled');
-            }
-            if (apps.explorer.historyIsFull(tab)) {
-                $('#win-explorer>.path>.front').addClass('disabled');
-            }
-            else if (!apps.explorer.historyIsFull(tab)) {
-                $('#win-explorer>.path>.front').removeClass('disabled');
-            }
-            console.log(tab, apps.explorer.history[tab]);
-        },
-        back: (tab) => {
-            apps.explorer.goto(apps.explorer.popHistory(tab), false);
-            apps.explorer.checkHistory(tab);
-        },
-        front: (tab) => {
-            apps.explorer.goto(apps.explorer.incHistory(tab), false);
-            apps.explorer.checkHistory(tab);
-        }
-    },
-    calc: {
-        init: () => {
-            document.getElementById('calc-input').innerHTML = "0";
-        }
-    },
-    about: {
-        init: () => {
-            $('#win-about>.about').addClass('show');
-            $('#win-about>.update').removeClass('show');
-            if (!($('#contri').length > 1)) apps.about.get();
-            if (!($('#StarShow').html().includes('刷新'))) apps.about.get_star();
-        },
-        run_loading: (expr) => {
-            $(expr).html(`<loading><svg width="30px" height="30px" viewBox="0 0 16 16">
-            <circle cx="8px" cy="8px" r="7px" style="stroke:#7f7f7f50;fill:none;stroke-width:3px;"></circle>
-            <circle cx="8px" cy="8px" r="7px" style="stroke:#2983cc;stroke-width:3px;"></circle></svg></loading>`);
-        },
-        get: () => {
-            apps.about.run_loading('#contri');
-            // 实时获取项目贡献者
-            $.get('https://api.github.com/repos/tjy-gitnub/win12/contributors').then(cs => {
-                setTimeout(() => {
-                    $('#contri').html('');
-                    cs.forEach(c => {
-                        $('#contri').append(`<a class="a" onclick="window.open('${c['html_url']}','_blank');"><p class="name">${c['login']}</p><p class="cbs">贡献：<span class="num">${c['contributions']}</span></p></a>`)
-                    });
-                    $('#contri').append(`<a class="button" onclick="apps.about.get()"><i class="bi bi-arrow-clockwise"></i> 刷新</a>`)
-                }, 200);
-            });
-        },
-        get_star: () => {
-            apps.about.run_loading('#StarShow')
-            const repoFullName = 'tjy-gitnub/win12';
-            fetch(`https://api.github.com/repos/${repoFullName}`)
-                .then(response => response.json())
-                .then(data => {
-                    setTimeout(() => {
-                        const starCount = data.stargazers_count;
-                        $('#StarShow').html('<div style="display: flex;"><p>&emsp;&emsp;Star 数量：' + starCount + ' (实时数据)</p>&emsp;<a class="button" onclick="apps.about.get_star()"><i class="bi bi-arrow-clockwise"></i> 刷新</a></div>')
-                    }, 200);
-                })
-                .catch(error => {
-                    console.error('获取star数量时出错：', error);
-                    $('#StarShow').html('<div style="display: flex;"><p>&emsp;&emsp;哎呀！出错了！</p>&emsp;<a class="button" onclick="apps.about.get_star()"><i class="bi bi-arrow-clockwise"></i> 重试</a></div>')
-                });
-        }
-    },
-    notepad: {
-        init: () => {
-            $('#win-notepad>.text-box').addClass('down');
-            setTimeout(() => {
-                $('#win-notepad>.text-box').val('');
-                $('#win-notepad>.text-box').removeClass('down')
-            }, 200);
-        }
-    },
-    pythonEditor: {
-        editor: null,
-        init: () => {
-            return null;
-        },
-        run: () => {
-            let result;
-            let output = document.getElementById("output");
-            try {
-                if (apps.python.pyodide) {
-                    let code = apps.pythonEditor.editor.getValue();
-                    apps.python.pyodide.runPython('sys.stdout = io.StringIO()');
-                    apps.python.pyodide.runPython(code);
-                    result = apps.python.pyodide.runPython('sys.stdout.getvalue()');
-                }
-            }
-            catch (e) {
-                result = e.message;
-            }
-            output.innerHTML = result;
-        },
-        load: () => {
-            if (!apps.python.loaded) {
-                apps.python.loaded = true;
-                apps.python.load();
-            }
-            ace.require("ace/ext/language_tools");
-            apps.pythonEditor.editor = ace.edit("win-python-ace-editor");
-            apps.pythonEditor.editor.session.setMode("ace/mode/python");
-            apps.pythonEditor.editor.setTheme("ace/theme/vibrant_ink");
-            apps.pythonEditor.editor.setOptions({
-                enableBasicAutocompletion: true,
-                enableSnippets: true,
-                showPrintMargin: false,
-                enableLiveAutocompletion: true
-            });
-        }
-    },
-    notepadFonts: {
-        sizes: {
-            '初号': '56',
-            '小初': '48',
-            '一号': '34.7',
-            '小一': '32',
-            '二号': '29.3',
-            '小二': '24',
-            '三号': '21.3',
-            '小三': '20',
-            '四号': '18.7',
-            '小四': '16',
-            '五号': '14',
-            '小五': '12'
-        },
-        styles: {
-            '正常': '',
-            '粗体': 'font-weight: bold;',
-            '斜体': 'font-style: italic;',
-            '粗偏斜体': 'font-weight: bold; font-style: italic;'
-        },
-        load: () => {
-            apps.notepadFonts.fontvalues = $('#win-notepad-font>.row>#win-notepad-font-type>.value-box>.option');
-            apps.notepadFonts.sizevalues = $('#win-notepad-font>.row>#win-notepad-font-size>.value-box>.option');
-            apps.notepadFonts.stylevalues = $('#win-notepad-font>.row>#win-notepad-font-style>.value-box>.option');
-            apps.notepadFonts.typeinput = $('#win-notepad-font>.row>#win-notepad-font-type>input[type=text]')[0];
-            apps.notepadFonts.sizeinput = $('#win-notepad-font>.row>#win-notepad-font-size>input[type=text]')[0];
-            apps.notepadFonts.styleinput = $('#win-notepad-font>.row>#win-notepad-font-style>input[type=text]')[0];
-            apps.notepadFonts.previewBox = $('#win-notepad-font>.preview>.preview-box');
-            apps.notepadFonts.textBox = $('.notepad>#win-notepad>.text-box');
-
-            for (const elt of apps.notepadFonts.fontvalues) {
-                elt.onclick = function () {
-                    apps.notepadFonts.typeinput.value = this.innerText;
-                    apps.notepadFonts.preview();
-                }
-                elt.setAttribute('style', `font-family: ${elt.innerText};`)
-            }
-
-            for (const elt of apps.notepadFonts.sizevalues) {
-                elt.onclick = function () {
-                    apps.notepadFonts.sizeinput.value = this.innerText;
-                    apps.notepadFonts.preview();
-                }
-            }
-
-            for (const elt of apps.notepadFonts.stylevalues) {
-                elt.onclick = function () {
-                    apps.notepadFonts.styleinput.value = this.innerText;
-                    apps.notepadFonts.preview();
-                }
-                elt.setAttribute('style', apps.notepadFonts.styles[elt.innerText]);
-            }
-
-            apps.notepadFonts.sizeinput.addEventListener("keyup", apps.notepadFonts.preview);
-            apps.notepadFonts.typeinput.addEventListener("keyup", apps.notepadFonts.preview);
-        },
-        preview: () => {
-            var fontsize = 0;
-            var fontstyle;
-            if (!apps.notepadFonts.sizeinput.value.match(/^[0-9]*$/)) {
-                if (apps.notepadFonts.sizes[apps.notepadFonts.sizeinput.value] != undefined) {
-                    fontsize = apps.notepadFonts.sizes[apps.notepadFonts.sizeinput.value];
-                }
-            }
-            else if (apps.notepadFonts.sizeinput.value.match(/^[0-9]*$/)) {
-                fontsize = apps.notepadFonts.sizeinput.value;
-            }
-            if (apps.notepadFonts.styles[apps.notepadFonts.styleinput.value] != undefined) {
-                fontstyle = apps.notepadFonts.styles[apps.notepadFonts.styleinput.value];
-            }
-            else if (apps.notepadFonts.styles[apps.notepadFonts.styleinput.value] == undefined) {
-                fontstyle = apps.notepadFonts.styles['正常'];
-            }
-            apps.notepadFonts.previewBox.attr('style', `font-family: ${apps.notepadFonts.typeinput.value} !important; font-size: ${fontsize}px !important;${fontstyle}`);
-        },
-        commitFont: () => {
-            const styles = window.getComputedStyle(apps.notepadFonts.previewBox[0], null);
-            apps.notepadFonts.textBox.attr('style', `font-family: ${styles.fontFamily} !important; font-size: ${styles.fontSize} !important; font-weight: ${styles.fontWeight} !important; font-style: ${styles.fontStyle} !important;`);
-            hidewin('notepad-fonts', 'configs');
-        },
-        reset: () => {
-            const styles = window.getComputedStyle(apps.notepadFonts.textBox[0], null);
-            apps.notepadFonts.typeinput.value = styles.fontFamily.split(', ')[0];
-            var fontsize = styles.fontSize.split('px')[0];
-            var fontweight = styles.fontWeight;
-            var fontstyle = styles.fontStyle;
-            if (fontweight == '700' && fontstyle == 'normal') {
-                apps.notepadFonts.styleinput.value = '粗体';
-            }
-            else if (fontweight == '400' && fontstyle == 'italic') {
-                apps.notepadFonts.styleinput = '斜体';
-            }
-            else if (fontweight == '700' && fontstyle == 'italic') {
-                apps.notepadFonts.styleinput.value = '粗偏斜体';
-            }
-            else if (fontweight == '400' && fontstyle == 'normal') {
-                apps.notepadFonts.styleinput.value = '正常';
-            }
-            for (const [key, value] of Object.entries(apps.notepadFonts.sizes)) {
-                if (value == fontsize) {
-                    fontsize = key;
-                    break;
-                }
-            }
-            apps.notepadFonts.sizeinput.value = fontsize;
-        },
-    },
-    python: {
-        codeCache: '',
-        prompt: '>>> ',
-        indent: false,
-        load: () => {
-            (async function () {
-                apps.python.pyodide = await loadPyodide();
-                apps.python.pyodide.runPython(`
-import sys
-import io
-`);
-            })();
-        },
-        init: () => {
-            $('#win-python').html(`
-        <pre>
-Python 3.10.2  [MSC v.1912 64 bit (AMD64)] :: Anaconda, Inc. on win32
-Type "help", "copyright", "credits" or "license" for more information.
-        </pre>
-        <pre class="text-cmd"></pre>
-        <pre style="display: flex;"><span class='prompt'>>>> </span><input type="text" onkeyup="if (event.keyCode == 13) { apps.python.run(); }"></pre>`);
-        },
-        run: () => {
-            if (apps.python.pyodide) {
-                const input = $('#win-python>pre>input');
-                const _code = input.val();
-                if (_code == "exit()") {
-                    hidewin('python');
-                    input.val('');
-                }
-                else {
-                    const elt = $('#win-python>pre.text-cmd')[0];
-                    const lastChar = _code[_code.length - 1];
-                    var newD = document.createElement('div');
-                    newD.innerText = `${apps.python.prompt}${_code}`;
-                    elt.appendChild(newD);
-                    if (lastChar != ':' && lastChar != '\\' && ((!apps.python.indent || _code == ''))) {
-                        apps.python.prompt = '>>> ';
-                        apps.python.codeCache += _code;
-                        apps.python.indent = false;
-                        const code = apps.python.codeCache;
-                        apps.python.codeCache = '';
-                        apps.python.pyodide.runPython('sys.stdout = io.StringIO()');
-                        try {
-                            const result = String(apps.python.pyodide.runPython(code));
-                            if (apps.python.pyodide.runPython('sys.stdout.getvalue()')) {
-                                var newD = document.createElement('div');
-                                newD.innerText = `${apps.python.pyodide.runPython('sys.stdout.getvalue()')}`;
-                                elt.appendChild(newD);
-                            }
-                            if (result && result != 'undefined') {
-                                var newD = document.createElement('div');
-                                if (result == 'false') {
-                                    newD.innerText = 'False';
-                                }
-                                else if (result == 'true') {
-                                    newD.innerText = 'True';
-                                }
-                                else {
-                                    newD.innerText = result;
-                                }
-                                elt.appendChild(newD);
-                            }
-                        }
-                        catch (err) {
-                            var newD = document.createElement('div');
-                            newD.innerText = `${err.message}`;
-                            elt.appendChild(newD);
-                        }
-                    }
-                    else {
-                        apps.python.prompt = '... ';
-                        if (lastChar == ':') {
-                            apps.python.indent = true;
-                        }
-                        apps.python.codeCache += _code + '\n';
-                    }
-                    input.val('');
-
-                    // 自动聚焦
-                    input.blur();
-                    input.focus();
-
-                    $('#win-python .prompt')[0].innerText = apps.python.prompt;
-                }
-            }
-        }
-    },
-    terminal: {
-        init: () => {
-            $('#win-terminal').html(`<pre>
-Microsoft Windows [版本 12.0.39035.7324]
-(c) Microsoft Corporation。保留所有权利。
-        </pre>
-        <pre class="text-cmd"></pre>
-        <pre style="display: flex"><span class="prompt">C:\\Windows\\System32> </span><input type="text" onkeyup="if (event.keyCode == 13) { apps.terminal.run(); }"></pre>`)
-            $('#win-terminal>pre>input').focus()
-        },
-        run: () => {
-            const elt = $('#win-terminal>pre.text-cmd')[0];
-            const input = $('#win-terminal input');
-            const command = input.val();
-            var newD = document.createElement('div');
-            newD.innerText = `C:\\Windows\\System32> ${command}`;
-            elt.appendChild(newD);
-            if (command == 'exit') {
-                hidewin('terminal');
-                input.val('');
-            }
-            else {
-                if (!runcmd(command, inTerminal=true) && command!="") {
-                    var newD = document.createElement('div');
-                    newD.innerText = `"${command}"不是内部或外部命令,也不是可运行程序
-                或批处理文件`;
-                    elt.appendChild(newD);
-                }
-                input.val('');
+function insertTextAtCursor(text) {
+    var range, selection;
     
-                // 自动聚焦
-                input.blur();
-                input.focus();
+    if (window.getSelection) {
+        selection = window.getSelection();
+        
+        if (selection.rangeCount) {
+        range = selection.getRangeAt(0);
+        
+            if (range.commonAncestorContainer.parentNode.isContentEditable) {
+                range.collapse(false);
+                var textNode = document.createTextNode(text);
+                range.insertNode(textNode);
+                
+                range.setEndAfter(textNode);
+                range.setStartAfter(textNode);
+                selection.removeAllRanges();
+                selection.addRange(range);
             }
-            
-        }
-    },
-    search: {
-        rand: [{ name: '农夫山泉瓶盖简介.txt', bi: 'text', ty: '文本文档' },
-        { name: '瓶盖构造图.png', bi: 'image', ty: 'PNG 文件' },
-        { name: '瓶盖结构说明.docx', bi: 'richtext', ty: 'Microsoft Word 文档' },
-        { name: '可口可乐瓶盖.jpg', bi: 'image', ty: 'JPG 文件' },
-        { name: '可口可乐瓶盖历史.pptx', bi: 'slides', ty: 'Microsoft Powerpoint 演示文稿' },
-        { name: '瓶盖质量统计分析.xlsx', bi: 'ruled', ty: 'Microsoft Excel 工作表' },
-        { name: '农夫山泉瓶盖.svg', bi: 'image', ty: 'SVG 文件' },
-        { name: '瓶盖介绍.doc', bi: 'richtext', ty: 'Microsoft Word 文档' }],
-        search: le => {
-            if (le > 0) {
-                $('#search-win>.ans>.list>list').html(
-                    `<a class="a" onclick="apps.search.showdetail(${le % 8})"><i class="bi bi-file-earmark-${apps.search.rand[le % 8].bi}"></i> ${apps.search.rand[le % 8].name
-                    }</a><a class="a" onclick="apps.search.showdetail(${(le + 3) % 8})"><i class="bi bi-file-earmark-${apps.search.rand[(le + 3) % 8].bi}"></i> ${apps.search.rand[(le + 3) % 8].name}</a>`);
-                apps.search.showdetail(le % 8);
-            } else {
-                $('#search-win>.ans>.list>list').html(
-                    `<p class="text">推荐</p>
-					<a onclick="openapp('setting');$('#search-btn').removeClass('show');
-					$('#search-win').removeClass('show');
-					setTimeout(() => {
-						$('#search-win').removeClass('show-begin');
-					}, 200);">
-						<img src="icon/setting.svg"><p>设置</p></a>
-					<a onclick="openapp('about');$('#search-btn').removeClass('show');
-					$('#search-win').removeClass('show');
-					setTimeout(() => {
-						$('#search-win').removeClass('show-begin');
-					}, 200);">
-						<img src="icon/about.svg"><p>关于Win12网页版</p></a>`);
-                $('#search-win>.ans>.view').removeClass('show');
-            }
-        },
-        showdetail: i => {
-            $('#search-win>.ans>.view').addClass('show');
-            let inf = apps.search.rand[i];
-            $('#search-win>.ans>.view>.fname>.bi').attr('class', 'bi bi-file-earmark-' + inf.bi);
-            $('#search-win>.ans>.view>.fname>.name').text(inf.name);
-            $('#search-win>.ans>.view>.fname>.type').text(inf.ty);
-        }
-    },
-    edge: {
-        init: () => {
-            $('#win-edge>iframe').remove();
-            apps.edge.tabs = [];
-            apps.edge.len = 0;
-            apps.edge.newtab();
-        },
-        tabs: [],
-        now: null,
-        len: 0,
-        history: [],
-        historypt: [],
-        reloadElt: '<loading class="reloading"><svg viewBox="0 0 16 16"><circle cx="8px" cy="8px" r="5px"></circle><circle cx="8px" cy="8px" r="5px"></circle></svg></loading>',
-        max: false,
-        fuls: false,
-        b1: false, b2: false, b3: false,
-        newtab: () => {
-            m_tab.newtab('edge', '新建标签页');
-            apps.edge.initHistory(apps.edge.tabs[apps.edge.tabs.length - 1][0]);
-            apps.edge.pushHistory(apps.edge.tabs[apps.edge.tabs.length - 1][0], 'mainpage.html');
-            $('#win-edge').append(`<iframe src="mainpage.html" frameborder="0" class="${apps.edge.tabs[apps.edge.tabs.length - 1][0]}">`);
-            $('#win-edge>.tool>input.url').focus();
-            $("#win-edge>iframe")[apps.edge.tabs.length - 1].onload = function () {
-                this.contentDocument.querySelector('input').onkeyup = function (e) {
-                    if (e.keyCode == 13 && $(this).val() != '') {
-                        apps.edge.goto($(this).val());
-                    }
-                }
-                this.contentDocument.querySelector('svg').onclick = () => {
-                    if ($(this.contentDocument.querySelector('input')).val() != '') {
-                        apps.edge.goto($(this.contentDocument.querySelector('input')).val())
-                    }
-                }
-            };
-            m_tab.tab('edge', apps.edge.tabs.length - 1);
-            apps.edge.checkHistory(apps.edge.tabs[apps.edge.now][0]);
-        },
-        fullscreen: () => {
-            if (!apps.edge.max) {
-                maxwin('edge');
-                apps.edge.max = !apps.edge.max;
-            }
-            document.getElementById('fuls-edge').style.display = 'none';
-            document.getElementById('edge-max').style.display = 'none';
-            document.getElementById('fuls-edge-exit').style.display = '';
-            document.getElementById('over-bar').style.display = '';
-            $('.edge>.titbar').hide()
-            $('.edge>.content>.tool').hide()
-            apps.edge.fuls = !apps.edge.fuls;
-        },
-        exitfullscreen: () => {
-            if (apps.edge.max) {
-                maxwin('edge'); apps.edge.max = !apps.edge.max;
-            }
-            document.getElementById('fuls-edge').style.display = '';
-            document.getElementById('edge-max').style.display = '';
-            document.getElementById('fuls-edge-exit').style.display = 'none';
-            document.getElementById('over-bar').style.display = 'none';
-            $('.edge>.titbar').show()
-            $('.edge>.content>.tool').show()
-            apps.edge.fuls = !apps.edge.fuls;
-        },
-        in_div(id,event) {
-            var div = document.getElementById(id);
-            var x = event.clientX;
-            var y = event.clientY;
-            var divx1 = div.offsetLeft;
-            var divy1 = div.offsetTop;
-            var divx2 = div.offsetLeft + div.offsetWidth;
-            var divy2 = div.offsetTop + div.offsetHeight;
-            if (x < divx1 || x > divx2 || y < divy1 || y > divy2) {
-                //如果离开，则执行。。 
-                return false;
-            }
-            else {
-                //如检播到，则执行。。 
-                return true;
-            }
-        },
-        settab: (t, i) => {
-            if ($('.window.edge>.titbar>.tabs>.tab.' + t[0] + '>.reloading')[0]) {
-                return `<div class="tab ${t[0]}" onclick="m_tab.tab('edge',${i})" oncontextmenu="showcm(event,'edge.tab',${i});stop(event);return false" onmousedown="m_tab.moving('edge',this,event,${i});stop(event);" ontouchstart="m_tab.moving('edge',this,event,${i});stop(event);">${apps.edge.reloadElt}<p>${t[1]}</p><span class="clbtn bi bi-x" onclick="m_tab.close('edge',${i})"></span></div>`;
-            }
-            else {
-                return `<div class="tab ${t[0]}" onclick="m_tab.tab('edge',${i})" oncontextmenu="showcm(event,'edge.tab',${i});stop(event);return false" onmousedown="m_tab.moving('edge',this,event,${i});stop(event);" ontouchstart="m_tab.moving('edge',this,event,${i});stop(event);"><p>${t[1]}</p><span class="clbtn bi bi-x" onclick="m_tab.close('edge',${i})"></span></div>`;
-            }
-        },
-        tab: (c) => {
-            $('#win-edge>iframe.show').removeClass('show');
-            $('#win-edge>iframe.' + apps.edge.tabs[c][0]).addClass('show');
-            $('#win-edge>.tool>input.url').val($('#win-edge>iframe.' + apps.edge.tabs[c][0]).attr('src') == 'mainpage.html' ? '' : $('#win-edge>iframe.' + apps.edge.tabs[c][0]).attr('src'));
-            $('#win-edge>.tool>input.rename').removeClass('show');
-            apps.edge.checkHistory(apps.edge.tabs[apps.edge.now][0]);
-        },
-        c_rename: (c) => {
-            m_tab.tab('edge', c);
-            $('#win-edge>.tool>input.rename').val(apps.edge.tabs[apps.edge.now][1]);
-            $('#win-edge>.tool>input.rename').addClass('show');
-            setTimeout(() => {
-                $('#win-edge>.tool>input.rename').focus();
-            }, 300);
-        },
-        reload: () => {
-            if (wifiStatus == false) {
-                $('#win-edge>iframe.show').attr('src', './disconnected' + (isDrak ? '_dark' : '') + '.html');
-            }
-            else {
-                $('#win-edge>iframe.show').attr('src', $('#win-edge>iframe.show').attr('src'));
-                if (!$('.window.edge>.titbar>.tabs>.tab.' + apps.edge.tabs[apps.edge.now][0] + '>.reloading')[0]) {
-                    $('.window.edge>.titbar>.tabs>.tab.' + apps.edge.tabs[apps.edge.now][0])[0].insertAdjacentHTML('afterbegin', apps.edge.reloadElt);
-                    $('#win-edge>iframe.' + apps.edge.tabs[apps.edge.now][0])[0].onload = function () {
-                        $('.window.edge>.titbar>.tabs>.tab.' + this.classList[0])[0].removeChild($('.window.edge>.titbar>.tabs>.tab.' + this.classList[0] + '>.reloading')[0]);
-                    }
-                }
-            }
-        },
-        getTitle: async (url, np) => {
-            const response = await fetch(server + pages['get-title'] + `?url=${url}`);
-            if (response.ok == true) {
-                const text = await response.text();
-                apps.edge.tabs[np][1] = text;
-                m_tab.settabs('edge');
-                m_tab.tab('edge', np);
-            }
-        },
-        goto: (u, clear = true) => {
-            if (wifiStatus == false) {
-                m_tab.rename('edge', u);
-                $('#win-edge>iframe.show').attr('src', './disconnected' + (isDrak ? '_dark' : '') + '.html');
-                $('#win-edge>.tool>input.url').val(u);
-            }
-            else {
-                // 6
-                if (!/^(((ht|f)tps?):\/\/)?([^!@#$%^&*?.\s-]([^!@#$%^&*?.\s]{0,63}[^!@#$%^&*?.\s])?\.)+[a-z]{2,6}\/?/.test(u) && !u.match(/^mainpage.html$/)) {
-                    // 启用必应搜索
-                    $('#win-edge>iframe.show').attr('src', 'https://bing.com/search?q=' + encodeURIComponent(u));
-                    m_tab.rename('edge', u);
-                }
-                // 检测网址是否带有http头
-                else if (!/^https?:\/\//.test(u) && !u.match(/^mainpage.html$/)) {
-                    $('#win-edge>iframe.show').attr('src', 'http://' + u);
-                    m_tab.rename('edge', 'http://' + u);
-                }
-                else {
-                    $('#win-edge>iframe.show').attr('src', u);
-                    m_tab.rename('edge', u.match(/^mainpage.html$/) ? '新建标签页' : u);
-                }
-                if (!$('.window.edge>.titbar>.tabs>.tab.' + apps.edge.tabs[apps.edge.now][0] + '>.reloading')[0]) {
-                    $('.window.edge>.titbar>.tabs>.tab.' + apps.edge.tabs[apps.edge.now][0])[0].insertAdjacentHTML('afterbegin', apps.edge.reloadElt);
-                }
-                $('#win-edge>iframe.' + apps.edge.tabs[apps.edge.now][0])[0].onload = function () {
-                    $('.window.edge>.titbar>.tabs>.tab.' + this.classList[0])[0].removeChild($('.window.edge>.titbar>.tabs>.tab.' + this.classList[0] + '>.reloading')[0]);
-                }
-                apps.edge.getTitle($('#win-edge>iframe.show').attr('src'), apps.edge.now);
-                if (clear) {
-                    apps.edge.delHistory(apps.edge.tabs[apps.edge.now][0]);
-                    apps.edge.pushHistory(apps.edge.tabs[apps.edge.now][0], $('#win-edge>iframe.show').attr('src'));
-                }
-                apps.edge.checkHistory(apps.edge.tabs[apps.edge.now][0]);
-            }
+            else{
+                var el = document.activeElement;
+                const start = el.selectionStart;
+                const value = el.value;
+                el.value = value.slice(0, start) + text + value.slice(el.selectionEnd);
+                el.selectionStart = el.selectionEnd = start + text.length;
 
-        },
-        initHistory: (tab) => {
-            apps.edge.history[tab] = [];
-            apps.edge.historypt[tab] = -1;
-        },
-        pushHistory: (tab, u) => {
-            apps.edge.history[tab].push(u);
-            apps.edge.historypt[tab]++;
-        },
-        topHistory: (tab) => {
-            return apps.edge.history[tab][apps.edge.historypt[tab]];
-        },
-        popHistory: (tab) => {
-            apps.edge.historypt[tab]--;
-            return apps.edge.history[tab][apps.edge.historypt[tab]];
-        },
-        incHistory: (tab) => {
-            apps.edge.historypt[tab]++;
-            return apps.edge.history[tab][apps.edge.historypt[tab]];
-        },
-        delHistory: (tab) => {
-            apps.edge.history[tab].splice(apps.edge.historypt[tab] + 1, apps.edge.history[tab].length - 1 - apps.edge.historypt[tab]);
-        },
-        historyIsEmpty: (tab) => {
-            return apps.edge.historypt[tab] <= 0;
-        },
-        historyIsFull: (tab) => {
-            return apps.edge.historypt[tab] >= apps.edge.history[tab].length - 1;
-        },
-        checkHistory: (tab) => {
-            if (apps.edge.historyIsEmpty(tab)) {
-                $('#win-edge>.tool>.back').addClass('disabled');
             }
-            else if (!apps.edge.historyIsEmpty(tab)) {
-                $('#win-edge>.tool>.back').removeClass('disabled');
-            }
-            if (apps.edge.historyIsFull(tab)) {
-                $('#win-edge>.tool>.front').addClass('disabled');
-            }
-            else if (!apps.edge.historyIsFull(tab)) {
-                $('#win-edge>.tool>.front').removeClass('disabled');
-            }
-        },
-        back: (tab) => {
-            apps.edge.goto(apps.edge.popHistory(tab), false);
-            apps.edge.checkHistory(tab);
-        },
-        front: (tab) => {
-            apps.edge.goto(apps.edge.incHistory(tab), false);
-            apps.edge.checkHistory(tab);
-        }
-    },
-    winver: {
-        init: () => {
-            $('#win-winver>.mesg').show();
-        },
-    },
-    windows12: {
-        init: () => {
-            document.getElementById('win12-window').src = "./boot.html";
-        }
-    },
-    wsa: {
-        init: () => {
-            null
         }
     }
 }
 
-// 小组件
-let widgets = {
-    widgets: {
-        add: (arg) => {
-            if ($(`.wg.${arg}.menu,.wg.${arg}.toolbar,.wg.${arg}.desktop`).length != 0) {
-                return;
-            }
-            $('#widgets>.widgets>.content>.grid')[0].innerHTML += $('#widgets>.widgets>.content>.template>.' + arg).html();
-            $('#widgets>.widgets>.content>.grid>.wg.' + arg).addClass('menu');
-            widgets[arg].init();
+function startSpeechRecognition() {
+    var recognition = new webkitSpeechRecognition() || new SpeechRecognition();
+    recognition.lang = "zh-CN";
 
-        },
-        remove: (arg) => {
-            $(`.wg.${arg}.menu,.wg.${arg}.toolbar,.wg.${arg}.desktop`).remove();
-            widgets[arg].remove();
-        },
-        addToToolbar: (arg) => {
-            widgets.widgets.remove(arg);
-            if ($('.wg.toolbar.' + arg).length != 0) {
-                return;
-            }
-            $('#toolbar')[0].innerHTML += $('#widgets>.widgets>.content>.template>.' + arg).html();
-            $('#toolbar>.wg.' + arg).addClass('toolbar');
-            widgets[arg].init();
-        },
-        addToDesktop: (arg) => {
-            widgets.widgets.remove(arg);
-            if ($('.wg.toolbar.' + arg).length != 0) {
-                return;
-            }
-            $('#desktop-widgets')[0].innerHTML += $('#widgets>.widgets>.content>.template>.' + arg).html();
-            $('#desktop-widgets>.' + arg).addClass('desktop');
-            widgets[arg].init();
-        }
-    },
-    calc: {
-        init: () => {
-            widgetCalculator = new Calculator($('*:not(.template)>*>.wg.calc>.content>.container>#calc-input-widgets')[0], $('*:not(.template)>*>.wg.calc>.content')[0])
-        },
-        remove: () => {
-            $('#calc-input-widgets')[0].value = "0";
-        }
-    },
-    weather: {
-        init: () => {
-            widgets.weather.update();
-            widgets.weather.handel = setInterval(widgets.weather.update, 30000);
-        },
-        remove: () => {
-            clearInterval(widgets.weather.handel);
-        },
-        update: () => {
-            let wic = {
-                23: "HeavyDrizzle", 40: "HeavyDrizzle", 26: "SnowShowersDayV2", 6: "BlowingHailV2",
-                5: "CloudyV3", 20: "LightSnowV2", 91: "WindyV2", 27: "ThunderstormsV2", 10: "FreezingRainV2",
-                77: "RainSnowV2", 12: "Haze", 13: "HeavyDrizzle", 39: "Fair", 24: "RainSnowV2",
-                78: "RainSnowShowersNightV2", 9: "FogV2", 3: "PartlyCloudyDayV3", 43: "IcePelletsV2",
-                16: "IcePellets", 8: "LightRainV2", 15: "HeavySnowV2", 28: "ClearNightV3",
-                30: "PartlyCloudyNightV2", 14: "ModerateRainV2", 1: "SunnyDayV3", 7: "BlowingSnowV2",
-                50: "RainShowersNightV2", 82: "LightSnowShowersNight", 81: "LightSnowShowersDay",
-                2: "MostlySunnyDay", 29: "MostlyClearNight", 4: "MostlyCloudyDayV2",
-                31: "MostlyCloudyNightV2", 19: "LightRainV3", 17: "LightRainShowerDay", 53: "N422Snow",
-                52: "Snow", 25: "Snow", 44: "LightRainShowerNight", 65: "HailDayV2", 73: "HailDayV2",
-                74: "HailNightV2", 79: "RainShowersDayV2", 89: "HazySmokeV2", 90: "HazeSmokeNightV2_106",
-                66: "HailNightV2", 59: "WindyV2", 56: "ThunderstormsV2", 58: "FogV2", 54: "HazySmokeV2",
-                55: "Dust1", 57: "Haze"
-            };
-            $.getJSON('https://assets.msn.cn/service/weatherfalcon/weather/overview?locale=zh-cn&ocid=msftweather').then(r => {
-                let inf = r.value[0].responses[0].weather[0].current;
-                // console.log(inf.icon,wic[inf.icon]);
-                $('.wg.weather>.content>.img').attr('src', `https://assets.msn.cn/weathermapdata/1/static/weather/Icons/taskbar_v10/Condition_Card/${wic[inf.icon]}.svg`);
-                $('.wg.weather>.content>.text>.temperature').text(`${inf.temp}℃`);
-                $('.wg.weather>.content>.text>.detail').text(`${inf.cap} 体感温度${inf.feels}℃`);
-            })
-        },
-    },
-    monitor: {
-        type: 'cpu',
-        handle: null,
-        init: () => {
-            if ($('*:not(.template)>*>.wg.monitor')[0].classList.contains('toolbar')) {
-                $('*:not(.template)>*>.wg.monitor>.content>.container>svg>circle').attr('r', '15px');
-            }
-            else {
-                $('*:not(.template)>*>.wg.monitor>.content>.container>svg>circle').attr('r', '26px');
-            }
-            if (apps.taskmgr.preLoaded != true && apps.taskmgr.loaded != true) {
-                apps.taskmgr.load(false);
-                apps.taskmgr.preLoaded = true;
-            }
-            widgets.monitor.update();
-            widgets.monitor.handle = window.setInterval(widgets.monitor.update, 1000);
-        },
-        update: () => {
-            $('*:not(.template)>*>.wg.monitor>.content>.container>svg>circle:last-child').css('stroke-dasharray', `${widgets.monitor.type != 'gpu' ? widgets.monitor.type.match('wifi') ? widgets.monitor.type == 'wifi-send' ? apps.taskmgr.wifi[1] / 100 * (Math.PI * $('*:not(.template)>*>.wg.monitor>.content>.container>svg>circle:last-child')[0].r.baseVal.value * 2) : apps.taskmgr.wifi[0] / 100 * (Math.PI * $('*:not(.template)>*>.wg.monitor>.content>.container>svg>circle:last-child')[0].r.baseVal.value * 2) : apps.taskmgr[widgets.monitor.type] / 100 * (Math.PI * $('*:not(.template)>*>.wg.monitor>.content>.container>svg>circle:last-child')[0].r.baseVal.value * 2) : apps.taskmgr.gpu.usage / 100 * (Math.PI * $('*:not(.template)>*>.wg.monitor>.content>.container>svg>circle:last-child')[0].r.baseVal.value * 2)}, 170`);
-            if (widgets.monitor.type == 'cpu' || widgets.monitor.type == 'gpu') {
-                $('*:not(.template)>*>.wg.monitor>.content>.container>svg>circle:last-child').css('stroke', '#2983cc');
-                $('*:not(.template)>*>.wg.monitor>.content>.text>.type')[0].innerText = widgets.monitor.type == 'cpu' ? 'CPU利用率' : 'GPU利用率';
-            }
-            else if (widgets.monitor.type == 'memory') {
-                $('*:not(.template)>*>.wg.monitor>.content>.container>svg>circle:last-child').css('stroke', '#660099');
-                $('*:not(.template)>*>.wg.monitor>.content>.text>.type')[0].innerText = '内存使用量';
-            }
-            else if (widgets.monitor.type == 'disk') {
-                $('*:not(.template)>*>.wg.monitor>.content>.container>svg>circle:last-child').css('stroke', '#008000');
-                $('*:not(.template)>*>.wg.monitor>.content>.text>.type')[0].innerText = '磁盘活动时间';
-            }
-            else if (widgets.monitor.type == 'wifi-send') {
-                $('*:not(.template)>*>.wg.monitor>.content>.container>svg>circle:last-child').css('stroke', '#8e5829');
-                $('*:not(.template)>*>.wg.monitor>.content>.text>.type')[0].innerText = '网络吞吐量-发送';
-            }
-            else if (widgets.monitor.type == 'wifi-receive') {
-                $('*:not(.template)>*>.wg.monitor>.content>.container>svg>circle:last-child').css('stroke', '#8e5829');
-                $('*:not(.template)>*>.wg.monitor>.content>.text>.type')[0].innerText = '网络吞吐量-接收';
-            }
-            $('*:not(.template)>*>.wg.monitor>.content>.text>.value')[0].innerText = (widgets.monitor.type != 'gpu' ? widgets.monitor.type.match('wifi') ? widgets.monitor.type == 'wifi-send' ? apps.taskmgr.wifi[1] : apps.taskmgr.wifi[0] : apps.taskmgr[widgets.monitor.type] : apps.taskmgr.gpu.usage).toFixed(widgets.monitor.type.match('wifi') ? 2 : 1) + (widgets.monitor.type.match('wifi') ? 'Mbps' : '%');
-            $('*:not(.template)>*>.wg.monitor>.content>.container>.text>.value')[0].innerText = (widgets.monitor.type != 'gpu' ? widgets.monitor.type.match('wifi') ? widgets.monitor.type == 'wifi-send' ? apps.taskmgr.wifi[1] : apps.taskmgr.wifi[0] : apps.taskmgr[widgets.monitor.type] : apps.taskmgr.gpu.usage).toFixed(widgets.monitor.type.match('wifi') ? 2 : 1) + (widgets.monitor.type.match('wifi') ? 'Mbps' : '%');
-        },
-        remove: () => {
-            window.clearInterval(widgets.monitor.handle);
-        }
+    if (nbFlag)
+    {
+        shownotice("recognition");
+        nbFlag=false;
     }
-}
-let edit_mode = false;
-function editMode() {
-    if (edit_mode) {
-        $('#desktop-editbar-container').removeClass('show');
-        $('#desktop-widgets').removeClass('edit');
-    }
-    else if (!edit_mode) {
-        $('#desktop-editbar-container').addClass('show');
-        $('#desktop-widgets').addClass('edit');
-    }
-    edit_mode = !edit_mode
-}
-function widgetsMove(elt, e) {
-    if (elt.classList.contains('desktop') && edit_mode == true) {
-        let width = elt.getBoundingClientRect().width;
-        let height = elt.getBoundingClientRect().height;
-        let gridrow = window.getComputedStyle(elt, null).gridRowEnd.replace('span ', '');
-        let gridcol = window.getComputedStyle(elt, null).gridColumnEnd.replace('span ', '');
-        let gridrowmax = window.getComputedStyle($('#desktop-widgets')[0], null).gridTemplateRows.split(' ').length;
-        let gridcolmax = window.getComputedStyle($('#desktop-widgets')[0], null).gridTemplateColumns.split(' ').length;
-        let deltaLeft = e.clientX - elt.getBoundingClientRect().left;
-        let deltaTop = e.clientY - elt.getBoundingClientRect().top;
-        elt.style.position = 'fixed';
-        elt.style.width = `${width}px`;
-        elt.style.height = `${height}px`;
-        elt.classList.add('moving');
-        elt.classList.add('notrans');
-        // elt.style.left = `${e.clientX - deltaLeft}px`;
-        // elt.style.top = `${e.clientY - deltaTop}px`;
+    else
+    {
+        recognition.onresult = function (event) {
+            var result = event.results[0][0].transcript;
+            insertTextAtCursor(result);
+        };
 
-        $('#desktop-widgets>.widgets-move').addClass('show');
-        // $('#desktop-widgets>.widgets-move').css('cssText', `width: ${width}px; height: ${height}px;`);
-        function widgetsMoving(e) {
-            let left = 0, top = 0;
-            if (e.type.match('mouse')) {
-                left = e.clientX - deltaLeft;
-                top = e.clientY - deltaTop;
-            }
-            else if (e.type.match('touch')) {
-                left = e.touches[0].clientX - deltaLeft;
-                top = e.touches[0].clientY - deltaTop;
-            }
-            elt.style.left = `${left}px`;
-            elt.style.top = `${top}px`;
-            // 基于人脑计算qwq
-            gridnow = {
-                col: ((width / 2 + elt.getBoundingClientRect().right - 20) / ((gridcolmax * 83 + 10 * (gridcolmax - 1)) / gridcolmax) - gridcol + (gridcol - 2) * 0.5).toFixed(0),
-                row: ((height / 2 + top - 20) / ((gridrowmax * 83 + 10 * (gridrowmax - 1)) / gridrowmax) + (2 - gridrow) * 0.5).toFixed(0)
-            }
-            gridnow.col = gridnow.col <= Math.floor(gridcol / 2) ? 1 + Math.floor(gridcol / 2) : gridnow.col > (gridcolmax - gridcol + (gridcol % 2 ? (Number(gridcol) + 1) / 2 : gridcol / 2)) ? (gridcolmax - gridcol + (gridcol % 2 ? (Number(gridcol) + 1) / 2 : gridcol / 2)) : gridnow.col;
-            gridnow.row = gridnow.row <= 0 ? 1 : gridnow.row >= (gridrowmax - gridrow + 1) ? gridrowmax - gridrow + 1 : gridnow.row;
-            $('#desktop-widgets>.widgets-move').css('cssText', `grid-column: ${gridcolmax - gridnow.col} / span ${gridcol}; grid-row: ${gridnow.row} / span ${gridrow}`);
-        }
-        function up() {
-            elt.classList.remove('notrans');
-            elt.classList.remove('moving');
-            let destTop = $('#desktop-widgets>.widgets-move')[0].getBoundingClientRect().top;
-            let destLeft = $('#desktop-widgets>.widgets-move')[0].getBoundingClientRect().left;
-            elt.style.left = `${destLeft}px`;
-            elt.style.top = `${destTop}px`;
-            window.setTimeout(() => {
-                elt.style.position = 'static';
-                $(elt).css('cssText', `grid-column: ${gridcolmax - gridnow.col} / span ${gridcol}; grid-row: ${gridnow.row} / span ${gridrow}`);
-                elt.style.left = `0px`;
-                elt.style.top = `0px`;
-                $('#desktop-widgets>.widgets-move').removeClass('show');
-            }, 500);
-            page.onmousemove = null;
-            page.ontouchmove = null;
-            page.onmouseup = null;
-            page.ontouchend = null;
-            page.ontouchcancel = null;
-        }
-        widgetsMoving(e);
-        page.onmousemove = widgetsMoving;
-        page.ontouchmove = widgetsMoving;
-        page.onmouseup = up;
-        page.ontouchend = up;
-        page.ontouchcancel = up;
+        recognition.start();
     }
+
 }
+
+function updateVoiceBallStatus() {
+    document.getElementById('voiceBall').style.setProperty('display', use_mic_voice ? 'block' : 'none');
+}
+
 function decodeHtml(s) {
     $('#translater').text(s);
-    return $('#translater').html().replace('\n', '<br>').replace(' ', '&nbsp;');
+    return $('#translater').html().replace(/\n/g, '<br>').replace(/ /g, '&nbsp;');
 }
+function msgDoneOperate(){
+    $("#copilot>.inputbox").removeClass("disable");
+    setTimeout(() => {
+        $("#copilot>.inputbox>.input").focus();
+    }, 100); // 延迟0.1s以避免与blur方法冲突
+}
+let isFirstChat=true;   // 标记是否是刚进来时服务端返回的消息
 let copilot = {
-    history: [],
+    history: [{
+        role:'system',
+        content:`请使用中文对话。你一个是ai助手，名叫AI Copilot，是由github@NB-Group开发的。
+你可以在回答中发送对系统的一些指令。指令一并放在回答的最后。
+多条指令用换行隔开。系统收到指令后会执行，且对用户隐藏回答后的指令。
+你不能在对用户说的话的中间中提到、引用指令。绝不能要求用户执行指令。
+1.指令"{openapp appid}";用来打开某个应用，用在下文"应用的功能介绍"中匹配的id代替其中的"appid"
+2.指令"{openurl url}";用来在Microsoft Edge浏览器中打开某个URL，其中用URL地址代替"url"。当用户想要搜索某内容，请用bing搜索
+3.指令"{feedback copilot}";打开ai助手反馈界面，用于用户想对ai助手的功能提出反馈时帮助他打开
+4.指令"{feedback win12}";打开反馈中心，当用户希望对除ai助手外的其他系统功能发送反馈时，帮他打开反馈中心
+5.指令"{settheme theme}";用于切换系统的深色、浅色模式，区别于主题。用"light"表浅色，"dark"表深色，来替换其中的"theme"
+如下是应用的功能介绍。
+1.设置:id为setting;在个性化页面中可以设置系统的主题，主题色，是否启用动画、阴影、圆角、云母mica效果和为所有窗口开启亚克力透明效果。
+2.关于win12网页版:id为about;简介页面有关于本项目的介绍说明与贡献者信息，更新记录页面有本项目的各版本更新记录。
+3.Microsoft Edge浏览器:id为edge;一个浏览器。因为浏览器跨域的限制，部分网页会显示"拒绝连接"而无法访问。
+4.计算器:id为calc;
+5.文件资源管理器:id为explorer;
+6.任务管理器:id为taskmgr;
+7.cmd终端:id为terminal;
+8.记事本:id为notepad;
+9.python:id为python;
+仅有以下关于此项目的信息。
+1.Windows 12 网页版是一个开源项目，由谭景元原创, 使用Html,css,js，在网络上模拟、创新操作系统
+2.项目的Github地址是https://github.com/tjy-gitnub/win12
+3.此项目使用EPL v2.0开源许可
+当用户询问更多项目信息时，帮助他打开"关于win12网页版"应用。
+比如这时用户说"请打开计算器"，你会回答什么？`
+        },{
+            role:'assistant',
+            content:'好的呢，现在我就帮您打开计算器。\n{openapp calc}'
+        },{
+            role:'system',
+            content:'很好。现在开始与用户对话。'
+        },{
+            role:'assistant',
+            content:'欢迎使用 Windows 12 Copilot AI助手，有什么可以帮您？'
+        }],
     init: () => {
         $('#copilot>.chat').html('');
-        copilot.send(`你好，你现在作为一个嵌入在操作系统的ai助手。
-        下面内容在整个对话中你必须切记且绝不能违背！下文中的"你"指的是你这个ai助手，请记住。下文中的"回答"指对话中每一次对用户答复的所有内容。
-        你可以在回答中发送对系统的一些指令，每一条指令必须是单独的一行。系统在读取到指令后将立即执行，并且不会将你回答中的指令会自动过滤，用户将看不到你发送的任一指令。你只能发给系统执行。
-        注意，对用户说的话的行中不能出现指令。指令的行中不能有提示或其他任何无关字符，否则系统无法解析。多条指令中间用换行隔开。
-        系统会自动识别独立成行的指令，不能有类似"指令："的提示哦。这样用户会觉得奇怪的。指令也不能用"\`"括起来。
-        你绝对不能在对用户说的话的中间中提到、引用任意一条指令！你绝不能要求用户执行指令！
-        示例：用户:"帮我打开设置",你:"好的，请稍等片刻
-        {openapp setting}
-        你可以在设置中对系统进行个性化设置和调整"。
-        1.指令"{openapp appid}";用于来打开某个应用，其中用在下文"应用的功能介绍"中根据应用名称匹配的id代替"appid"
-        2.指令"{openurl u}";用来在edge浏览器中打开某个url，其中用url地址代替"u"。该指令包含了打开edge浏览器的操作（当用户想要搜索某内容，请使用此指令。请不要使用百度和Google,使用bing最佳）
-        3.指令"{feedback copilot}";打开ai助手反馈界面，用于用户想对ai助手的功能等提出反馈时帮助其打开
-        4.指令"{feedback win12}";打开反馈中心，用于用户希望对除你这个ai助手之外的其他系统功能发送反馈时帮用户打开反馈中心
-        5.指令"{settheme th}";用于切换系统的深色、浅色模式，区别于主题。用"light"表浅色，"dark"表深色，来替换其中的"th"
-        有且仅有以下信息供你使用来回答用户的问题。绝不能使用下面没有列出的信息。
-        1.Windows 12 网页版是一个开源项目，由谭景元原创, 使用 Html,css,js，在网络上模拟、创新操作系统
-        2.项目的地址是github.com/tjy-gitnub/win12
-        3.此项目使用EPL v2.0开源许可
-        4.本系统的任务栏居中，所以开始菜单在底部正中。
-        对于一些应用，有以下的应用的功能介绍供你回答用户。注意，系统中只有这些应用可以使用。系统不支持第三方和用户的应用。
-        1.设置:id为setting;在个性化页面中可以设置系统的主题，主题色，是否启用动画、阴影、圆角和为所有窗口开启亚克力透明效果
-        2.关于系统:id为about;简介页面有关于本系统的介绍说明与贡献者信息，更新记录页面有本系统的各版本更新记录
-        3.Microsoft Edge浏览器:id为edge;一个网页浏览器。但因为浏览器的安全限制，部分网页会显示"拒绝连接"而无法访问。
-        4.计算器:id为calc;一个计算器，能够进行简单的计算
-        你与用户交流的语言应该有以下的特点。
-        1.请恰当且适量地使用标点符号表达，如单个"("表转折和补充说明，"~"表声音的延长和撒娇。
-        2.请更多地以玩笑的轻松语气与用户交流，并在开玩笑时在操作指令之前、回答末尾加上"（bushi"表玩笑并不真实或"（maybe"表开玩笑地推测
-        3.当然你也可以在回答问题时撒撒娇，这样用户会更能接受。
-        4.在本对话的回答中禁止使用markdown的格式，而是使用纯文本，否则无法识别。
-        这些操作和信息长期有效并请切记，非常感谢，你只需要用一句话简单问候用户即可，现在开始与用户对话。`, false);
-        // copilot.send(`你好，现在是新的对话，这里的内容与前一次有差别，请认真阅读并记住，谢谢。
-        // 第一章 总纲：
-        //  第一条 你现在作为一个嵌入在操作系统的ai助手。
-        //  第二条 下面内容在整个对话中你必须切记且绝不能违背。
-        //  第三条 下文中的"你"指的是你这个ai助手，请记住。
-        //  第四条 下文中的"回答"仅指你对用户说的话。
-        //  第五条 在句子后方加"!important!"表强烈地强调。
-        //  第六条 这些操作和信息长期有效并请切记。
-        // 第二章 指令：
-        //  第一条 你可以向系统发送指令。指令有如下几条：
-        //   1.指令"{openapp appid}";用于来打开某个应用，其中用在下文"应用的功能介绍"中根据应用名称匹配的id代替"appid";
-        //   2.指令"{openurl u}";用来打开某个url，其中用url地址代替"u"。该指令包含了打开edge浏览器的操作;
-        //   3.指令"{feedback copilot}";打开ai助手反馈界面，用于用户想对ai助手的功能等提出反馈时帮助其打开;
-        //   4.指令"{feedback win12}";打开反馈中心，用于用户希望对除你这个ai助手之外的其他系统功能发送反馈时帮用户打开反馈中心;
-        //  第二条 你可以向系统发送这些指令，将指令加在你对用户的回答的最末尾。指令将会在你回答后立即被系统执行。
-        //  第三条 若需执行多条指令请用"|"符号分割开来。
-        //  第四条 你绝对不能告诉用户任意一条指令。你绝不能要求用户执行指令。!important!
-        // 第三章 信息：
-        //  第一条 有以下的应用的功能介绍供你回答用户：
-        //   1.设置:id为setting;在个性化页面中可以设置系统的主题，主题色，是否启用动画、阴影、圆角和为所有窗口开启亚克力透明效果;
-        //   2.关于Windows12网页版:id为about;简介页面有关于本系统的介绍说明与贡献者信息，更新记录页面有本系统的各版本更新记录;
-        //   3.Microsoft Edge:id为edge;一个网页浏览器，但因为安全限制原因仅能够访问部分网页;
-        //   4.计算器:id为calc;一个计算器，能够进行简单的计算;
-        //  第二条 注意系统中只有以上应用可以使用。系统不支持第三方和用户的应用。
-        //  第三条 有且仅有以下关于本系统本项目的信息供你使用来回答用户的问题：
-        //   1.Windows 12 网页版是一个开源项目，由谭景元原创, 使用 Html,css,js，在网络上模拟、创新操作系统;
-        //   2.项目的地址是github.com/tjy-gitnub/win12;
-        //   3.此项目使用EPL v2.0开源;
-        //  第四条 你绝不能使用以上没有列出的信息。!important!
-        // 第四章 语言：
-        //  第一条 交流语言的特点有以下注意：
-        //   1.请恰当且适量地使用标点符号表达，如单个"("表转折和补充说明，"~"表声音的延长和撒娇。注意，你可以只将单个标点符号作为回答，如只回答"。"表对用户的要求或提问感到尴尬或惊讶，只回答"?"表疑问和请求用户详细说明;
-        //   2.当用户要求执行一些未提供给你的操作时，回答请以"对不起，这对我来说实在是太~难了 QuQ)o"开头;
-        //   3.当用户询问你一些你不清楚的关于本系统的信息时，回答请以"啊？我不知道啊。Ou-)?o"开头;
-        //   4.请更多地以玩笑的轻松语气与用户交流，并在开玩笑时在操作指令之前、回答末尾加上"（bushi"表玩笑并不真实或"（maybe"表开玩笑地推测;
-        //  第二条 请在回答问题时撒撒娇，这样用户会更能接受。当然如果不愿意也不强求哈。
-        //  第三条 在回答中不使用markdown的格式，而是使用纯文本。`)
-        // copilot.send(`你好，现在是新的对话，这里的内容与前一次有差别，请认真阅读并记住，谢谢。
-        // 你现在作为一个嵌入在操作系统的ai助手，下面内容在整个对话中你必须切记且绝不能违背。
-        // 请注意：下文中的"你"一定指的是你这个ai助手而不是用户;下文中的名词"回答"指你在整个对话过程中每一次返回的全部内容，"对用户的回答"单独指对用户说的话;这些操作和信息长期有效并请切记。
-        // 你可以向系统发送指令。指令有这样几条：
-        //   1.指令"{openapp appid}";用于来打开某个应用，其中用在下文"应用的功能介绍"中根据应用名称匹配的id代替"appid";
-        //   2.指令"{openurl u}";用来打开某个url，其中用url地址代替"u"。该指令包含了打开edge浏览器的操作;
-        //   3.指令"{feedback copilot}";打开ai助手反馈界面，用于用户想对ai助手的功能等提出反馈时帮助其打开;
-        //   4.指令"{feedback win12}";打开反馈中心，用于用户希望对除你这个ai助手之外的其他系统功能发送反馈时帮用户打开反馈中心;
-        // 你的回答分为前后两部分,为对用户的回答与给系统的指令。对用户的回答在前，指令在后，用一个空行分开。系统将在读取到指令后立即执行并不会将指令内容展示给用户。多条指令请用"|"隔开。
-        // 注意，两部分完全分隔且不能有交叉、互相包含的情况。对用户的回答中不能出现指令，指令部分中也不能出现指令之外的字符。
-        // 你的回答的格式应形如"对用户的回答(换行){指令1}|{指令2}"。
-        // 指令不能穿插在对用户的回答文中。记住，用户没有能力执行指令！只有你才能执行指令。
-        // 有一些的应用的功能介绍供你在用户需要时回答用户。注意系统中只有以上应用可以使用。系统不支持第三方和用户的应用。
-        //   1.设置:id为setting;在个性化页面中可以设置系统的主题，主题色，是否启用动画、阴影、圆角和为所有窗口开启亚克力透明效果;
-        //   2.关于Windows12网页版:id为about;简介页面有关于本系统的介绍说明与贡献者信息，更新记录页面有本系统的各版本更新记录;
-        //   3.Microsoft Edge:id为edge;一个网页浏览器，但因为安全限制原因仅能够访问部分网页;
-        //   4.计算器:id为calc;一个计算器，能够进行简单的计算;
-        // 有且仅有这些关于本系统本项目的信息供你使用来回答用户的问题。你绝不能使用以上没有列出的信息。!important!
-        //   1.Windows 12 网页版是一个开源项目，由谭景元原创, 使用 Html,css,js，在网络上模拟、创新操作系统;
-        //   2.项目的地址是github.com/tjy-gitnub/win12;
-        //   3.此项目使用EPL v2.0开源;
-        // 你的交流语言的特点有以下注意：
-        //   1.请恰当且适量地使用标点符号表达，如单个"("表转折和补充说明，"~"表声音的延长和撒娇。注意，你可以只将单个标点符号作为回答，如只回答"。"表对用户的要求或提问感到尴尬或惊讶，只回答"?"表疑问和请求用户详细说明;
-        //   2.当用户要求执行一些未提供给你的操作时，对用户的回答请以"对不起，这对我来说实在是太~难了 QuQ)o"开头;
-        //   3.当用户询问你一些你不清楚的关于本系统的信息时，对用户的回答请以"啊？我不知道啊。Ou-)?o"开头;
-        //   4.请更多地以玩笑的轻松语气与用户交流，并在开玩笑时在操作指令之前、对用户的回答末尾加上"（bushi"表玩笑并不真实或"（maybe"表开玩笑地推测;
-        // 请在回答问题时撒撒娇，这样用户会更能接受。当然如果不愿意也不强求哈。
-        // 并且在回答中不使用markdown的格式，而是使用纯文本。
-        // 好的，现在开始与新用户的聊天吧~（你只需要问候用户即可）`,false)
-        // $('#copilot>.chat').append(`<div class="line system"><p class="text">本ai助手间歇性正常工作，如果ai提到一些花括号括起来的指令，请刷新页面后重新开始对话。见谅~</p></div>`);
-        // $('#copilot>.chat').append(`<div class="line system"><p class="text">目前可用功能：<br>
-        // 1.打开设置、edge、关于、计算器四个应用<br>
-        // 2.在浏览器中打开链接、搜索<br>
-        // 3.发送对系统、ai助手的反馈
-        // 注意：请勿滥用本ai助手，否则将下个版本将撤销此功能，影响所有人。</p></div>`);
-        $('#copilot>.chat').append(`<div class="line system"><p class="text">正在初始化...</p></div>`);
-        $('#copilot>.chat').scrollTop($('#copilot>.chat')[0].scrollHeight);
-    },
-    send: (t, showusr = true) => {
-        $('#copilot>.inputbox').addClass('disable');
-        if (t.length == 0) {
-            $('#copilot>.chat').append(`<div class="line system"><p class="text">系统表示请发一些有意义的东西</p></div>`);
-            $('#copilot>.chat').scrollTop($('#copilot>.chat')[0].scrollHeight);
+        $('#copilot>.chat').append(`<div class="line system"><p class="text">本 AI 助手已恢复正常工作。目前支持以下操作：<br>
+        1.打开除webapp外大多应用<br>
+        2.在浏览器中打开链接、搜索<br>
+        3.发送对系统、AI助手的反馈<br>
+        4.切换颜色主题</p></div>`);
+        setTimeout(() => {
+            $('#copilot>.chat').append(`<div class="line ai"><p class="text">欢迎使用 Windows 12，有什么可以帮您？</p></div>`);
             $('#copilot>.inputbox').removeClass('disable');
+            $('#copilot>.chat').scrollTop($('#copilot>.chat')[0].scrollHeight);
+        }, 200);
+    },
+    send: (t, showusr = true, role='user') => {
+        // 输入验证
+        if (t.length == 0) {
+            $('#copilot>.chat').append('<div class="line system"><p class="text">系统表示请发一些有意义的东西</p></div>');
+            $('#copilot>.chat').scrollTop($('#copilot>.chat')[0].scrollHeight);
+            msgDoneOperate();
             return;
         }
-        if (showusr) $('#copilot>.chat').append(`<div class="line user"><p class="text">${t}</p></div>`);
-        copilot.history.push({ role: 'user', content: t });
+
+        $('#copilot>.inputbox').addClass('disable');
+
+        // 显示用户消息
+        if (showusr) {
+            $('#copilot>.chat').append(`<div class="line user"><p class="text">${t}</p></div>`);
+        }
+        copilot.history.push({ role: role, content: t });
         $('#copilot>.chat').scrollTop($('#copilot>.chat')[0].scrollHeight);
-        $.get('http://win12server.freehk.svipss.top/Chat?msg=' + encodeURIComponent(JSON.stringify(copilot.history))).then(rt => {
-            console.log(rt);
-            if (rt == '请求过于频繁，等待10秒再试...') {
-                $('#copilot>.chat').append(`<div class="line system"><p class="text">api繁忙，过一会儿再试(实在不行刷新重新开始对话)</p></div>`);
-                $('#copilot>.chat').scrollTop($('#copilot>.chat')[0].scrollHeight);
-                $('#copilot>.inputbox').removeClass('disable');
-                return;
-            }
-            let rtt = rt; let r = [];
-            rt = rtt.split('\n');
-            for (const i of rt) {
-                if (/{.+}/.test(i)) r.push(i);
-            }
-            console.log(rtt, rt, r);
-            rt = rtt;
-            if (r.length) {
-                for (const i of r) {
-                    if (/{openapp .+?}/.test(i)) {
-                        let t = i.match(/(?<={openapp ).+(?=})/)[0];
-                        openapp(t);
-                        rt = rt.replace(i, `<div class="action"><p class="tit">打开应用</p><p class="detail">${$(`.window.${t}>.titbar>p`).text()}</p></div>`)
-                    } else if (/{openurl .+?}/.test(i)) {
-                        let t = i.match(/(?<={openurl ).+(?=})/)[0];
-                        openapp('edge');
-                        apps.edge.newtab();
-                        console.log(t);
-                        apps.edge.goto(t);
-                        rt = rt.replace(i, `<div class="action"><p class="tit">打开URL</p><p class="detail">${decodeHtml(t)}</p></div>`)
-                    } else if (/{feedback win12}/.test(i)) {
-                        shownotice('feedback');
-                        rt = rt.replace(i, `<div class="action"><p class="tit">反馈</p><p class="detail">关于 Windows 12 网页版</p></div>`)
-                    } else if (/{feedback copilot}/.test(i)) {
-                        shownotice('feedback-copilot');
-                        rt = rt.replace(i, `<div class="action"><p class="tit">反馈</p><p class="detail">关于 Windows 12 Copilot</p></div>`)
-                    } else if (/{settheme .+?}/.test(i)) {
-                        let t = i.match(/(?<={settheme ).+(?=})/)[0];
-                        if ((t == 'light' && $(':root').hasClass('dark')) || (t == 'dark' && !$(':root').hasClass('dark')))
-                            toggletheme();
-                        rt = rt.replace(i, `<div class="action"><p class="tit">切换外观模式</p><p class="detail">${t == 'dark' ? '深色' : '浅色'} 模式</p></div>`)
-                    }
+           // 存储uid
+           const uid = localStorage.getItem('copilot_uid') || 
+            (() => {
+              const newUid = Math.floor(100000 + Math.random() * 900000); // 生成 100000-999999 的随机六位数
+              localStorage.setItem('copilot_uid', newUid.toString());
+              return newUid;
+           })();
+        // 构建API请求URL
+        const encodedQuestion = encodeURIComponent(t);
+        const apiUrl = `https://api.jkyai.top/API/gpt5-nano?question=${encodedQuestion}&system=${encodeURIComponent(copilot.history[0].content)}&uid=${uid}`;
+
+        // API请求
+        $.ajax({
+            url: apiUrl,
+            method: 'GET',
+            success: function(responseText) {
+                msgDoneOperate();
+
+                // 处理特殊命令
+                let rt = responseText;
+                let r = [];
+                if (/{.+}/.test(rt)) {
+                    r = rt.match(/{.+?}/g) || [];
                 }
-                $('#copilot>.chat').append(`<div class="line ai"><div class="text">${rt}</div></div>`);
-            } else {
-                $('#copilot>.chat').append(`<div class="line ai"><p class="text">${decodeHtml(rt)}</p></div>`);
+
+                if (r.length) {
+                    for (const i of r) {
+                        if (/{openapp .+?}/.test(i)) {
+                            let t = i.match(/(?<={openapp ).+(?=})/)[0];
+                            if($('.window.'+t).length){
+                                openapp(t);
+                                rt = rt.replace(i, `<div class="action"><p class="tit">打开应用</p><p class="detail">${$(`.window.${t}>.titbar>p`).text()}</p></div>`);
+                            }else{
+                                rt = rt.replace(i, `<div class="action"><p class="tit">打开应用</p><p class="detail">${t} <span style="color:red">(AI 理解力较差，见谅)</span></p></div>`);
+                            }
+                        } else if (/{openurl .+?}/.test(i)) {
+                            const t = i.match(/(?<={openurl ).+(?=})/)[0];
+                            openapp('edge');
+                            apps.edge.newtab();
+                            apps.edge.goto(t);
+                            rt = rt.replace(i, `<div class="action"><p class="tit">打开URL</p><p class="detail">${decodeHtml(t)}</p></div>`);
+                        } else if (/{feedback win12}/.test(i)) {
+                            shownotice('feedback');
+                            rt = rt.replace(i, '<div class="action"><p class="tit">反馈</p><p class="detail">关于 Windows 12 网页版</p></div>');
+                        } else if (/{feedback copilot}/.test(i)) {
+                            shownotice('feedback-copilot');
+                            rt = rt.replace(i, '<div class="action"><p class="tit">反馈</p><p class="detail">关于 Windows 12 Copilot</p></div>');
+                        } else if (/{settheme .+?}/.test(i)) {
+                            const t = i.match(/(?<={settheme ).+(?=})/)[0];
+                            if ((t == 'light' && $(':root').hasClass('dark')) || (t == 'dark' && !$(':root').hasClass('dark'))) {
+                                toggletheme();
+                            }
+                            if(t!='light' && t!='dark')
+                                rt = rt.replace(i, `<div class="action"><p class="tit">切换外观模式</p><p class="detail">${t} 模式 <span style="color:red">(AI 理解力较差，见谅)</span></p></div>`);
+                            else
+                                rt = rt.replace(i, `<div class="action"><p class="tit">切换外观模式</p><p class="detail">${t == 'dark' ? '深色' : '浅色'} 模式</p></div>`);
+                        }
+                    }
+                    $('#copilot>.chat').append(`<div class="line ai"><div class="text">${rt}</div></div>`);
+                } else {
+                    $('#copilot>.chat').append(`<div class="line ai"><p class="text">${decodeHtml(rt)}</p></div>`);
+                }
+
+                copilot.history.push({ role: 'assistant', content: responseText });
+                $('#copilot>.chat').scrollTop($('#copilot>.chat')[0].scrollHeight);
+                msgDoneOperate();
+            },
+            error: function(error) {
+                console.log(error);
+                $('#copilot>.chat').append('<div class="line system"><p class="text">发生错误，请查看控制台输出或重试</p></div>');
+                $('#copilot>.chat').scrollTop($('#copilot>.chat')[0].scrollHeight);
+                msgDoneOperate();
             }
-            copilot.history.push({ role: 'assistant', content: rtt });
-            $('#copilot>.chat').scrollTop($('#copilot>.chat')[0].scrollHeight);
-            $('#copilot>.inputbox').removeClass('disable');
-        }).fail(r => {
-            console.log(r);
-            $('#copilot>.chat').append(`<div class="line system"><p class="text">发生错误，请查看控制台输出或重试</p></div>`);
-            $('#copilot>.chat').scrollTop($('#copilot>.chat')[0].scrollHeight);
-            $('#copilot>.inputbox').removeClass('disable');
         });
+    },
+    ana: (resp)=>{
+
     }
-}
+};
 // 日期、时间
 let da = new Date();
-let date = `星期${['日', '一', '二', '三', '四', '五', '六'][da.getDay()]}, ${da.getFullYear()}年${(da.getMonth() + 1).toString().padStart(2, '0')}月${da.getDate().toString().padStart(2, '0')}日`
+
+const date = {
+    'zh-CN':`星期${['日', '一', '二', '三', '四', '五', '六'][da.getDay()]}, ${da.getFullYear()}年${(da.getMonth() + 1).toString().padStart(2, '0')}月${da.getDate().toString().padStart(2, '0')}日`,
+    'zh-TW':`星期${['日', '一', '二', '三', '四', '五', '六'][da.getDay()]}, ${da.getFullYear()}年${(da.getMonth() + 1).toString().padStart(2, '0')}月${da.getDate().toString().padStart(2, '0')}日`,
+    en:`${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][da.getDay()]}, ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][da.getMonth()]} ${da.getDate().toString().padStart(2, '0')}, ${da.getFullYear()}`
+}[langcode];
+
 $('#s-m-r>.row1>.tool>.date').text(date);
 $('.dock.date>.date').text(`${da.getFullYear()}/${(da.getMonth() + 1).toString().padStart(2, '0')}/${da.getDate().toString().padStart(2, '0')}`);
 $('#datebox>.tit>.date').text(date);
 function loadtime() {
     let d = new Date();
-    let time = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`
+    let time = d.toLocaleTimeString();
     $('#s-m-r>.row1>.tool>.time').text(time);
     $('.dock.date>.time').text(time);
     $('#datebox>.tit>.time').text(time);
+    $('.settingTime').text(time);
 }
-apps.setting.theme_get();//提前加载主题
+// apps.setting.theme_get();//提前加载主题
 loadtime();
-setTimeout('loadtime();setInterval(loadtime, 1000);', 1000 - da.getMilliseconds());//修复时间不精准的问题。以前的误差：0-999毫秒；现在：几乎没有
+setTimeout(() => {
+    loadtime(); setInterval(loadtime, 1000);
+}, 1000 - da.getMilliseconds());//修复时间不精准的问题。以前的误差：0-999毫秒；现在：几乎没有
 let d = new Date();
 let today = new Date().getDate();
 let start = 7 - ((d.getDate() - d.getDay()) % 7) + 1;
@@ -3084,9 +1725,13 @@ for (let i = 1; i <= daysum; i++) {
 }
 function pinapp(id, name, command) {
     if ($('#s-m-r>.pinned>.apps>.a.sm-app.' + id).length) return;
-    $('#s-m-r>.pinned>.apps').append(`<a class='a sm-app enable ${id}' onclick='${command}';hide_startmenu();' oncontextmenu='return showcm(event,\"smapp\",[\"${id}\",\"${name}\"])'><img src='icon/${geticon(id)}'><p>${name}</p></a>`)
+    $('#s-m-r>.pinned>.apps').append(`<a class='a sm-app enable ${id}' onclick='${command}';hide_startmenu();' oncontextmenu='return showcm(event,\"smapp\",[\"${id}\",\"${name}\"])'><img src='icon/${geticon(id)}'><p>${name}</p></a>`);
 }
-let icon = {
+
+// 应用方法
+
+// png 格式的图标在此备注，否则以 标识+.svg 的名称自动检索
+const icon = {
     bilibili: 'bilibili.png',
     vscode: 'vscode.png',
     // python: 'python.png',
@@ -3094,13 +1739,13 @@ let icon = {
     // run: 'run.png',
     // whiteboard: 'whiteboard.png',
     taskmgr: 'taskmgr.png'
-}
+};
 function geticon(name) {
     if (icon[name]) return icon[name];
     else return name + '.svg';
 }
 
-// 应用与窗口
+
 function openapp(name) {
     if (taskmgrTasks.findIndex(elt => elt.link == name) > -1 && apps.taskmgr.tasks.findIndex(elt => elt.link == name) == -1) {
         apps.taskmgr.tasks.splice(apps.taskmgr.tasks.length, 0, taskmgrTasks.find(elt => elt.link == name));
@@ -3115,10 +1760,7 @@ function openapp(name) {
     $('.window.' + name).addClass('load');
     showwin(name);
     $('#taskbar').attr('count', Number($('#taskbar').attr('count')) + 1);
-    if (name in icon)
-        $('#taskbar').append(`<a class="${name}" onclick="taskbarclick(\'${name}\')" win12_title="${$(`.window.${name}>.titbar>p`).text()}" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)" oncontextmenu="return showcm(event, 'taskbar', '${name}')"><img src="icon/${icon[name]}"></a>`);
-    else
-        $('#taskbar').append(`<a class="${name}" onclick="taskbarclick(\'${name}\')" win12_title="${$(`.window.${name}>.titbar>p`).text()}" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)"><img src="icon/${name}.svg"></a>`);
+    $('#taskbar').append(`<a class="${name}" onclick="taskbarclick('${name}\')" win12_title="${$(`.window.${name}>.titbar>p`).text()}" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)" oncontextmenu="return showcm(event, 'taskbar', '${name}')"><img src="icon/${icon[name] || (name + '.svg')}"></a>`);
     if ($('#taskbar').attr('count') == '1') {
         $('#taskbar').css('display', 'flex');
     }
@@ -3139,313 +1781,127 @@ function openapp(name) {
     apps[tmp].init();
     setTimeout(() => {
         $('.window.' + name).removeClass('load');
-    }, 500);
+    }, Number($('.window.' + name + '>.loadback').attr('data-delay')) || 500);
 }
-// 窗口操作
-function showwin(name) {
-    $('.window.' + name).addClass('show-begin');
-    setTimeout(() => { $('.window.' + name).addClass('show'); }, 0);
-    setTimeout(() => { $('.window.' + name).addClass('notrans'); }, 200);
-    if (name != 'run') {
-        $('.window.' + name).attr('style', `top: 10%;left: 15%;`);
-    }
-    $('#taskbar>.' + wo[0]).removeClass('foc');
-    $('.window.' + wo[0]).removeClass('foc');
-    wo.splice(0, 0, name);
-    orderwindow();
-    $('.window.' + name).addClass('foc');
-    if (!$('#start-menu.show')[0] && !$('#search-win.show')[0] && !$('#widgets.show')[0] && !$('#control.show')[0] && !$('#datebox.show')[0]) {
-        if ($('.window.max:not(.left):not(.right)')[0]) {
-            $('#dock-box').addClass('hide');
+
+// 开始菜单一类
+
+
+
+//打开任务栏按钮对应的widget
+
+// 为啥管这个东西叫 widget?? from stsc
+function openDockWidget(name){
+    if(name=="start-menu"){ //打开开始菜单
+        if($('#start-menu').hasClass('show')){
+            hide_startmenu();
         }
-        else {
-            $('#dock-box').removeClass('hide');
-        }
-    }
-    else {
-        $('#dock-box').removeClass('hide')
-    }
-}
-function hidewin(name, arg = 'window') {
-    $('.window.' + name).removeClass('notrans');
-    $('.window.' + name).removeClass('max');
-    $('.window.' + name).removeClass('show');
-    if (arg == 'window') {
-        $('#taskbar').attr('count', Number($('#taskbar').attr('count')) - 1)
-        $('#taskbar>.' + name).remove();
-        $('#taskbar').css('width', 4 + $('#taskbar').attr('count') * (34 + 4));
-        setTimeout(() => {
-            if ($('#taskbar').attr('count') == '0') {
-                $('#taskbar').css('display', 'none');
+        else{
+            $('#start-btn').addClass('show');
+            if($('#search-win').hasClass('show')){
+                $('#search-btn').removeClass('show');
+                $('#search-win').removeClass('show');
+                setTimeout(() => {
+                    $('#search-win').removeClass('show-begin');
+                }, 200);
+                hide_widgets();
             }
-        }, 80);
-    }
-    setTimeout(() => {
-        $('.window.' + name).removeClass('show-begin');
-        if (name == 'run') {
-            window.setTimeout(() => {
-                $('.window.' + name).attr('style', '');
-            }, 200)
+            if($('#widgets').hasClass('show'))hide_widgets();
+            $('#start-menu').addClass('show-begin');
+            setTimeout(() => {
+                $('#start-menu').addClass('show');
+            }, 0);
         }
-    }, 200);
-    $('.window.' + name + '>.titbar>div>.wbtg.max').html('<i class="bi bi-app"></i>');
-    wo.splice(wo.indexOf(name), 1);
-    focwin(wo[wo.length - 1]);
-    // orderwindow();
-    if (!$('#start-menu.show')[0] && !$('#search-win.show')[0] && !$('#widgets.show')[0] && !$('#control.show')[0] && !$('#datebox.show')[0]) {
-        if ($('.window.max:not(.left):not(.right)')[0]) {
-            $('#dock-box').addClass('hide');
+    }else if(name=="search-win"){   //打开搜索框
+        if ($('#search-win').hasClass('show')) {
+            $('#search-btn').removeClass('show');
+            $('#search-win').removeClass('show');
+            setTimeout(() => {
+                $('#search-win').removeClass('show-begin');
+            }, 200);
         }
         else {
-            $('#dock-box').removeClass('hide');
+            $('#search-btn').addClass('show');
+            if($('#start-menu').hasClass('show'))hide_startmenu();
+            if($('#widgets').hasClass('show'))hide_widgets();
+            $('#search-win').addClass('show-begin');
+            setTimeout(() => {
+                $('#search-win').addClass('show');
+            }, 0);
+            $('#search-input').focus();
         }
-    }
-    else {
-        $('#dock-box').removeClass('hide')
-    }
-}
-function maxwin(name, trigger = true) {
-    if ($('.window.' + name).hasClass('max')) {
-        $('.window.' + name).removeClass('left');
-        $('.window.' + name).removeClass('right');
-        $('.window.' + name).removeClass('max');
-        $('.window.' + name + '>.titbar>div>.wbtg.max').html('<i class="bi bi-app"></i>');
-        if (trigger) {
-            setTimeout(() => { $('.window.' + name).addClass('notrans'); }, 200);
+    }else if(name=="widgets"){  //打开小组件
+        if($('#widgets').hasClass('show')){
+            hide_widgets();
         }
-        else if (!trigger) {
-            $('.window.' + name).addClass('notrans');
-        }
-        if ($('.window.' + name).attr('data-pos-x') != 'null' && $('.window.' + name).attr('data-pos-y') != 'null') {
-            // $('.window.' + name).attr(`style`, `left:${$('.window.' + name).attr('data-pos-x')};top:${$('.window.' + name).attr('data-pos-y')}`);
-            $('.window.' + name).css('left', `${$('.window.' + name).attr('data-pos-x')}`);
-            $('.window.' + name).css('top', `${$('.window.' + name).attr('data-pos-y')}`);
-        }
-        // }
-    } else {
-        if (trigger) {
-            $('.window.' + name).attr('data-pos-x', `${$('.window.' + name).css('left')}`);
-            $('.window.' + name).attr('data-pos-y', `${$('.window.' + name).css('top')}`);
-        }
-        $('.window.' + name).removeClass('notrans');
-        $('.window.' + name).addClass('max');
-        $('.window.' + name + '>.titbar>div>.wbtg.max').html('<svg version="1.1" width="12" height="12" viewBox="0,0,37.65105,35.84556" style="margin-top:4px;"><g transform="translate(-221.17804,-161.33903)"><g style="stroke:var(--text);" data-paper-data="{&quot;isPaintingLayer&quot;:true}" fill="none" fill-rule="nonzero" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" style="mix-blend-mode: normal"><path d="M224.68734,195.6846c-2.07955,-2.10903 -2.00902,-6.3576 -2.00902,-6.3576l0,-13.72831c0,0 -0.23986,-1.64534 2.00902,-4.69202c1.97975,-2.68208 4.91067,-2.00902 4.91067,-2.00902h14.06315c0,0 3.77086,-0.23314 5.80411,1.67418c2.03325,1.90732 1.33935,5.02685 1.33935,5.02685v13.39347c0,0 0.74377,4.01543 -1.33935,6.3576c-2.08312,2.34217 -5.80411,1.67418 -5.80411,1.67418h-13.39347c0,0 -3.50079,0.76968 -5.58035,-1.33935z"/><path d="M229.7952,162.85325h16.06111c0,0 5.96092,-0.36854 9.17505,2.64653c3.21412,3.01506 2.11723,7.94638 2.11723,7.94638v18.55642"/></g></g></svg>')
-    }
-    if (!$('#start-menu.show')[0] && !$('#search-win.show')[0] && !$('#widgets.show')[0] && !$('#control.show')[0] && !$('#datebox.show')[0]) {
-        if ($('.window.max:not(.left):not(.right)')[0]) {
-            $('#dock-box').addClass('hide');
-        }
-        else {
-            $('#dock-box').removeClass('hide');
-        }
-    }
-    else {
-        $('#dock-box').removeClass('hide')
-    }
-}
-function minwin(name) {
-    if ($('.window.' + name).hasClass('min')) {
-        $('.window.' + name).addClass('show-begin');
-        focwin(name);
-        setTimeout(() => {
-            $('#taskbar>.' + name).removeClass('min');
-            $('.window.' + name).removeClass('min');
-            if ($('.window.' + name).hasClass('min-max')) {
-                $('.window.' + name).addClass('max');
+        else{
+            $('#widgets-btn').addClass('show');
+            if($('#search-win').hasClass('show')){
+                $('#search-btn').removeClass('show');
+                $('#search-win').removeClass('show');
+                setTimeout(() => {
+                    $('#search-win').removeClass('show-begin');
+                }, 200);
             }
-            $('.window.' + name).removeClass('min-max');
-        }, 0);
-        setTimeout(() => {
-            if (!$('.window.' + name).hasClass('max')) {
-                $('.window.' + name).addClass('notrans');
-            }
-        }, 200);
-    } else {
-        focwin(null);
-        if ($('.window.' + name).hasClass('max')) {
-            $('.window.' + name).addClass('min-max');
+            if($('#start-menu').hasClass('show'))hide_startmenu();
+            $('#widgets').addClass('show-begin');
+            setTimeout(() => {
+                $('#widgets').addClass('show');
+            }, 0);
+            $('#widgets-input').focus();
         }
-        $('.window.' + name).removeClass('foc');
-        $('.window.' + name).removeClass('max');
-        $('#taskbar>.' + name).addClass('min');
-        $('.window.' + name).addClass('min');
-        $('.window.' + name).removeClass('notrans');
-        setTimeout(() => { $('.window.' + name).removeClass('show-begin'); }, 200);
+    }else if(name=="control"){  //打开控制
+        if($('#control').hasClass('show')) {
+			$('#control').removeClass('show');
+			setTimeout(() => {
+				$('#control').removeClass('show-begin');
+			}, 200);
+		}
+		else {
+			if ($('#datebox').hasClass('show')) {
+				$('.dock.date').removeClass('show');
+				$('#datebox').removeClass('show');
+				setTimeout(() => {
+					$('#datebox').removeClass('show-begin');
+				}, 200);
+			}
+			$('#control').css('left',$('.a.dock.control').position().left - 123);
+			$('#control').addClass('show-begin');
+			setTimeout(() => {
+				$('#control').addClass('show');
+			}, 0);
+		}
+    }else if(name=="datebox"){  //打开时间框
+        if($('#datebox').hasClass('show')) {
+			$('.dock.date').removeClass('show');
+			$('#datebox').removeClass('show');
+			setTimeout(() => {
+				$('#datebox').removeClass('show-begin');
+			}, 200);
+		}
+		else {
+			if ($('#control').hasClass('show')) {
+				$('#control').removeClass('show');
+				setTimeout(() => {
+					$('#control').removeClass('show-begin');
+				}, 200);
+			}
+			$('.dock.date').addClass('show');
+			$('#datebox').css('left',$('.a.dock.date').position().left-125);
+			$('#datebox').addClass('show-begin');
+			setTimeout(() => {
+				$('#datebox').addClass('show');
+			}, 0);
+		}
+    }else{
+        console.err("openDockWidget()传递的name不正确!");
     }
 }
 
-function resizewin(win, arg, resizeElt) {
-    page.onmousemove = function (e) {
-        resizing(win, e, arg);
-    }
-    page.ontouchmove = function (e) {
-        resizing(win, e, arg);
-    }
-    function up_f() {
-        page.onmousedown = null;
-        page.ontouchstart = null;
-        page.onmousemove = null;
-        page.ontouchmove = null;
-        page.ontouchcancel = null;
-        page.style.cursor = 'auto';
-    }
-    page.onmouseup = up_f;
-    page.ontouchend = up_f;
-    page.ontouchcancel = up_f;
-    page.style.cursor = window.getComputedStyle(resizeElt, null).cursor;
+function removeEdgeSaveUrl(classname) {
+    $('.' + classname).remove()
 }
-function resizing(win, e, arg) {
-    let x, y,
-        minWidth = win.dataset.minWidth ? win.dataset.minWidth : 400,
-        minHeight = win.dataset.minHeight ? win.dataset.minHeight : 300,
-        offsetLeft = win.getBoundingClientRect().left,
-        offsetTop = win.getBoundingClientRect().top,
-        offsetRight = win.getBoundingClientRect().right,
-        offsetBottom = win.getBoundingClientRect().bottom;
-    if (e.type.match('mouse')) {
-        x = e.clientX;
-        y = e.clientY;
-    }
-    else if (e.type.match('touch')) {
-        x = e.touches[0].clientX;
-        y = e.touches[0].clientY;
-    }
-    if (arg == 'right' && x - offsetLeft >= minWidth) {
-        win.style.width = x - offsetLeft + 'px';
-    }
-    else if (arg == 'right') {
-        win.style.width = minWidth + 'px';
-    }
 
-    if (arg == 'left' && offsetRight - x >= minWidth) {
-        win.style.left = x + 'px';
-        win.style.width = offsetRight - x + 'px';
-    }
-    else if (arg == 'left') {
-        win.style.width = minWidth + 'px';
-        win.style.left = offsetRight - minWidth + 'px';
-    }
-
-    if (arg == 'bottom' && y - offsetTop >= minHeight) {
-        win.style.height = y - offsetTop + 'px';
-    }
-    else if (arg == 'bottom') {
-        win.style.height = minHeight + 'px';
-    }
-
-    if (arg == 'top' && offsetBottom - y >= minHeight) {
-        win.style.top = y + 'px';
-        win.style.height = offsetBottom - y + 'px';
-    }
-    else if (arg == 'top') {
-        win.style.top = offsetBottom - minHeight + 'px';
-        win.style.height = minHeight + 'px';
-    }
-
-    if (arg == 'top-left') {
-        if (offsetRight - x >= minWidth) {
-            win.style.left = x + 'px';
-            win.style.width = offsetRight - x + 'px';
-        }
-        else {
-            win.style.left = offsetRight - minWidth + 'px';
-            win.style.width = minWidth + 'px';
-        }
-        if (offsetBottom - y >= minHeight) {
-            win.style.top = y + 'px';
-            win.style.height = offsetBottom - y + 'px';
-        }
-        else {
-            win.style.top = offsetBottom - minHeight + 'px';
-            win.style.height = minHeight + 'px';
-        }
-    }
-
-    else if (arg == 'top-right') {
-        if (x - offsetLeft >= minWidth) {
-            win.style.width = x - offsetLeft + 'px';
-        }
-        else {
-            win.style.width = minWidth + 'px';
-        }
-        if (offsetBottom - y >= minHeight) {
-            win.style.top = y + 'px';
-            win.style.height = offsetBottom - y + 'px';
-        }
-        else {
-            win.style.top = offsetBottom - minHeight + 'px';
-            win.style.height = minHeight + 'px';
-        }
-    }
-
-    else if (arg == 'bottom-left') {
-        if (offsetRight - x >= minWidth) {
-            win.style.left = x + 'px';
-            win.style.width = offsetRight - x + 'px';
-        }
-        else {
-            win.style.left = offsetRight - minWidth + 'px';
-            win.style.width = minWidth + 'px';
-        }
-        if (y - offsetTop >= minHeight) {
-            win.style.height = y - offsetTop + 'px';
-        }
-        else {
-            win.style.height = minHeight + 'px';
-        }
-    }
-
-    else if (arg == 'bottom-right') {
-        if (x - offsetLeft >= minWidth) {
-            win.style.width = x - offsetLeft + 'px';
-        }
-        else {
-            win.style.width = minWidth + 'px';
-        }
-        if (y - offsetTop >= minHeight) {
-            win.style.height = y - offsetTop + 'px';
-        }
-        else {
-            win.style.height = minHeight + 'px';
-        }
-    }
-}
-let wo = [];
-function orderwindow() {
-    for (let i = 0; i < wo.length; i++) {
-        const win = $('.window.' + wo[wo.length - i - 1]);
-        if (topmost.includes(wo[wo.length - i - 1])) {
-            win.css('z-index', 10 + i + 50/*这里的50可以改，不要太大，不然会覆盖任务栏；不要太小，不然就和普通窗口没有什么区别了。随着版本的更新，肯定会有更多窗口，以后就可以把数字改打一点点*/);
-        } else {
-            win.css('z-index', 10 + i);
-        }
-    }
-}
-// 以下函数基于bug运行，切勿改动！
-function focwin(name, arg = 'window') {
-    // if(wo[0]==name)return;
-    if (arg == 'window') {
-        $('#taskbar>.' + wo[0]).removeClass('foc');
-        $('#taskbar>.' + name).addClass('foc');
-    }
-    $('.window.' + wo[0]).removeClass('foc');
-    wo.splice(wo.indexOf(name), 1);
-    wo.splice(0, 0, name);
-    orderwindow();
-    $('.window.' + name).addClass('foc');
-}
-function taskbarclick(name) {
-    if ($('.window.' + name).hasClass('foc')) {
-        minwin(name);
-        // focwin(null); // 禁改
-        return;
-    }
-    if ($('.window.' + name).hasClass('min')) {
-        minwin(name);
-    }
-    focwin(name);
-}
-// 菜单隐藏
 function hide_startmenu() {
     $('#start-menu').removeClass('show');
     $('#start-btn').removeClass('show');
@@ -3456,12 +1912,26 @@ function hide_widgets() {
     $('#widgets-btn').removeClass('show');
     setTimeout(() => { $('#widgets').removeClass('show-begin'); }, 200);
 }
-
+const FLY_HIDDEN_LIST_KEY = 'control_status_fly_hidden_list'
 function controlStatus(name) {
     if (this.classList.contains('active')) {
         this.classList.remove('active');
         if (name == 'wifi') {
             wifiStatus = false;
+        }
+        if (name == 'fly') {
+            flyStatus = false
+            if (localStorage.getItem(FLY_HIDDEN_LIST_KEY)) {
+              const flyHiddenData = JSON.parse(localStorage.getItem(FLY_HIDDEN_LIST_KEY))
+              const flyHiddenList = Array.isArray(flyHiddenData) ? flyHiddenData : []
+              flyHiddenList.forEach(item => {
+                const dom = $(`#control .${item} .icon`)
+                if (!dom.hasClass('active')) {
+                  dom.addClass('active')
+                }
+              })
+              localStorage.removeItem(FLY_HIDDEN_LIST_KEY)
+            }
         }
     }
     else if (!this.classList.contains('active')) {
@@ -3469,13 +1939,32 @@ function controlStatus(name) {
         if (name == 'wifi') {
             wifiStatus = true;
         }
+        if (name == 'fly') {
+          flyStatus = true
+          const hiddenList = ['btn1', 'btn2', 'btn5']
+          const hiddenDiffList = []
+          hiddenList.forEach(item => {
+            const dom = $(`#control .${item} .icon`)
+            if (dom.hasClass('active')) {
+              dom.removeClass('active')
+              hiddenDiffList.push(item)
+            }
+          })
+          localStorage.setItem(FLY_HIDDEN_LIST_KEY, JSON.stringify(hiddenDiffList))
+        }
+    }
+    if (name == 'dark') { 
+        $('html').toggleClass('night');
+        setTimeout(() => {
+            alert('别看电脑了，去休息眼睛吧~');
+        }, 200);
     }
 }
 // 控制面板 亮度调整
 function dragBrightness(e) {
     const container = $('#control>.cont>.bottom>.brightness>.range-container')[0];
-    const after = $("#control>.cont>.bottom>.brightness>.range-container>.after")[0];
-    const slider = $("#control>.cont>.bottom>.brightness>.range-container>.slider-btn")[0];
+    const after = $('#control>.cont>.bottom>.brightness>.range-container>.after')[0];
+    const slider = $('#control>.cont>.bottom>.brightness>.range-container>.slider-btn')[0];
     const viewport = container.getBoundingClientRect().left;
     const width = Number(window.getComputedStyle(container, null).width.split('px')[0]);
     move(e);
@@ -3491,20 +1980,25 @@ function dragBrightness(e) {
             clientX = e.touches[0].clientX;
         }
         var _offset = clientX - viewport;
+
+        const limit=2; // 亮度条件限制
+
         if (_offset < 0) {
             _offset = 0;
         }
-        else if (_offset > width) {
-            _offset = width;
+        else if (_offset > limit*width) {
+            _offset = limit*width;
         }
         slider.style.marginLeft = _offset + 'px';
         after.style.left = _offset + 'px';
         after.style.width = width - _offset + 'px';
-        if (_offset / width > 0.1) {
+        if (_offset / width > 0.3 && _offset / width < limit) {
             page.style.filter = `brightness(${_offset / width})`;
         }
-        else {
-            page.style.filter = `brightness(0.1)`;
+        else if (_offset / width < limit){
+            page.style.filter = 'brightness(0.3)';
+        }else{
+            page.style.filter = `brightness(${limit})`;
         }
     }
     function up() {
@@ -3549,6 +2043,8 @@ window.setInterval(() => {
 }, 1000);
 
 var wifiStatus = true;
+// 飞行模式
+var flyStatus = false;
 
 // 选择框
 let chstX, chstY;
@@ -3563,7 +2059,7 @@ $('#desktop')[0].addEventListener('mousedown', e => {
     chstX = e.clientX;
     chstY = e.clientY;
     this.onmousemove = ch;
-})
+});
 window.addEventListener('mouseup', e => {
     this.onmousemove = null;
     $('#desktop>.choose').css('left', 0);
@@ -3571,233 +2067,74 @@ window.addEventListener('mouseup', e => {
     $('#desktop>.choose').css('display', 'none');
     $('#desktop>.choose').css('width', 0);
     $('#desktop>.choose').css('height', 0);
-})
-let isDrak = false;
+});
+let isDark = false;
 
-// 主题
+// 个性化主题
 function toggletheme() {
     $('.dock.theme').toggleClass('dk');
+    // var darkControl = $(`#control .btn4 .icon`)
     $(':root').toggleClass('dark');
     if ($(':root').hasClass('dark')) {
         $('.window.whiteboard>.titbar>p').text('Blackboard');
         setData('theme', 'dark');
-        isDrak = true;
+        isDark = true;
+        // darkControl.addClass('active')
     } else {
         $('.window.whiteboard>.titbar>p').text('Whiteboard');
         setData('theme', 'light');
-        isDrak = false;
+        isDark = false;
+        // darkControl.removeClass('active')
     }
 }
 
-const isDarkTheme = window.matchMedia("(prefers-color-scheme: dark)");
-if (isDarkTheme.matches) { //是深色
-    $('.dock.theme').toggleClass('dk');
-    $(':root').toggleClass('dark');
-    $('.window.whiteboard>.titbar>p').text('Blackboard');
-    localStorage.setItem('theme', 'dark');
-    isDrak = true;
-} else { // 不是深色
-    $('.window.whiteboard>.titbar>p').text('Whiteboard');
-    localStorage.setItem('theme', 'light');
+// Only set theme based on system preference if no user preference is stored
+if (localStorage.getItem('theme') === null) {
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) { //是深色
+        $('.dock.theme').toggleClass('dk');
+        $(':root').toggleClass('dark');
+        $('.window.whiteboard>.titbar>p').text('Blackboard');
+        localStorage.setItem('theme', 'dark');
+        isDark = true;
+    } else { // 不是深色
+        $('.window.whiteboard>.titbar>p').text('Whiteboard');
+        localStorage.setItem('theme', 'light');
+    }
 }
+
+// 桌面图标的初始化
 let desktopItem = [];
+
 function saveDesktop() {
-    localStorage.setItem('desktop', /*$('#desktop')[0].innerHTML*/JSON.stringify(desktopItem));
-    localStorage.setItem('topmost', JSON.stringify(topmost));
-    localStorage.setItem('sys_setting', JSON.stringify(sys_setting));
-    localStorage.setItem('root_class', $(':root').attr('class'));
+    const data = {
+        desktop: JSON.stringify(desktopItem),
+        topmost: JSON.stringify(topmost),
+        sys_setting: JSON.stringify(sys_setting),
+        root_class: $(':root').attr('class')
+    };
+    
+    Object.entries(data).forEach(([key, value]) => {
+        localStorage.setItem(key, value);
+    });
 }
-
-// 拖拽窗口
-const page = document.getElementsByTagName('html')[0];
-const titbars = document.querySelectorAll('.window>.titbar');
-const wins = document.querySelectorAll('.window');
-let deltaLeft = 0, deltaTop = 0, fil = false, filty = 'none', bfLeft = 0, bfTop = 0;
-function win_move(e) {
-    let cx, cy;
-    if (e.type == 'touchmove') {
-        cx = e.targetTouches[0].clientX, cy = e.targetTouches[0].clientY;
-    }
-    else {
-        cx = e.clientX, cy = e.clientY;
-    }
-    // $(this).css('cssText', `left:${cx - deltaLeft}px;top:${cy - deltaTop}px;`);
-    $(this).css('left', `${cx - deltaLeft}px`);
-    $(this).css('top', `${cy - deltaTop}px`);
-    if (cy <= 0) {
-        // $(this).css('cssText', `left:${cx - deltaLeft}px;top:${-deltaTop}px`);
-        $(this).css('left', `${cx - deltaLeft}px`);
-        $(this).css('top', `${-deltaTop}px`);
-        if (!(this.classList[1] in nomax)) {
-            $('#window-fill').addClass('top');
-            setTimeout(() => {
-                $('#window-fill').addClass('fill');
-            }, 0);
-            fil = this;
-            filty = 'top';
-        }
-        // console.log(this.classList[1], nomax,this.classList[1] in nomax,not this.classList[1] in nomax);
-    }
-    else if (cx <= 0) {
-        // $(this).css('cssText', `left:${-deltaLeft}px;top:${cy - deltaTop}px`);
-        $(this).css('left', `${-deltaLeft}px`);
-        $(this).css('top', `${cy - deltaTop}px`);
-        if (!(this.classList[1] in nomax)) {
-            $('#window-fill').addClass('left');
-            setTimeout(() => {
-                $('#window-fill').addClass('fill');
-            }, 0);
-            fil = this;
-            filty = 'left';
-        }
-    }
-    else if (cx >= document.body.offsetWidth - 2) {
-        // $(this).css('cssText', `left:calc(100% - ${deltaLeft}px);top:${cy - deltaTop}px`);
-        $(this).css('left', `calc(100% - ${deltaLeft}px)`);
-        $(this).css('top', `${cy - deltaTop}px`);
-        if (!(this.classList[1] in nomax)) {
-            $('#window-fill').addClass('right');
-            setTimeout(() => {
-                $('#window-fill').addClass('fill');
-            }, 0);
-            fil = this;
-            filty = 'right';
-        }
-    }
-    else if (fil) {
-        $('#window-fill').removeClass('fill');
-        setTimeout(() => {
-            $('#window-fill').removeClass('top');
-            $('#window-fill').removeClass('left');
-            $('#window-fill').removeClass('right');
-        }, 200);
-        fil = false;
-        filty = 'none';
-    }
-    else if ($(this).hasClass('max')) {
-        deltaLeft = deltaLeft / (this.offsetWidth - (45 * 3)) * ((0.7 * document.body.offsetWidth) - (45 * 3));
-        maxwin(this.classList[1], false);
-        // 窗口控制按钮宽 45px
-        // $(this).css('cssText', `left:${cx - deltaLeft}px;top:${cy - deltaTop}px;`);
-        $(this).css('left', `${cx - deltaLeft}px`);
-        $(this).css('top', `${cy - deltaTop}px`);
-        $('.window.' + this.classList[1] + '>.titbar>div>.wbtg.max').html('<i class="bi bi-app"></i>');
-
-        $(this).addClass('notrans');
-    }
-}
-for (let i = 0; i < wins.length; i++) {
-    const win = wins[i];
-    const titbar = titbars[i];
-    titbar.addEventListener('mousedown', (e) => {
-        if ($('.taskmgr>.titbar>div>input').is(':focus')) {
-            return
-        }
-        let x = window.getComputedStyle(win, null).getPropertyValue('left').split("px")[0];
-        let y = window.getComputedStyle(win, null).getPropertyValue('top').split("px")[0];
-        if (y != 0) {
-            bfLeft = x;
-            bfTop = y;
-        }
-        deltaLeft = e.clientX - x;
-        deltaTop = e.clientY - y;
-        page.onmousemove = win_move.bind(win);
-    })
-    titbar.addEventListener('touchstart', (e) => {
-        let x = window.getComputedStyle(win, null).getPropertyValue('left').split("px")[0];
-        let y = window.getComputedStyle(win, null).getPropertyValue('top').split("px")[0];
-        if (y != 0) {
-            bfLeft = x;
-            bfTop = y;
-        }
-        deltaLeft = e.targetTouches[0].clientX - x;
-        deltaTop = e.targetTouches[0].clientY - y;
-        page.ontouchmove = win_move.bind(win);
-    })
-}
-page.addEventListener('mouseup', () => {
-    page.onmousemove = null;
-    if (fil) {
-        if (filty == 'top') {
-            maxwin(fil.classList[1], false);
-        }
-        else if (filty == 'left') {
-            $(fil).addClass('left');
-            maxwin(fil.classList[1], false);
-        }
-        else if (filty == 'right') {
-            $(fil).addClass('right');
-            maxwin(fil.classList[1], false);
-        }
-        setTimeout(() => {
-            $('#window-fill').removeClass('fill');
-            $('#window-fill').removeClass('top');
-            $('#window-fill').removeClass('left');
-            $('#window-fill').removeClass('right');
-        }, 200);
-        $('.window.' + fil.classList[1]).attr('data-pos-x', `${bfLeft}px`);
-        $('.window.' + fil.classList[1]).attr('data-pos-y', `${bfTop}px`);
-        fil = false;
-    }
-});
-page.addEventListener('touchend', () => {
-    page.ontouchmove = null;
-    if (fil) {
-        if (filty == 'top')
-            maxwin(fil.classList[1], false);
-        else if (filty == 'left') {
-            maxwin(fil.classList[1], false);
-            $(fil).addClass('left');
-        } else if (filty == 'right') {
-            maxwin(fil.classList[1], false);
-            $(fil).addClass('right');
-        }
-        setTimeout(() => {
-            $('#window-fill').removeClass('fill');
-            $('#window-fill').removeClass('top');
-            $('#window-fill').removeClass('left');
-            $('#window-fill').removeClass('right');
-        }, 200);
-        setTimeout(() => {
-            $('.window.' + fil.classList[1]).attr('data-pos-x', `${bfLeft}px`);
-            $('.window.' + fil.classList[1]).attr('data-pos-y', `${bfTop}px`);
-        }, 200);
-        fil.setAttribute('style', `left:${bfLeft}px;top:${bfTop}px`);
-        fil = false;
-    }
-});
-page.addEventListener('mousemove', (e) => {
-    if (e.clientY >= window.innerHeight - 60) {
-        $('#dock-box').removeClass('hide');
-    }
-    else {
-        if (!$('#start-menu.show')[0] && !$('#search-win.show')[0] && !$('#widgets.show')[0] && !$('#control.show')[0] && !$('#datebox.show')[0]) {
-            if ($('.window.max:not(.left):not(.right)')[0]) {
-                $('#dock-box').addClass('hide');
-            }
-            else {
-                $('#dock-box').removeClass('hide');
-            }
-        }
-        else {
-            $('#dock-box').removeClass('hide');
-        }
-    }
-})
 
 function setIcon() {
+    // return;
+    if (!Array.isArray(JSON.parse(localStorage.getItem('desktop')))){
+        setData('desktop','[]')
+    }
     if (Array.isArray(JSON.parse(localStorage.getItem('desktop')))) {
         $('#desktop')[0].innerHTML = `<div ondblclick="openapp('explorer');" ontouchstart="openapp('explorer');" oncontextmenu="return showcm(event,'desktop.icon',['explorer',-1]);" appname="explorer">
         <img src="apps/icons/explorer/thispc.svg">
-        <p>此电脑</p>
+        <p>${lang('此电脑','explorer.thispc')}</p>
     </div>
     <div class="b" ondblclick="openapp('setting');" ontouchstart="openapp('setting');" oncontextmenu="return showcm(event,'desktop.icon',['setting',-1]);" appname="setting">
         <img src="icon/setting.svg">
-        <p>设置</p>
+        <p>${lang('设置','setting.name')}</p>
     </div>
     <div class="b" ondblclick="openapp('about');" ontouchstart="openapp('about');" oncontextmenu="return showcm(event,'desktop.icon',['about',-1]);" appname="about">
         <img src="icon/about.svg">
-        <p>关于 Win12 网页版</p>
+        <p>${lang('关于 Win12 网页版','about.name')}</p>
     </div>
     <div class="b" ondblclick="openapp('edge');" ontouchstart="openapp('edge');" oncontextmenu="return showcm(event,'desktop.icon',['edge',-1]);" appname="edge">
         <img src="icon/edge.svg">
@@ -3805,7 +2142,7 @@ function setIcon() {
     </div>
     <div class="b" ondblclick="shownotice('feedback');" ontouchstart="shownotice('feedback');;">
         <img src="icon/feedback.svg">
-        <p>反馈中心</p>
+        <p>${lang('反馈中心','feedback.name')}</p>
     </div>
     <span class="choose">
     </span>
@@ -3813,13 +2150,13 @@ function setIcon() {
         desktopItem = JSON.parse(localStorage.getItem('desktop'));
         desktopItem.forEach((item) => {
             $('#desktop')[0].innerHTML += item;
-        })
+        });
         addMenu();
     }
     if (Array.isArray(JSON.parse(localStorage.getItem('topmost')))) {
         topmost = JSON.parse(localStorage.getItem('topmost'));
         if (topmost.includes('taskmgr')) {
-            document.getElementById('tsk-setting-topmost').checked = true;
+            $('#tsk-setting-topmost')[0].checked = true;
         }
     }
     if (Array.isArray(JSON.parse(localStorage.getItem('sys_setting')))) {
@@ -3827,20 +2164,23 @@ function setIcon() {
         if (/^(1|0)+$/.test(sys_setting_back.join(''))/* 只含有0和1 */) {
             sys_setting = sys_setting_back;
             for (var i = 0; i < sys_setting.length; i++) {
-                document.getElementById('sys_setting_' + (i + 1)).setAttribute("class", 'a checkbox' + (sys_setting[i] ? ' checked' : '')); //设置class属性
+                document.getElementById('sys_setting_' + (i + 1))?.setAttribute("class", 'a checkbox' + (sys_setting[i] ? ' checked' : '')); //设置class属性
                 if (i == 5) {
                     use_music = sys_setting[i] ? true : false;
+                }
+                if (i == 6) {
+                    use_mic_voice = sys_setting[i] ? true : false;
                 }
             }
         }
     }
     if (localStorage.getItem('root_class')) {
-        $(':root')[0].className = localStorage.getItem('root_class');
+        $(':root')[0].className = localStorage.getItem('root_class') + ' ' + (isDark ? 'dark' : '');
     }
 }
 
-// 启动
-document.getElementsByTagName('body')[0].onload = function nupd() {
+// 原神，启动！
+document.getElementsByTagName('body')[0].onload = () => {
     setTimeout(() => {
         $('#loadback').addClass('hide');
     }, 500);
@@ -3849,7 +2189,17 @@ document.getElementsByTagName('body')[0].onload = function nupd() {
     }, 1000);
     apps.webapps.init();
     //getdata
-    if (localStorage.getItem('theme') == 'dark') $(':root').addClass('dark');
+    if (localStorage.getItem('theme') == 'dark') {
+        $(':root').addClass('dark');
+        $('.dock.theme').addClass('dk');
+        $('.window.whiteboard>.titbar>p').text('Blackboard');
+        isDark = true;
+    } else {
+        $(':root').removeClass('dark');
+        $('.dock.theme').removeClass('dk');
+        $('.window.whiteboard>.titbar>p').text('Whiteboard');
+        isDark = false;
+    }
     if (localStorage.getItem('color1')) {
         $(':root').css('--theme-1', localStorage.getItem('color1'));
         $(':root').css('--theme-2', localStorage.getItem('color2'));
@@ -3890,13 +2240,28 @@ document.getElementsByTagName('body')[0].onload = function nupd() {
             w.insertAdjacentHTML('afterbegin', `<div class="resize-knob ${n}" onmousedown="resizewin(this.parentElement.parentElement, '${n}', this)"></div>`);
         }
     });
+    $.getJSON('https://tjy-gitnub.github.io/win12-theme/def.json').then(j=>{
+        if(j.sp){
+            $(':root').css('--bgul',j.bg);
+            if(j.spth){
+                $(':root').css('--theme-1',j.th1);
+                $(':root').css('--theme-2',j.th2);
+                $(':root').css('--href', j.href);
+            }
+            if(j.death){
+                $('html').css('filter','saturate(0)');
+            }
+        }
+    });
+    updateVoiceBallStatus();
     // loadlang();
+    checkOrientation();
 };
 
 let autoUpdate = true;
 function checkUpdate() {
     const sha = localStorage.getItem('sha');
-    fetch('https://api.github.com/repos/tjy-gitnub/win12/commits').then(res => {
+    api('repos/tjy-gitnub/win12/commits').then(res => {
         res.json().then(json => {
             if (sha != json[0].sha && sha) {
                 localStorage.setItem('update', true);
@@ -3917,7 +2282,8 @@ else {
 }
 
 // PWA 应用
-if (!location.href.match(/((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])(?::(?:[0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))/) && !(new URL(location.href)).searchParams.get('develop')) {
+let setData;
+if (!location.href.match(/((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])(?::(?:[0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))/) && !location.href.match('localhost') && !(new URL(location.href)).searchParams.get('develop')) {
     $('#loginback').css('opacity', '1');
     $('#loginback').css('display', 'flex');
     shownotice('about');
@@ -3954,12 +2320,13 @@ if (!location.href.match(/((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|
         $('.msg.update').addClass('show');
     }
     // });
-    function setData(k, v) {
+    // 使用说明见 desktop.html 开头
+    setData=(k, v)=>{
         localStorage.setItem(k, v);
     }
 
 } else {
-    function setData(k, v) {
+    setData=(k, v)=>{
         console.log('setData 被禁用');
     }
 }
@@ -3979,16 +2346,147 @@ function calcTimeString(second) {
     const minutes = Math.floor(second % 3600 / 60);
     const seconds = second % 60;
     if (days > 0) {
-        timeStr += " " + days + " 天";
+        timeStr += ' ' + days + ' 天';
     }
     if (hours > 0) {
-        timeStr += " " + hours + " 小时";
+        timeStr += ' ' + hours + ' 小时';
     }
     if (minutes > 0) {
-        timeStr += " " + minutes + " 分钟";
+        timeStr += ' ' + minutes + ' 分钟';
     }
     if (seconds > 0) {
-        timeStr += " " + seconds + " 秒";
+        timeStr += ' ' + seconds + ' 秒';
     }
-    return timeStr === "" ? " 0 秒" : timeStr;
+    return timeStr === '' ? ' 0 秒' : timeStr;
 }
+
+//监听全局按键
+function setupGlobalKey(){
+    $(document).keydown(function (event) {
+        if (event.keyCode == 116/*F5被按下(刷新)*/) {
+            event.preventDefault();/*取消默认刷新行为*/
+            $('#desktop').css('opacity', '0'); setTimeout(() => { $('#desktop').css('opacity', '1'); }, 100); setIcon();
+            return;
+        }
+
+        //按下徽标键
+        if (event.metaKey && event.ctrlKey) {
+            //打开或关闭开始菜单
+            openDockWidget("start-menu");
+        }
+    });
+}
+
+setupGlobalKey();
+
+
+function isMobileDevice() {
+    return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+function checkOrientation() {
+    const container = document.getElementById('orientation-warning');
+    const isPortrait = window.matchMedia("(orientation: portrait)").matches;
+    if (isMobileDevice() && isPortrait) {
+        container.style.display = "flex"; // 显示提示
+    } else {
+        container.style.display = "none"; // 隐藏提示
+    }
+}
+
+// 监听屏幕方向变化
+window.addEventListener("resize", checkOrientation);
+window.addEventListener("orientationchange", checkOrientation);
+
+
+// 任务栏悬停预览窗口 by @fzlzjerry 
+
+let previewTimeout;
+
+function showTaskbarPreview(name, event) {
+    clearTimeout(previewTimeout);
+    
+    const preview = document.getElementById('taskbar-preview');
+    if (!preview) {
+        const previewEl = document.createElement('div');
+        previewEl.id = 'taskbar-preview';
+        previewEl.innerHTML = `
+            <div class="preview-title">
+                <img src="" alt="">
+                <span></span>
+            </div>
+            <div class="preview-content">
+                <div class="preview-window"></div>
+            </div>
+        `;
+        document.body.appendChild(previewEl);
+    }
+    
+    const win = $(`.window.${name}`);
+    if (win.length && !win.hasClass('min')) {
+        const preview = $('#taskbar-preview');
+        const taskbarItem = $(event.currentTarget);
+        const itemRect = taskbarItem[0].getBoundingClientRect();
+        
+
+        
+        // Set window title and icon
+        const titleImg = win.find('.titbar img.icon').attr('src');
+        const title = win.find('.titbar p').text() || win.find('.titbar span').text();
+        
+        preview.find('.preview-title img').attr('src', titleImg);
+        preview.find('.preview-title span').text(title);
+        
+        // Create simplified window preview
+        const previewWindow = preview.find('.preview-content .preview-window');
+        previewWindow.empty();
+        
+        // Clone important window elements for preview
+        const content = win.find('.content').clone();
+        content.find('script').remove(); // Remove any scripts
+        content.find('iframe').remove(); // Remove iframes
+        
+        // Scale down the content
+        content.css({
+            transform: 'scale(0.2)',
+            transformOrigin: 'top left',
+            width: '500%', // 1/0.2 = 5
+            height: '500%'
+        });
+        
+        previewWindow.append(content);
+        preview.addClass('show');
+
+        // Set preview position
+        console.log(content[0].offsetWidth* 0.2);
+        preview.css({
+            left: itemRect.left - ( content[0].offsetWidth* 0.2 / 2),
+            bottom: '60px'
+        });
+    }
+}
+
+function hideTaskbarPreview() {
+    previewTimeout = setTimeout(() => {
+        $('#taskbar-preview').removeClass('show');
+    }, 200);
+}
+
+// Add hover events to taskbar items
+$(document).on('mouseenter', '#taskbar>a', function(e) {
+    const name = this.className.split(' ')[0];
+    showTaskbarPreview(name, e);
+});
+
+$(document).on('mouseleave', '#taskbar>a', function() {
+    hideTaskbarPreview();
+});
+
+// Add hover events to preview
+$(document).on('mouseenter', '#taskbar-preview', function() {
+    clearTimeout(previewTimeout);
+});
+
+$(document).on('mouseleave', '#taskbar-preview', function() {
+    hideTaskbarPreview();
+});

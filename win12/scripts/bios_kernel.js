@@ -1,151 +1,238 @@
-var code = "null";
 function addZero(i) {
-    return i < 10 ? ('0' + i) : i
+    return i < 10 ? `0${i}` : i;
 }
+
 function timeChange() {
-    d = new Date()
-    document.getElementById('time').innerHTML = "[" + addZero(d.getHours()) + ":" + addZero(d.getMinutes()) + ":" + addZero(d.getSeconds()) + "]";
-    document.getElementById('date').innerHTML = "[" + d.getDate() + "/" + (d.getMonth() + 1) + "/" + d.getFullYear() + "]";
-
-    //顺便适应高度
-    // document.getElementById('body').style.height = window.innerHeight + "px";
-    // document.getElementById('mainPage').style.height = (window.innerHeight - 150) + 'px';
-    // document.getElementById('exitPage').style.height = (window.innerHeight - 150) + 'px';
+    const d = new Date();
+    $('#time')[0].innerText = `[${addZero(d.getHours())}:${addZero(d.getMinutes())}:${addZero(d.getSeconds())}]`;
+    $('#date')[0].innerText = `[${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}]`;
 }
+
 function toBoot() {
-    document.getElementById('background').style.display = '';
-    setTimeout('document.getElementById(`body`).innerHTML=``;document.getElementById(`body`).style.cssText=`background-color: black;`;', 500); setTimeout('window.location.href=`./boot.html`', 1000); //Boot延迟
+    setTimeout(() => {
+        $('#body').html('');
+        $('#body').css('cssText', 'background-color: black;');
+    }, 500);
+    setTimeout(() => {
+        location.href = './boot.html';
+    }, 1000);
 }
-function BIOS_confirm(tit, okcode, width) {
-    document.getElementById('confirm-tit').innerHTML = tit;
-    document.getElementById('exit_confirm').style.display = '';
-    document.getElementById('background').style.display = '';
-    document.getElementById('confirm').style.width = (window.innerWidth * width / 100) + "px";
-    code = okcode;
-}
-setTimeout("timeChange();setInterval(timeChange,1000)", 1000 - (new Date()).getMilliseconds());
 
-var here;
-var tab = 0, tab_back = tab;
-var btn = 0, btn_back = btn;
-var foc = 0, foc_back = foc;
+function BIOS_confirm(tit, func) {
+    $('#confirm-tit')[0].innerText = tit;
+    $('#confirmContainer').css('display', 'flex');
+    $('#confirm').attr('data-show', 'true');
+    $('#confirm>.btns>*:first-child').attr('click', func);
+    $('#confirm>.btns>*:first-child').attr('ontouchstart', func);
+}
+
+function changePage(t) {
+    $('.tab.show').removeClass('show');
+    $('.tab.foc').removeClass('foc');
+    $(`.tab${t}`).addClass('show');
+    $(`.tab${t}`).addClass('foc');
+    $('.page.show').removeClass('show');
+    $(`.page${t}`).addClass('show');
+    tab = t;
+}
+
+let tab = 0;
+let btn = 0;
+let foc = 0;
+let tab_back = tab;
+let btn_back = btn;
+let foc_back = foc;
+let subFoc = -1;
+
 timeChange();
-function ChangePage() {
-    if (!tab) {
-        document.getElementById('exitPage').style.display = 'none';
-        document.getElementById('mainPage').style.display = '';
-        document.getElementById('exit').style.cssText = 'background-color: #0100a2;color: #aaaaaa;';
-        document.getElementById('main').style.cssText = 'color: #ffffff;background-color: #aaaaaa;';
-        here = 'main';
-        tab = 0;
-    } else {
-        document.getElementById('mainPage').style.display = 'none';
-        document.getElementById('exitPage').style.display = '';
-        document.getElementById('main').style.cssText = 'background-color: #0100a2;color: #aaaaaa;';
-        document.getElementById('exit').style.cssText = 'color: #ffffff;background-color: #aaaaaa;';
-        here = 'exit';
-        tab = 1;
+
+// Add configuration state
+const biosConfig = {
+    cpuHyperThreading: true,
+    cpuTurboBoost: true,
+    cpuCoreRatio: 'Auto',
+    memoryFrequency: 'Auto',
+    memoryTimingMode: 'Auto',
+    xmpProfile: false,
+    fastBoot: true,
+    bootMode: 'UEFI',
+    secureBoot: true,
+    tpmState: true
+};
+
+function toggleOption(optionElement) {
+    const currentValue = optionElement.innerText;
+    if (currentValue.includes('Enabled')) {
+        optionElement.innerText = '[Disabled]';
+        return false;
+    }
+    if (currentValue.includes('Disabled')) {
+        optionElement.innerText = '[Enabled]';
+        return true;
+    }
+    if (currentValue.includes('Auto')) {
+        optionElement.innerText = '[Manual]';
+        return 'Manual';
+    }
+    if (currentValue.includes('Manual')) {
+        optionElement.innerText = '[Auto]';
+        return 'Auto';
+    }
+    return currentValue;
+}
+
+function handleExitOption(option) {
+    const action = $(option).attr('click');
+    if (action.includes('toBoot()')) {
+        toBoot();
+    } else if (action.includes('BIOS_confirm')) {
+        const match = action.match(/BIOS_confirm\('([^']+)',\s*'([^']+)'\)/);
+        if (match) {
+            const [_, message, callback] = match;
+            BIOS_confirm(message, callback);
+        }
     }
 }
-ChangePage();
-h = window.innerHeight * 0.15;
-w = window.innerWidth * 0.3;
-document.getElementById('confirm').style.height = h + "px";
-document.getElementById('confirm').style.width = w + "px";
-document.oncontextmenu = function () {
-    return false;
-}
-var tabs = ['main', 'exit']
-window.onkeydown = function (event) {
-    event = event || window.event;
-    tab_back = tab;
-    if (document.getElementById('background').style.display != '') {
-        if (event.keyCode == 9) {
-            event.preventDefault();
-            tab++;
-            foc = 0;
-            tab = tab % 2;
-            ChangePage();
+
+function updateFocus() {
+    // Clear all focus states first
+    $('.option').css('background-color', '#aaaaaa');
+    $('.option').css('color', '#0100a2');
+    $('.exit').css('color', '#0100a2');
+    
+    const currentPage = $(`.page${tab}`);
+    
+    if (tab === tabs.length - 1) { // Exit page
+        const exitOptions = currentPage.find('.exit');
+        if (foc > 0 && foc <= exitOptions.length) {
+            $(exitOptions[foc - 1]).css('color', '#ffffff');
         }
-        if (event.keyCode == 121/*F10=退出*/) {
-            event.preventDefault();
-            eval(document.getElementById('e1').getAttribute('click'));
-        }
-        if (event.keyCode == 39) {
-            event.preventDefault();
-            tab++;
-        } else if (event.keyCode == 37) {
-            event.preventDefault();
-            tab--;
-        }
-        if (tab + 1 > 0 && tab + 1 <= tabs.length && foc == 0) {
-            if ([37, 39].includes(event.keyCode)) {
-                ChangePage();
+    } else { // Other pages
+        const options = currentPage.find('.option');
+        if (foc > 0 && options.length > 0) {
+            const focusedOption = options[Math.min(foc - 1, options.length - 1)];
+            if (focusedOption) {
+                $(focusedOption).css('background-color', '#0100a2');
+                $(focusedOption).css('color', '#ffffff');
             }
-        } else {
-            tab = tab_back;
         }
-        foc_back = foc;
-        if (event.keyCode == 40) {
+    }
+}
+
+// Update tabs array
+const tabs = ['main', 'advanced', 'boot', 'security', 'exit'];
+
+changePage(0);
+document.oncontextmenu = () => false;
+
+window.onkeydown = (evt) => {
+    const event = evt || window.event;
+    
+    if ($('#confirm').attr('data-show') !== 'true') {
+        if (event.keyCode === 9) { // Tab
             event.preventDefault();
-            foc++;
-        } else if (event.keyCode == 38) {
-            event.preventDefault();
-            foc--;
+            tab = (tab + 1) % tabs.length;
+            foc = 0;
+            changePage(tab);
         }
-        if (tab == 1 && foc <= 3 && foc >= 0) {
-            if (!foc) { //0
-                if (tab)
-                    document.getElementById('exit').style.cssText = 'color: #ffffff;background-color: #aaaaaa;';
-                else
-                    document.getElementById('main').style.cssText = 'color: #ffffff;background-color: #aaaaaa;';
-                for (var i = 1; i <= 3; i++)
-                    document.getElementById('e' + i).style.color = "#0100a2";
+        else if (event.keyCode === 121) { // F10
+            toBoot();
+        }
+        else if (event.keyCode === 39) { // Right
+            event.preventDefault();
+            if (tab < tabs.length - 1) {
+                tab++;
+                foc = 0;
+                changePage(tab);
+            }
+        }
+        else if (event.keyCode === 37) { // Left
+            event.preventDefault();
+            if (tab > 0) {
+                tab--;
+                foc = 0;
+                changePage(tab);
+            }
+        }
+        else if (event.keyCode === 40) { // Down
+            event.preventDefault();
+            const currentPage = $(`.page${tab}`);
+            if (tab === tabs.length - 1) { // Exit page
+                const exitOptions = currentPage.find('.exit');
+                if (exitOptions.length > 0) {
+                    foc = Math.min(foc + 1, exitOptions.length);
+                    updateFocus();
+                }
             } else {
-                if (tab)
-                    document.getElementById('exit').style.cssText = 'color: #0100a2;background-color: #aaaaaa;';
-                else
-                    document.getElementById('main').style.cssText = 'color: #0100a2;background-color: #aaaaaa;';
-                for (var i = 1; i <= 3; i++)
-                    document.getElementById('e' + i).style.color = "#0100a2";
-                document.getElementById('e' + foc).style.color = "#fff";
-                if (event.keyCode == 13) {
-                    eval(document.getElementById('e' + foc).getAttribute('click'));
+                const options = currentPage.find('.option');
+                if (options.length > 0) {
+                    foc = Math.min(foc + 1, options.length);
+                    updateFocus();
                 }
             }
-        } else {
-            foc = foc_back;
+        }
+        else if (event.keyCode === 38) { // Up
+            event.preventDefault();
+            if (foc > 0) {
+                foc--;
+                updateFocus();
+            }
+        }
+        else if (event.keyCode === 13) { // Enter
+            const currentPage = $(`.page${tab}`);
+            if (tab === tabs.length - 1) { // Exit page
+                const exitOptions = currentPage.find('.exit');
+                if (foc > 0 && foc <= exitOptions.length) {
+                    const focusedOption = exitOptions[foc - 1];
+                    handleExitOption(focusedOption);
+                }
+            } else {
+                const options = currentPage.find('.option');
+                if (foc > 0 && foc <= options.length) {
+                    const focusedOption = options[foc - 1];
+                    const newValue = toggleOption(focusedOption);
+                    const optionId = $(focusedOption).attr('data-option');
+                    if (optionId) {
+                        biosConfig[optionId] = newValue;
+                    }
+                }
+            }
         }
     } else {
-        btn_back = btn;
-        if (event.keyCode == 39) {
+        // Confirm dialog navigation
+        if (event.keyCode === 39 || event.keyCode === 37) { // Right/Left
             event.preventDefault();
-            btn++;
-        } else if (event.keyCode == 37) {
-            event.preventDefault();
-            btn--;
-        }
-        if ([0, 1].includes(btn)) {
-            if (btn) {//1
-                document.getElementById('cancel-btn').style.cssText = "background-color: #000;color: #fff;";
-                document.getElementById('ok-btn').style.cssText = "color: #000;background-color: #fff;";
-            } else {//0
-                document.getElementById('ok-btn').style.cssText = "background-color: #000;color: #fff;";
-                document.getElementById('cancel-btn').style.cssText = "color: #000;background-color: #fff;";
+            btn = btn ? 0 : 1;
+            if (btn) {
+                $('#cancel-btn').css('cssText', 'background-color: #000; color: #fff;');
+                $('#ok-btn').css('cssText', 'color: #000; background-color: #fff;');
+            } else {
+                $('#ok-btn').css('cssText', 'background-color: #000;color: #fff;');
+                $('#cancel-btn').css('cssText', 'color: #000;background-color: #fff;');
             }
-        } else {
-            btn = btn_back;
         }
-        if (event.keyCode == 13) {
+        else if (event.keyCode === 13) { // Enter
             event.preventDefault();
             if (btn) {
-                eval(document.getElementById('cancel-btn').getAttribute('click'));
+                $('#confirmContainer').css('display', 'none');
+                $('#confirm').attr('data-show', 'false');
             } else {
-                eval(document.getElementById('ok-btn').getAttribute('click'));
+                toBoot();
             }
             btn = 0;
-            document.getElementById('ok-btn').style.cssText = "background-color: #000;color: #fff;";
-            document.getElementById('cancel-btn').style.cssText = "color: #000;background-color: #fff;";
+            $('#ok-btn').css('cssText', 'background-color: #000;color: #fff;');
+            $('#cancel-btn').css('cssText', 'color: #000;background-color: #fff;');
         }
     }
+};
+
+// Add click handlers for options
+for (const option of document.querySelectorAll('.option')) {
+    option.addEventListener('click', function() {
+        const newValue = toggleOption(this);
+        const optionId = this.getAttribute('data-option');
+        if (optionId) {
+            biosConfig[optionId] = newValue;
+        }
+    });
 }
